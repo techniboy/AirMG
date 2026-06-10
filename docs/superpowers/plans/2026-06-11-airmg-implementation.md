@@ -3231,22 +3231,74 @@ export default defineConfig({
 })
 ```
 
-Replace `src/index.css` with:
+Replace `src/index.css` with exact colors from `noop/Packages/StrandDesign/Sources/StrandDesign/Palette.swift`:
 
 ```css
 @import "tailwindcss";
 
 @theme {
-  --color-bg-primary: #0a0a0a;
-  --color-bg-secondary: #1a1a1a;
-  --color-bg-tertiary: #2a2a2a;
-  --color-accent: #18C98B;
-  --color-accent-light: #2FE6A8;
-  --color-recovery-red: #FF4444;
-  --color-recovery-yellow: #FFBB33;
-  --color-recovery-green: #18C98B;
-  --color-text-primary: #E8E8E8;
+  /* Surfaces (Palette.swift §9.1) */
+  --color-surface-base: #060A08;
+  --color-surface-raised: #0D1512;
+  --color-surface-overlay: #121D18;
+  --color-surface-inset: #0A100D;
+  --color-hairline: #1B2620;
+  --color-hairline-strong: #27362E;
+
+  /* Text */
+  --color-text-primary: #F4F7F5;
   --color-text-secondary: #8B9690;
+  --color-text-tertiary: #6F7A74;
+
+  /* Accent */
+  --color-accent: #18C98B;
+  --color-accent-hover: #2FE0A0;
+  --color-accent-muted: #10271F;
+
+  /* Recovery gradient */
+  --color-recovery-000: #FF4F73;
+  --color-recovery-030: #F5A623;
+  --color-recovery-055: #E8C24B;
+  --color-recovery-078: #18C98B;
+  --color-recovery-100: #2FE6A8;
+
+  /* Strain ramp */
+  --color-strain-000: #E8B04B;
+  --color-strain-033: #E8743B;
+  --color-strain-066: #E0476B;
+  --color-strain-100: #C13AC1;
+
+  /* Sleep stages */
+  --color-sleep-awake: #E0476B;
+  --color-sleep-light: #5C6FB1;
+  --color-sleep-deep: #2C3A7A;
+  --color-sleep-rem: #5BE0C7;
+
+  /* HR zones */
+  --color-zone-1: #4FA9C9;
+  --color-zone-2: #5BD3A0;
+  --color-zone-3: #E8C24B;
+  --color-zone-4: #E8743B;
+  --color-zone-5: #E0476B;
+
+  /* Status */
+  --color-status-positive: #18C98B;
+  --color-status-warning: #F5A623;
+  --color-status-critical: #FF4F73;
+
+  /* Metric accents */
+  --color-metric-cyan: #2FC7FF;
+  --color-metric-purple: #A879FF;
+  --color-metric-amber: #F5A623;
+  --color-metric-rose: #FF4F73;
+
+  /* Glow */
+  --color-glow-ambient: #1B2A3A;
+
+  /* Legacy aliases for convenience */
+  --color-bg-primary: #060A08;
+  --color-bg-secondary: #0D1512;
+  --color-bg-tertiary: #121D18;
 }
 ```
 
@@ -3365,26 +3417,53 @@ export interface CorrelationResult {
 
 ```typescript
 // frontend/src/lib/colors.ts
+// Mirrors StrandPalette.swift recoveryState() and recoveryColor() / strainColor()
+
+export function recoveryState(score: number): string {
+  if (score < 25) return 'DEPLETED';
+  if (score < 50) return 'LOW';
+  if (score < 70) return 'MODERATE';
+  if (score < 88) return 'PRIMED';
+  return 'PEAK';
+}
+
 export function recoveryColor(score: number | null): string {
   if (score === null) return 'text-text-secondary';
-  if (score < 34) return 'text-recovery-red';
-  if (score < 67) return 'text-recovery-yellow';
-  return 'text-recovery-green';
+  if (score < 25) return 'text-recovery-000';
+  if (score < 50) return 'text-recovery-030';
+  if (score < 70) return 'text-recovery-055';
+  if (score < 88) return 'text-recovery-078';
+  return 'text-recovery-100';
 }
 
 export function recoveryBg(score: number | null): string {
-  if (score === null) return 'bg-bg-tertiary';
-  if (score < 34) return 'bg-recovery-red/20';
-  if (score < 67) return 'bg-recovery-yellow/20';
-  return 'bg-recovery-green/20';
+  if (score === null) return 'bg-surface-raised';
+  if (score < 25) return 'bg-recovery-000/20';
+  if (score < 50) return 'bg-recovery-030/20';
+  if (score < 70) return 'bg-recovery-055/20';
+  return 'bg-recovery-078/20';
 }
 
 export function strainColor(strain: number | null): string {
   if (strain === null) return 'text-text-secondary';
-  if (strain < 7) return 'text-blue-400';
-  if (strain < 14) return 'text-recovery-yellow';
-  return 'text-recovery-red';
+  const t = strain / 21;
+  if (t < 0.33) return 'text-strain-000';
+  if (t < 0.66) return 'text-strain-033';
+  if (t < 0.85) return 'text-strain-066';
+  return 'text-strain-100';
 }
+
+export function sleepStageColor(stage: string): string {
+  switch (stage) {
+    case 'wake': return '#E0476B';
+    case 'light': return '#5C6FB1';
+    case 'deep': return '#2C3A7A';
+    case 'rem': return '#5BE0C7';
+    default: return '#5C6FB1';
+  }
+}
+
+export const HR_ZONE_COLORS = ['#4FA9C9', '#4FA9C9', '#5BD3A0', '#E8C24B', '#E8743B', '#E0476B'];
 ```
 
 ```typescript
@@ -3567,7 +3646,49 @@ git commit -m "feat: add app shell with sidebar navigation"
 - Create: `frontend/src/components/charts/WeekStrip.tsx`
 - Create: `frontend/src/hooks/useApi.ts`
 
-**Skill:** invoke `frontend-design:frontend-design` before implementing. Reference `noop/Strand/Screens/TodayView.swift` for layout inspiration.
+**UI CLONING RULE (applies to ALL frontend tasks):**
+
+The NOOP repo contains a complete SwiftUI design system and screen implementations. **Do NOT design from scratch.** Instead:
+
+1. **Read the NOOP source files first** — both the screen (`noop/Strand/Screens/*.swift`) AND the design components (`noop/Packages/StrandDesign/Sources/StrandDesign/*.swift`)
+2. **Faithfully replicate** the layout, component hierarchy, spacing, colors, data presentation, and visual structure in React + Tailwind + shadcn/ui + recharts
+3. **Port design components 1:1** from StrandDesign to React:
+
+| NOOP SwiftUI (StrandDesign) | AirMG React equivalent |
+|---|---|
+| `Palette.swift` | `lib/colors.ts` — extract exact hex values |
+| `RecoveryRing.swift` | `components/charts/RecoveryGauge.tsx` |
+| `StrainGauge.swift` | `components/charts/StrainGauge.tsx` |
+| `Hypnogram.swift` | `components/charts/SleepStagesChart.tsx` |
+| `Sparkline.swift` | `components/charts/Sparkline.tsx` |
+| `TrendChart.swift` | `components/charts/TrendLine.tsx` |
+| `YearHeatStrip.swift` | `components/charts/YearHeatStrip.tsx` |
+| `StrandCard.swift` | `components/shared/MetricCard.tsx` |
+| `StatePill.swift` | `components/shared/ScoreBadge.tsx` |
+| `Typography.swift` | Tailwind font classes |
+| `ChartHover.swift` | recharts tooltip customization |
+| `Components.swift` | shadcn/ui primitives |
+
+4. **Screen-to-page mapping** — read each Swift screen, replicate in React:
+
+| NOOP Screen | AirMG Page | Read first |
+|---|---|---|
+| `TodayView.swift` | `pages/Today.tsx` | Also read `ScreenScaffold.swift` |
+| `SleepView.swift` | `pages/Sleep.tsx` | Also read `Hypnogram.swift` |
+| `HealthView.swift` | `pages/Recovery.tsx` | Also read `RecoveryRing.swift` |
+| `WorkoutsView.swift` | `pages/Workouts.tsx` | Also read `StrainGauge.swift` |
+| `TrendsView.swift` | `pages/Trends.tsx` | Also read `TrendChart.swift` |
+| `InsightsView.swift` | `pages/Insights.tsx` | Also read `CompareView.swift` |
+| `CoachView.swift` | `pages/Coach.tsx` | — |
+| `JournalLogCard.swift` | `pages/Journal.tsx` | — |
+| `SettingsView.swift` | `pages/Settings.tsx` | — |
+| `MetricExplorerView.swift` | `pages/Trends.tsx` (tab) | — |
+
+5. Read `noop/Packages/StrandDesign/Sources/StrandDesign/Palette.swift` for exact color values and apply them in the Tailwind theme.
+
+**Do NOT invoke `frontend-design:frontend-design` for layout decisions** — the NOOP source IS the design. Only invoke it if creating something that has no NOOP equivalent.
+
+**Skill:** invoke `tailwind-v4-shadcn` and `vercel-plugin:shadcn` for component implementation patterns. Read `noop/Strand/Screens/TodayView.swift` and `noop/Packages/StrandDesign/Sources/StrandDesign/` before writing any TSX.
 
 - [ ] **Step 1: Create useApi hook**
 
@@ -3776,25 +3897,26 @@ git commit -m "feat: add Today page with recovery/strain/sleep dashboard"
 - Create: `frontend/src/components/charts/StrainGauge.tsx`
 - Create: `frontend/src/components/charts/HRChart.tsx`
 
-**Skill:** invoke `frontend-design:frontend-design` for each page. Reference the matching `noop/Strand/Screens/*.swift` file for layout.
+**IMPORTANT: Follow the UI CLONING RULE from Task 16 header.** Do NOT design from scratch.
 
 This is a large task — implement each page one at a time. Each page follows the same pattern:
-1. Read the corresponding NOOP Swift screen for layout reference
-2. Invoke frontend-design skill
-3. Create the chart components needed
-4. Create the page
+1. **Read the NOOP Swift screen file** (`noop/Strand/Screens/<Page>View.swift`) — understand every section, every metric shown, every layout decision
+2. **Read the NOOP design components** used by that screen (`noop/Packages/StrandDesign/Sources/StrandDesign/`) — understand visual structure (rings, gauges, hypnograms, sparklines)
+3. Port the design component to React+recharts if not already ported
+4. Build the page replicating NOOP's layout faithfully
 5. Wire into App.tsx routes
-6. Verify in browser
+6. Verify in browser — compare side-by-side with NOOP screenshots if available
 7. Commit
 
-Each page commit message: `feat: add [PageName] page`
+Each page commit message: `feat: add [PageName] page (cloned from NOOP)`
 
-Full code for each page is not repeated here — the implementing agent should:
-- Use the NOOP screen as visual reference
+Full code for each page is not repeated here — the implementing agent MUST:
+- **Read the NOOP SwiftUI source first** — this is the spec, not a suggestion
+- **Clone the layout** — same sections, same metric cards, same data hierarchy, same visual weight
 - Hit the corresponding backend API endpoint
-- Use shadcn/ui Card, Badge, Separator components
-- Use recharts for charts (LineChart, BarChart, PieChart, RadialBarChart)
-- Follow the dark theme color scheme established in Task 14
+- Use shadcn/ui Card, Badge, Separator as the base primitives
+- Use recharts for charts — match NOOP's chart types (RadialBarChart for recovery ring, custom SVG for strain gauge, area chart for hypnogram, line chart for trends)
+- Use exact colors from `Palette.swift` via the Tailwind theme
 - Follow the component patterns established in Task 16
 
 ---

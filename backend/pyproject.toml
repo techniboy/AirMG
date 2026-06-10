@@ -1,0 +1,34 @@
+[project]
+name = "airmg"
+version = "0.1.0"
+description = "Local-first health dashboard for Fitbit Air"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.34",
+    "httpx>=0.28",
+    "google-auth>=2.38",
+    "google-auth-oauthlib>=1.2",
+]
+
+[project.scripts]
+airmg = "airmg.main:run"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "UP", "B", "SIM", "RUF"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.0.3",
+]

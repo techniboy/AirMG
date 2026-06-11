@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sqlite3
 from datetime import datetime
 
@@ -81,6 +82,41 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
         duration = sleep_row["end_ts"] - sleep_row["start_ts"]
         sleep_minutes = duration // 60
 
+        if sleep_row["stages_json"]:
+            try:
+                stages = json.loads(sleep_row["stages_json"])
+                for stage_entry in stages:
+                    stage_name = stage_entry.get("stage", "")
+                    stage_dur = 0
+                    if "start" in stage_entry and "end" in stage_entry:
+                        stage_dur = (stage_entry["end"] - stage_entry["start"]) // 60
+                    elif "minutes" in stage_entry:
+                        stage_dur = stage_entry["minutes"]
+                    if stage_name == "deep":
+                        deep_minutes = (deep_minutes or 0) + stage_dur
+                    elif stage_name == "rem":
+                        rem_minutes = (rem_minutes or 0) + stage_dur
+                    elif stage_name == "light":
+                        light_minutes = (light_minutes or 0) + stage_dur
+                    elif stage_name in ("wake", "awake"):
+                        wake_minutes = (wake_minutes or 0) + stage_dur
+            except (json.JSONDecodeError, TypeError):
+                pass
+
+    # Resp rate
+    resp_data = get_samples_range(conn, "resp_rate", start_ts, end_ts)
+    resp_rate = None
+    if resp_data:
+        resp_rate = round(sum(s["value"] for s in resp_data) / len(resp_data), 1)
+
+    # Calories from workouts
+    workout_rows = conn.execute(
+        "SELECT calories FROM workouts WHERE start_ts >= ? AND start_ts < ?",
+        (start_ts, end_ts),
+    ).fetchall()
+    cal_vals = [r["calories"] for r in workout_rows if r["calories"] is not None]
+    calories = round(sum(cal_vals)) if cal_vals else None
+
     # Update baselines
     hrv_baseline = _baseline_from_db(conn, "hrv")
     hrv_baseline = Baselines.update(hrv_baseline, nightly_hrv, Baselines.HRV_CFG)
@@ -123,11 +159,13 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
             "sleep_performance": sleep_perf,
             "hrv_rmssd": nightly_hrv,
             "resting_hr": rhr_val,
+            "resp_rate": resp_rate,
             "sleep_minutes": sleep_minutes,
             "deep_minutes": deep_minutes,
             "rem_minutes": rem_minutes,
             "light_minutes": light_minutes,
             "wake_minutes": wake_minutes,
             "steps": steps,
+            "calories": calories,
         },
     )

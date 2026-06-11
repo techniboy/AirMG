@@ -1,20 +1,18 @@
 # backend/src/airmg/config.py
 from pathlib import Path
 
+REPO_ROOT = Path(__file__).resolve().parents[3]
 DATA_DIR = Path.home() / ".airmg"
 DB_PATH = DATA_DIR / "airmg.db"
 TOKENS_PATH = DATA_DIR / "tokens.json"
-CLIENT_SECRETS_PATH = DATA_DIR / "client_secret.json"
+CLIENT_SECRETS_PATH = REPO_ROOT / "client_secret.json"
 
 GOOGLE_HEALTH_BASE = "https://health.googleapis.com/v4"
 GOOGLE_HEALTH_SCOPES = [
-    "https://www.googleapis.com/auth/health.body.read",
-    "https://www.googleapis.com/auth/health.heart_rate.read",
-    "https://www.googleapis.com/auth/health.sleep.read",
-    "https://www.googleapis.com/auth/health.activity.read",
-    "https://www.googleapis.com/auth/health.blood_oxygen.read",
-    "https://www.googleapis.com/auth/health.respiratory_rate.read",
-    "https://www.googleapis.com/auth/health.body_temperature.read",
+    "https://www.googleapis.com/auth/googlehealth.activity_and_fitness.readonly",
+    "https://www.googleapis.com/auth/googlehealth.health_metrics_and_measurements.readonly",
+    "https://www.googleapis.com/auth/googlehealth.sleep.readonly",
+    "https://www.googleapis.com/auth/googlehealth.profile.readonly",
 ]
 
 BACKEND_PORT = 8000

@@ -15,7 +15,7 @@ def login():
 
 @router.get("/callback")
 def callback(code: str, state: str | None = None):
-    creds_data = exchange_code(code)
+    creds_data = exchange_code(code, state)
     save_credentials(creds_data)
     return RedirectResponse("http://localhost:5173?auth=success")
 

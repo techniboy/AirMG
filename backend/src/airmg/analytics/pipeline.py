@@ -67,6 +67,14 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
 
     if sleep_row:
         resting_hr = sleep_row["resting_hr"]
+        if not resting_hr:
+            sleep_hr = get_samples_range(
+                conn, "hr", sleep_row["start_ts"], sleep_row["end_ts"]
+            )
+            if sleep_hr:
+                values = sorted(s["value"] for s in sleep_hr)
+                p5_idx = max(0, len(values) * 5 // 100)
+                resting_hr = round(values[p5_idx])
         sleep_perf = sleep_row["efficiency"]
         if sleep_row["avg_hrv"] and nightly_hrv is None:
             nightly_hrv = sleep_row["avg_hrv"]

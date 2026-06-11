@@ -1,8 +1,18 @@
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { workoutsAtom } from "../atoms/api";
+import { workoutsAtom, workoutsRangeAtom, workoutsSummaryAtom } from "../atoms/api";
+import { StatTile } from "../components/shared/StatTile";
+import { HRZonesBar } from "../components/charts/HRZonesBar";
 import { strainColor } from "../lib/colors";
+
+const RANGES = [
+	{ key: "7d", label: "7D" },
+	{ key: "30d", label: "30D" },
+	{ key: "90d", label: "90D" },
+	{ key: "1y", label: "1Y" },
+	{ key: "all", label: "ALL" },
+] as const;
 
 function formatDuration(startTs: number, endTs: number): string {
 	const totalSec = endTs - startTs;
@@ -11,6 +21,11 @@ function formatDuration(startTs: number, endTs: number): string {
 	const m = Math.floor((totalSec % 3600) / 60);
 	if (h > 0) return `${h}h ${m}m`;
 	return `${m}m`;
+}
+
+function formatTotalTime(mins: number): string {
+	if (mins >= 60) return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+	return `${mins}m`;
 }
 
 function formatDate(ts: number): string {
@@ -30,7 +45,16 @@ function formatTime(ts: number): string {
 
 export default function Workouts() {
 	const { data, isPending, error } = useAtomValue(workoutsAtom);
-	const workouts = data?.workouts ?? [];
+	const selectedRange = useAtomValue(workoutsRangeAtom);
+	const setRange = useSetAtom(workoutsRangeAtom);
+	const { data: summary } = useAtomValue(workoutsSummaryAtom);
+
+	const allWorkouts = data?.workouts ?? [];
+	const rangeDays = { "7d": 7, "30d": 30, "90d": 90, "1y": 365, all: 99999 }[selectedRange];
+	const cutoffTs = Math.floor(Date.now() / 1000) - rangeDays * 86400;
+	const workouts = allWorkouts.filter((w) => w.start_ts >= cutoffTs);
+
+	const mostActive = summary?.sport_breakdown?.[0]?.type ?? "--";
 
 	return (
 		<div className="mx-auto max-w-4xl space-y-6">
@@ -43,12 +67,74 @@ export default function Workouts() {
 				)}
 			</div>
 
+			{/* Range filter */}
+			<div className="flex gap-2">
+				{RANGES.map((r) => (
+					<button
+						key={r.key}
+						onClick={() => setRange(r.key)}
+						className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+							selectedRange === r.key
+								? "bg-accent-muted text-accent"
+								: "text-text-secondary hover:bg-surface-overlay hover:text-text-primary"
+						}`}
+					>
+						{r.label}
+					</button>
+				))}
+			</div>
+
 			{isPending && <div className="text-text-secondary">Loading…</div>}
 			{error && <div className="text-sm text-status-critical">{String(error)}</div>}
 
+			{/* Summary tiles */}
+			{summary && (
+				<div className="grid grid-cols-[repeat(auto-fill,minmax(168px,1fr))] gap-2">
+					<StatTile label="Sessions" value={String(summary.count)} color="text-accent" />
+					<StatTile label="Total Time" value={formatTotalTime(summary.total_minutes)} color="text-metric-purple" />
+					<StatTile label="Calories" value={summary.total_calories.toLocaleString()} color="text-metric-amber" />
+					<StatTile label="Most Active" value={mostActive} color="text-text-primary" />
+				</div>
+			)}
+
+			{/* Sport breakdown */}
+			{summary && summary.sport_breakdown.length > 0 && (
+				<div>
+					<div className="mb-3 text-[11px] uppercase tracking-widest text-text-tertiary">
+						Sport Breakdown
+					</div>
+					<div className="grid grid-cols-[repeat(auto-fill,minmax(168px,1fr))] gap-2">
+						{summary.sport_breakdown.map((s) => (
+							<Card key={s.type} className="border-hairline bg-surface-raised p-3 space-y-1">
+								<div className="flex items-center justify-between">
+									<span className="font-semibold text-sm text-text-primary">{s.type}</span>
+									<span className="text-xs text-text-tertiary">{s.count}×</span>
+								</div>
+								<div className="text-xs text-text-tertiary">
+									{formatTotalTime(s.minutes)}
+									{s.avg_strain > 0 && ` · ${s.avg_strain.toFixed(1)} strain`}
+									{s.avg_hr > 0 && ` · ${s.avg_hr} bpm`}
+								</div>
+							</Card>
+						))}
+					</div>
+				</div>
+			)}
+
+			{/* HR Zones */}
+			{summary && Object.values(summary.hr_zones).some((v) => v > 0) && (
+				<Card className="border-hairline bg-surface-raised p-4 space-y-2">
+					<div className="text-[11px] uppercase tracking-widest text-text-tertiary">
+						HR Zones
+					</div>
+					<HRZonesBar zones={summary.hr_zones} />
+				</Card>
+			)}
+
+			{/* All sessions */}
 			{!isPending && workouts.length === 0 && (
 				<Card className="border-hairline bg-surface-raised p-8 text-center text-text-tertiary">
-					No workouts yet. Sync your data to bring in sessions.
+					No workouts in this range.
 				</Card>
 			)}
 

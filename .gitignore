@@ -1,0 +1,9 @@
+client_secret.json
+tokens.json
+pkce_verifier.json
+*.db
+__pycache__/
+.venv/
+node_modules/
+dist/
+.env

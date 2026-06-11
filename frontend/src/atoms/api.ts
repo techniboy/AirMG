@@ -2,12 +2,18 @@ import { atom } from "jotai";
 import { atomWithQuery } from "jotai-tanstack-query";
 import { api } from "../api/client";
 import type {
+	BaselinesResponse,
+	BehaviorEffect,
 	CorrelationResult,
 	DailyMetrics,
+	HRTrendData,
+	ReadinessResult,
 	Recommendation,
 	SleepSession,
+	SparklineData,
 	StageSegment,
 	Workout,
+	WorkoutsSummary,
 } from "../lib/types";
 
 // ---------------------------------------------------------------------------
@@ -41,7 +47,13 @@ export const weekMetricsAtom = atomWithQuery(() => ({
 // Sleep
 // ---------------------------------------------------------------------------
 
-export interface SleepApiResponse extends SleepSession {
+export interface SleepApiResponse {
+	id: number;
+	start_ts: number;
+	end_ts: number;
+	efficiency: number | null;
+	resting_hr: number | null;
+	avg_hrv: number | null;
 	status?: string;
 	sleep_minutes?: number;
 	deep_minutes?: number;
@@ -107,21 +119,23 @@ export const workoutsAtom = atomWithQuery(() => ({
 // Trends
 // ---------------------------------------------------------------------------
 
-export const trendsRangeAtom = atom<"7d" | "30d" | "90d">("30d");
+export const trendsRangeAtom = atom<"7d" | "30d" | "90d" | "6m" | "1y" | "all">("30d");
 export const trendsMetricAtom = atom<string>("recovery");
 
 export const trendsAtom = atomWithQuery((get) => {
-	const rangeDays = { "7d": 7, "30d": 30, "90d": 90 }[get(trendsRangeAtom)];
+	const rangeMap: Record<string, number> = {
+		"7d": 7, "30d": 30, "90d": 90, "6m": 180, "1y": 365, all: 3650,
+	};
+	const rangeDays = rangeMap[get(trendsRangeAtom)] ?? 30;
 	const d = new Date();
 	d.setDate(d.getDate() - rangeDays + 1);
 	const start = d.toISOString().slice(0, 10);
 	const end = todayStr();
-	const metric = get(trendsMetricAtom);
 	return {
-		queryKey: ["trends", start, end, metric],
+		queryKey: ["trends", start, end],
 		queryFn: () =>
 			api<{ days: DailyMetrics[] }>(
-				`/api/trends?start=${start}&end=${end}&metrics=${metric}`,
+				`/api/trends?start=${start}&end=${end}&metrics=recovery,strain,hrv_rmssd,resting_hr,sleep_minutes,sleep_performance`,
 			),
 	};
 });
@@ -195,6 +209,108 @@ export const settingsAtom = atomWithQuery(() => ({
 	queryKey: ["settings"],
 	queryFn: () => api<ProfileSettings>("/api/settings"),
 }));
+
+// ---------------------------------------------------------------------------
+// Sparklines
+// ---------------------------------------------------------------------------
+
+export const sparklinesAtom = atomWithQuery(() => ({
+	queryKey: ["sparklines"],
+	queryFn: () => api<SparklineData>("/api/sparklines?days=14"),
+}));
+
+// ---------------------------------------------------------------------------
+// Readiness
+// ---------------------------------------------------------------------------
+
+export const readinessAtom = atomWithQuery(() => ({
+	queryKey: ["readiness"],
+	queryFn: () => api<ReadinessResult>("/api/readiness"),
+}));
+
+// ---------------------------------------------------------------------------
+// HR Trend
+// ---------------------------------------------------------------------------
+
+export const hrTrendAtom = atomWithQuery(() => ({
+	queryKey: ["hr-trend"],
+	queryFn: () => api<HRTrendData>("/api/hr-trend"),
+}));
+
+// ---------------------------------------------------------------------------
+// Baselines
+// ---------------------------------------------------------------------------
+
+export const baselinesAtom = atomWithQuery(() => ({
+	queryKey: ["baselines"],
+	queryFn: () => api<BaselinesResponse>("/api/baselines"),
+}));
+
+// ---------------------------------------------------------------------------
+// Behaviour Effects
+// ---------------------------------------------------------------------------
+
+export const behaviourOutcomeAtom = atom<"recovery" | "hrv" | "sleep_performance" | "resting_hr">("recovery");
+
+export const behaviourEffectsAtom = atomWithQuery((get) => ({
+	queryKey: ["behaviour-effects", get(behaviourOutcomeAtom)],
+	queryFn: () =>
+		api<{ effects: BehaviorEffect[] }>(
+			`/api/insights/behaviours?outcome=${get(behaviourOutcomeAtom)}`,
+		),
+}));
+
+// ---------------------------------------------------------------------------
+// Workouts Range + Summary
+// ---------------------------------------------------------------------------
+
+export const workoutsRangeAtom = atom<"7d" | "30d" | "90d" | "1y" | "all">("30d");
+
+export const workoutsSummaryAtom = atomWithQuery((get) => {
+	const days = { "7d": 7, "30d": 30, "90d": 90, "1y": 365, all: 9999 }[
+		get(workoutsRangeAtom)
+	];
+	return {
+		queryKey: ["workouts-summary", days],
+		queryFn: () => api<WorkoutsSummary>(`/api/workouts/summary?days=${days}`),
+	};
+});
+
+// ---------------------------------------------------------------------------
+// Sleep Trend (dedicated 30-day atom)
+// ---------------------------------------------------------------------------
+
+export const sleepTrendAtom = atomWithQuery(() => {
+	const d = new Date();
+	d.setDate(d.getDate() - 29);
+	const start = d.toISOString().slice(0, 10);
+	const end = new Date().toISOString().slice(0, 10);
+	return {
+		queryKey: ["sleep-trend"],
+		queryFn: () =>
+			api<{ days: DailyMetrics[] }>(
+				`/api/trends?start=${start}&end=${end}&metrics=sleep_minutes`,
+			),
+	};
+});
+
+// ---------------------------------------------------------------------------
+// Year Recovery (heatmap)
+// ---------------------------------------------------------------------------
+
+export const yearRecoveryAtom = atomWithQuery(() => {
+	const d = new Date();
+	d.setDate(d.getDate() - 364);
+	const start = d.toISOString().slice(0, 10);
+	const end = new Date().toISOString().slice(0, 10);
+	return {
+		queryKey: ["year-recovery"],
+		queryFn: () =>
+			api<{ days: DailyMetrics[] }>(
+				`/api/trends?start=${start}&end=${end}&metrics=recovery`,
+			),
+	};
+});
 
 // ---------------------------------------------------------------------------
 // Auth

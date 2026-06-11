@@ -13,6 +13,7 @@ from airmg.routes.explorer import router as explorer_router
 from airmg.routes.export import router as export_router
 from airmg.routes.insights import router as insights_router
 from airmg.routes.journal import router as journal_router
+from airmg.routes.readiness import router as readiness_router
 from airmg.routes.recovery import router as recovery_router
 from airmg.routes.settings import router as settings_router
 from airmg.routes.sleep import router as sleep_router
@@ -44,6 +45,7 @@ app.include_router(auth_router)
 app.include_router(sync_router)
 app.include_router(dashboard_router)
 app.include_router(sleep_router)
+app.include_router(readiness_router)
 app.include_router(recovery_router)
 app.include_router(strain_router)
 app.include_router(workouts_router)

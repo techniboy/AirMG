@@ -62,16 +62,12 @@ class CorrelationEngine:
         return Correlation(r=r, n=n, p_approx=p_approx, slope=slope, intercept=intercept)
 
     @staticmethod
-    def align_by_day(
-        x: dict[str, float], y: dict[str, float]
-    ) -> list[tuple[float, float]]:
+    def align_by_day(x: dict[str, float], y: dict[str, float]) -> list[tuple[float, float]]:
         common = sorted(set(x.keys()) & set(y.keys()))
         return [(x[day], y[day]) for day in common]
 
     @staticmethod
-    def lagged(
-        x: dict[str, float], y: dict[str, float], lag_days: int = 1
-    ) -> Correlation | None:
+    def lagged(x: dict[str, float], y: dict[str, float], lag_days: int = 1) -> Correlation | None:
         pairs: list[tuple[float, float]] = []
         for day_str, x_val in sorted(x.items()):
             d = datetime.strptime(day_str, "%Y-%m-%d")

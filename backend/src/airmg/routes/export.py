@@ -1,13 +1,17 @@
 from __future__ import annotations
+
 import csv
 import io
+
 from fastapi import APIRouter, Query
 from fastapi.responses import StreamingResponse
+
 from airmg.config import DB_PATH
 from airmg.store.db import get_connection
 from airmg.store.reads import get_daily_metrics_range
 
 router = APIRouter(prefix="/api", tags=["export"])
+
 
 @router.get("/export/csv")
 def export_csv(

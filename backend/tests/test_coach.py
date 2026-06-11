@@ -1,4 +1,4 @@
-from airmg.coach.engine import CoachEngine, Recommendation
+from airmg.coach.engine import CoachEngine
 from airmg.journal.catalog import JournalCatalog
 
 

@@ -48,13 +48,15 @@ def build_zones(age: int | None = None, manual_max_hr: float | None = None) -> H
 
     zones = []
     for num, lo_pct, hi_pct in ZONE_BANDS:
-        zones.append(HRZone(
-            number=num,
-            lower=round(max_hr * lo_pct, 1),
-            upper=round(max_hr * hi_pct, 1),
-            lower_pct=lo_pct,
-            upper_pct=hi_pct,
-        ))
+        zones.append(
+            HRZone(
+                number=num,
+                lower=round(max_hr * lo_pct, 1),
+                upper=round(max_hr * hi_pct, 1),
+                lower_pct=lo_pct,
+                upper_pct=hi_pct,
+            )
+        )
     return HRZoneSet(zones=zones, max_hr=max_hr, source=source)
 
 

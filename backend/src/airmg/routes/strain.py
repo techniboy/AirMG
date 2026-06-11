@@ -1,11 +1,15 @@
 from __future__ import annotations
+
 from datetime import date, timedelta
+
 from fastapi import APIRouter
+
 from airmg.config import DB_PATH
 from airmg.store.db import get_connection
 from airmg.store.reads import get_daily_metrics_range
 
 router = APIRouter(prefix="/api/strain", tags=["strain"])
+
 
 @router.get("/{day}")
 def strain_detail(day: str):

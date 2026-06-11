@@ -1,12 +1,16 @@
 from __future__ import annotations
+
 from datetime import date, timedelta
+
 from fastapi import APIRouter
+
 from airmg.analytics.correlation import CorrelationEngine
 from airmg.config import DB_PATH
 from airmg.store.db import get_connection
 from airmg.store.reads import get_daily_metrics_range
 
 router = APIRouter(prefix="/api/insights", tags=["insights"])
+
 
 @router.get("")
 def insights():
@@ -30,10 +34,15 @@ def insights():
                 pairs = CorrelationEngine.align_by_day(x, y)
                 result = CorrelationEngine.pearson(pairs)
             if result:
-                correlations.append({
-                    "x": x_key, "y": y_key, "lag": lag,
-                    "r": round(result.r, 3), "n": result.n,
-                    "p": round(result.p_approx, 4),
-                })
+                correlations.append(
+                    {
+                        "x": x_key,
+                        "y": y_key,
+                        "lag": lag,
+                        "r": round(result.r, 3),
+                        "n": result.n,
+                        "p": round(result.p_approx, 4),
+                    }
+                )
     conn.close()
     return {"correlations": correlations}

@@ -1,11 +1,15 @@
 from __future__ import annotations
+
 import json
 from datetime import datetime
+
 from fastapi import APIRouter
+
 from airmg.config import DB_PATH
 from airmg.store.db import get_connection
 
 router = APIRouter(prefix="/api/sleep", tags=["sleep"])
+
 
 @router.get("/{day}")
 def sleep_detail(day: str):
@@ -13,7 +17,9 @@ def sleep_detail(day: str):
     start_ts = int(datetime.strptime(day, "%Y-%m-%d").timestamp())
     end_ts = start_ts + 86400
     row = conn.execute(
-        "SELECT * FROM sleep_sessions WHERE start_ts >= ? AND start_ts < ? ORDER BY start_ts DESC LIMIT 1",
+        "SELECT * FROM sleep_sessions"
+        " WHERE start_ts >= ? AND start_ts < ?"
+        " ORDER BY start_ts DESC LIMIT 1",
         (start_ts - 43200, end_ts),
     ).fetchone()
     daily = conn.execute("SELECT * FROM daily_metrics WHERE day = ?", (day,)).fetchone()

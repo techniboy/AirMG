@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+from typing import ClassVar
+
 
 class JournalCatalog:
-    STARTER_QUESTIONS: list[str] = [
+    STARTER_QUESTIONS: ClassVar[list[str]] = [
         "Did you drink any alcohol?",
         "Did you have caffeine late in the day?",
         "Did you view a screen in bed?",

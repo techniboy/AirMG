@@ -1,7 +1,10 @@
 from __future__ import annotations
+
 import time
 from datetime import date, datetime, timedelta
+
 from fastapi import APIRouter
+
 from airmg.config import DB_PATH
 from airmg.store.db import get_connection
 from airmg.store.reads import get_sync_state
@@ -19,6 +22,7 @@ DATA_TYPES = {
     "workouts": ("com.google.activity.segment", map_workouts),
 }
 DEFAULT_LOOKBACK_DAYS = 90
+
 
 @router.post("/start")
 def start_sync():
@@ -45,9 +49,11 @@ def start_sync():
         results[key] = len(mapped)
     # compute daily metrics after sync
     from airmg.analytics.pipeline import compute_daily_metrics
+
     compute_daily_metrics(conn, date.today().isoformat())
     conn.close()
     return {"synced": results}
+
 
 @router.get("/status")
 def sync_status():
@@ -56,7 +62,9 @@ def sync_status():
     for key in DATA_TYPES:
         s = get_sync_state(conn, key)
         states[key] = {
-            "last_synced": datetime.fromtimestamp(s["last_synced_ts"]).isoformat() if s and s["last_synced_ts"] else None,
+            "last_synced": datetime.fromtimestamp(s["last_synced_ts"]).isoformat()
+            if s and s["last_synced_ts"]
+            else None,
         }
     conn.close()
     return {"sync_states": states}

@@ -1,6 +1,5 @@
-import math
-from airmg.analytics.recovery import RecoveryScorer
 from airmg.analytics.baselines import BaselineState, BaselineStatus
+from airmg.analytics.recovery import RecoveryScorer
 
 
 def _make_baseline(mean: float, spread: float, n_valid: int = 14) -> BaselineState:

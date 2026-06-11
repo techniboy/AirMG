@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 from google_auth_oauthlib.flow import Flow
+
 from airmg.config import CLIENT_SECRETS_PATH, GOOGLE_HEALTH_SCOPES, OAUTH_REDIRECT_URI
+
 
 def create_flow() -> Flow:
     flow = Flow.from_client_secrets_file(
@@ -10,6 +13,7 @@ def create_flow() -> Flow:
     )
     return flow
 
+
 def get_authorization_url() -> tuple[str, str]:
     flow = create_flow()
     url, state = flow.authorization_url(
@@ -18,6 +22,7 @@ def get_authorization_url() -> tuple[str, str]:
         prompt="consent",
     )
     return url, state
+
 
 def exchange_code(code: str) -> dict:
     flow = create_flow()

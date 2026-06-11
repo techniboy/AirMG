@@ -1,11 +1,14 @@
 from __future__ import annotations
+
 from fastapi import APIRouter
+
 from airmg.coach.engine import CoachEngine
 from airmg.config import DB_PATH
 from airmg.store.db import get_connection
 from airmg.store.reads import get_today_metrics
 
 router = APIRouter(prefix="/api/coach", tags=["coach"])
+
 
 @router.get("")
 def coach():

@@ -1,12 +1,12 @@
 from airmg.analytics.baselines import (
-    MetricCfg,
-    BaselineState,
-    BaselineStatus,
     Baselines,
+    BaselineStatus,
+    MetricCfg,
 )
 
-
-HRV_CFG = MetricCfg(min_val=5.0, max_val=250.0, floor_spread=5.0, half_life_b=14.0, half_life_s=21.0)
+HRV_CFG = MetricCfg(
+    min_val=5.0, max_val=250.0, floor_spread=5.0, half_life_b=14.0, half_life_s=21.0
+)
 
 
 def test_first_night_seeds_baseline():
@@ -49,7 +49,7 @@ def test_becomes_trusted_at_14():
 
 def test_hard_outlier_rejected_after_seed():
     state = None
-    for i in range(5):
+    for _ in range(5):
         state = Baselines.update(state, 50.0, HRV_CFG)
     spread = state.spread
     outlier = state.baseline + 6 * spread  # > 5 * spread
@@ -59,7 +59,7 @@ def test_hard_outlier_rejected_after_seed():
 
 def test_winsorization_clamps():
     state = None
-    for i in range(5):
+    for _ in range(5):
         state = Baselines.update(state, 50.0, HRV_CFG)
     before = state.baseline
     clamped_val = state.baseline + 2.5 * state.spread  # within 3x, will be Winsorized

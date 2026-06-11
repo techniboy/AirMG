@@ -68,31 +68,40 @@ class RecoveryScorer:
         terms: list[tuple[float, float]] = []
 
         # HRV: higher is better
-        terms.append((
-            RecoveryScorer.z_score(hrv, hrv_baseline.baseline, hrv_baseline.spread),
-            RecoveryScorer.W_HRV,
-        ))
+        terms.append(
+            (
+                RecoveryScorer.z_score(hrv, hrv_baseline.baseline, hrv_baseline.spread),
+                RecoveryScorer.W_HRV,
+            )
+        )
 
         # RHR: lower is better → invert
         if rhr_baseline is not None:
-            terms.append((
-                RecoveryScorer.z_score(rhr_baseline.baseline, rhr, rhr_baseline.spread),
-                RecoveryScorer.W_RHR,
-            ))
+            terms.append(
+                (
+                    RecoveryScorer.z_score(rhr_baseline.baseline, rhr, rhr_baseline.spread),
+                    RecoveryScorer.W_RHR,
+                )
+            )
 
         # Resp: lower is better, optional
         if resp is not None and resp_baseline is not None:
-            terms.append((
-                RecoveryScorer.z_score(resp_baseline.baseline, resp, resp_baseline.spread),
-                RecoveryScorer.W_RESP,
-            ))
+            terms.append(
+                (
+                    RecoveryScorer.z_score(resp_baseline.baseline, resp, resp_baseline.spread),
+                    RecoveryScorer.W_RESP,
+                )
+            )
 
         # Sleep perf: centered at 0.85, no baseline
         if sleep_perf is not None:
-            terms.append((
-                (sleep_perf - RecoveryScorer.SLEEP_PERF_CENTER) / RecoveryScorer.SLEEP_PERF_SCALE,
-                RecoveryScorer.W_SLEEP,
-            ))
+            terms.append(
+                (
+                    (sleep_perf - RecoveryScorer.SLEEP_PERF_CENTER)
+                    / RecoveryScorer.SLEEP_PERF_SCALE,
+                    RecoveryScorer.W_SLEEP,
+                )
+            )
 
         if not terms:
             return None
@@ -102,5 +111,7 @@ class RecoveryScorer:
             return None
 
         z = sum(zi * wi for zi, wi in terms) / total_weight
-        score = 100.0 / (1.0 + math.exp(-RecoveryScorer.LOGISTIC_K * (z - RecoveryScorer.LOGISTIC_Z0)))
+        score = 100.0 / (
+            1.0 + math.exp(-RecoveryScorer.LOGISTIC_K * (z - RecoveryScorer.LOGISTIC_Z0))
+        )
         return max(0.0, min(100.0, score))

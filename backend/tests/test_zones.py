@@ -1,4 +1,4 @@
-from airmg.analytics.zones import HRZone, HRZoneSet, build_zones, time_in_zones
+from airmg.analytics.zones import build_zones, time_in_zones
 
 
 def test_build_zones_from_age():
@@ -15,16 +15,16 @@ def test_zone_number():
     zs = build_zones(age=30)
     assert zs.zone_number(100.0) == 1  # ~53% of 187
     assert zs.zone_number(175.0) == 5  # ~93% of 187
-    assert zs.zone_number(50.0) == 0   # below zone 1
+    assert zs.zone_number(50.0) == 0  # below zone 1
 
 
 def test_time_in_zones():
     zs = build_zones(age=30)
     samples = [
-        {"ts": 0, "value": 100},   # zone 1
-        {"ts": 1, "value": 100},   # zone 1
-        {"ts": 2, "value": 170},   # zone 4-5
-        {"ts": 3, "value": 170},   # zone 4-5
+        {"ts": 0, "value": 100},  # zone 1
+        {"ts": 1, "value": 100},  # zone 1
+        {"ts": 2, "value": 170},  # zone 4-5
+        {"ts": 3, "value": 170},  # zone 4-5
     ]
     result = time_in_zones(zs, samples)
     assert len(result) == 5

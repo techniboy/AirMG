@@ -41,9 +41,15 @@ class Baselines:
     MIN_NIGHTS_TRUST = 14
     STALE_DAYS = 14
 
-    HRV_CFG = MetricCfg(min_val=5.0, max_val=250.0, floor_spread=5.0, half_life_b=14.0, half_life_s=21.0)
-    RHR_CFG = MetricCfg(min_val=30.0, max_val=120.0, floor_spread=2.0, half_life_b=14.0, half_life_s=21.0)
-    RESP_CFG = MetricCfg(min_val=4.0, max_val=40.0, floor_spread=0.5, half_life_b=14.0, half_life_s=21.0)
+    HRV_CFG = MetricCfg(
+        min_val=5.0, max_val=250.0, floor_spread=5.0, half_life_b=14.0, half_life_s=21.0
+    )
+    RHR_CFG = MetricCfg(
+        min_val=30.0, max_val=120.0, floor_spread=2.0, half_life_b=14.0, half_life_s=21.0
+    )
+    RESP_CFG = MetricCfg(
+        min_val=4.0, max_val=40.0, floor_spread=0.5, half_life_b=14.0, half_life_s=21.0
+    )
 
     @staticmethod
     def lambda_half_life(half_life: float) -> float:

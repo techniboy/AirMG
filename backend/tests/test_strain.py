@@ -1,4 +1,3 @@
-import math
 from airmg.analytics.strain import StrainScorer
 
 

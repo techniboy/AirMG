@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from typing import ClassVar
 
 
 class StrainScorer:
@@ -12,7 +13,7 @@ class StrainScorer:
     HRMAX_MIN_SAMPLES = 600
     HRMAX_PERCENTILE = 99.5
 
-    EDWARDS_ZONES: list[tuple[float, int]] = [
+    EDWARDS_ZONES: ClassVar[list[tuple[float, int]]] = [
         (90.0, 5),
         (80.0, 4),
         (70.0, 3),

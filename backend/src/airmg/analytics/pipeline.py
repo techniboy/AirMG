@@ -1,16 +1,20 @@
 from __future__ import annotations
+
 import sqlite3
 from datetime import datetime
-from airmg.analytics.baselines import BaselineState, BaselineStatus, Baselines
+
+from airmg.analytics.baselines import Baselines, BaselineState, BaselineStatus
 from airmg.analytics.recovery import RecoveryScorer
 from airmg.analytics.strain import StrainScorer
 from airmg.store.reads import get_baseline, get_samples_range
 from airmg.store.writes import upsert_baseline, upsert_daily_metrics
 
+
 def _day_ts_range(day: str) -> tuple[int, int]:
     dt = datetime.strptime(day, "%Y-%m-%d")
     start = int(dt.timestamp())
     return start, start + 86400
+
 
 def _baseline_from_db(conn: sqlite3.Connection, metric: str) -> BaselineState | None:
     row = get_baseline(conn, metric)
@@ -24,9 +28,18 @@ def _baseline_from_db(conn: sqlite3.Connection, metric: str) -> BaselineState | 
         status=BaselineStatus(row["status"]),
     )
 
+
 def _save_baseline(conn: sqlite3.Connection, metric: str, state: BaselineState) -> None:
-    upsert_baseline(conn, metric, state.baseline, state.spread,
-                    state.n_valid, state.nights_since_update, state.status.value)
+    upsert_baseline(
+        conn,
+        metric,
+        state.baseline,
+        state.spread,
+        state.n_valid,
+        state.nights_since_update,
+        state.status.value,
+    )
+
 
 def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
     start_ts, end_ts = _day_ts_range(day)
@@ -38,7 +51,9 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
         nightly_hrv = sum(s["value"] for s in hrv_data) / len(hrv_data)
 
     sleep_row = conn.execute(
-        "SELECT * FROM sleep_sessions WHERE start_ts >= ? AND end_ts <= ? ORDER BY start_ts DESC LIMIT 1",
+        "SELECT * FROM sleep_sessions"
+        " WHERE start_ts >= ? AND end_ts <= ?"
+        " ORDER BY start_ts DESC LIMIT 1",
         (start_ts - 43200, end_ts),
     ).fetchone()
 
@@ -91,17 +106,20 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
     steps_row = conn.execute("SELECT total FROM steps WHERE day = ?", (day,)).fetchone()
     steps = steps_row["total"] if steps_row else None
 
-    upsert_daily_metrics(conn, {
-        "day": day,
-        "recovery": recovery,
-        "strain": strain_val,
-        "sleep_performance": sleep_perf,
-        "hrv_rmssd": nightly_hrv,
-        "resting_hr": rhr_val,
-        "sleep_minutes": sleep_minutes,
-        "deep_minutes": deep_minutes,
-        "rem_minutes": rem_minutes,
-        "light_minutes": light_minutes,
-        "wake_minutes": wake_minutes,
-        "steps": steps,
-    })
+    upsert_daily_metrics(
+        conn,
+        {
+            "day": day,
+            "recovery": recovery,
+            "strain": strain_val,
+            "sleep_performance": sleep_perf,
+            "hrv_rmssd": nightly_hrv,
+            "resting_hr": rhr_val,
+            "sleep_minutes": sleep_minutes,
+            "deep_minutes": deep_minutes,
+            "rem_minutes": rem_minutes,
+            "light_minutes": light_minutes,
+            "wake_minutes": wake_minutes,
+            "steps": steps,
+        },
+    )

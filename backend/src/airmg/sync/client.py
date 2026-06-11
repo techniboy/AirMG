@@ -1,9 +1,12 @@
 from __future__ import annotations
+
 import httpx
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+
 from airmg.auth.tokens import load_credentials, save_credentials
 from airmg.config import GOOGLE_HEALTH_BASE
+
 
 def _get_credentials() -> Credentials:
     creds_data = load_credentials()
@@ -18,15 +21,18 @@ def _get_credentials() -> Credentials:
     )
     if creds.expired and creds.refresh_token:
         creds.refresh(Request())
-        save_credentials({
-            "token": creds.token,
-            "refresh_token": creds.refresh_token,
-            "token_uri": creds.token_uri,
-            "client_id": creds.client_id,
-            "client_secret": creds.client_secret,
-            "scopes": list(creds.scopes or []),
-        })
+        save_credentials(
+            {
+                "token": creds.token,
+                "refresh_token": creds.refresh_token,
+                "token_uri": creds.token_uri,
+                "client_id": creds.client_id,
+                "client_secret": creds.client_secret,
+                "scopes": list(creds.scopes or []),
+            }
+        )
     return creds
+
 
 def fetch_data_points(data_type: str, start_ts: int, end_ts: int) -> list[dict]:
     creds = _get_credentials()

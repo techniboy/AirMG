@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { useAtomValue, useSetAtom } from "jotai";
 import { Card } from "@/components/ui/card";
 import { TrendLine } from "../components/charts/TrendLine";
-import { trendsAtom, trendsRangeAtom, trendsMetricAtom } from "../atoms/api";
+import { YearHeatStrip } from "../components/charts/YearHeatStrip";
+import { trendsAtom, trendsRangeAtom, trendsMetricAtom, yearRecoveryAtom } from "../atoms/api";
 
 type MetricKey =
 	| "recovery"
@@ -12,7 +13,7 @@ type MetricKey =
 	| "sleep_performance"
 	| "sleep_minutes"
 	| "resp_rate";
-type RangeKey = "7d" | "30d" | "90d";
+type RangeKey = "7d" | "30d" | "90d" | "6m" | "1y" | "all";
 
 const METRICS: Array<{
 	key: MetricKey;
@@ -53,10 +54,13 @@ const METRICS: Array<{
 	{ key: "resp_rate", label: "Resp Rate", color: "#2FC7FF", unit: "rpm" },
 ];
 
-const RANGES: Array<{ key: RangeKey; label: string; days: number }> = [
-	{ key: "7d", label: "7D", days: 7 },
-	{ key: "30d", label: "30D", days: 30 },
-	{ key: "90d", label: "90D", days: 90 },
+const RANGES: Array<{ key: RangeKey; label: string }> = [
+	{ key: "7d", label: "7D" },
+	{ key: "30d", label: "30D" },
+	{ key: "90d", label: "90D" },
+	{ key: "6m", label: "6M" },
+	{ key: "1y", label: "1Y" },
+	{ key: "all", label: "ALL" },
 ];
 
 export default function Trends() {
@@ -66,6 +70,7 @@ export default function Trends() {
 	const setSelectedRange = useSetAtom(trendsRangeAtom);
 
 	const { data, isPending, error } = useAtomValue(trendsAtom);
+	const { data: yearData } = useAtomValue(yearRecoveryAtom);
 
 	const metricMeta = METRICS.find((m) => m.key === selectedMetric)!;
 
@@ -90,6 +95,16 @@ export default function Trends() {
 		validPoints.length > 0
 			? Math.max(...validPoints.map((p) => p.value!))
 			: null;
+
+	useEffect(() => {
+		if (!isPending && trendPoints.length === 0) {
+			const rangeOrder: RangeKey[] = ["7d", "30d", "90d", "6m", "1y", "all"];
+			const idx = rangeOrder.indexOf(selectedRange);
+			if (idx < rangeOrder.length - 1) {
+				setSelectedRange(rangeOrder[idx + 1]);
+			}
+		}
+	}, [isPending, trendPoints.length, selectedRange, setSelectedRange]);
 
 	return (
 		<div className="mx-auto max-w-4xl space-y-6">
@@ -196,6 +211,37 @@ export default function Trends() {
 					</div>
 				)}
 			</Card>
+
+			{/* Supporting metrics */}
+			<div className="grid gap-3 sm:grid-cols-3">
+				{[
+					{ key: "hrv_rmssd", label: "HRV", color: "#A879FF", unit: "ms" },
+					{ key: "resting_hr", label: "Resting HR", color: "#FF4F73", unit: "bpm" },
+					{ key: "strain", label: "Strain", color: "#E8743B", unit: "" },
+				]
+					.filter((m) => m.key !== selectedMetric)
+					.map((m) => {
+						const pts =
+							data?.days?.map((d) => ({
+								day: d.day,
+								value: d[m.key as keyof typeof d] as number | null,
+							})) ?? [];
+						return (
+							<Card key={m.key} className="border-hairline bg-surface-raised p-3 space-y-1">
+								<div className="text-xs text-text-tertiary">{m.label}</div>
+								{pts.length >= 2 && <TrendLine data={pts} color={m.color} />}
+							</Card>
+						);
+					})}
+			</div>
+
+			{/* Year heat strip */}
+			{yearData?.days && yearData.days.length > 0 && (
+				<Card className="border-hairline bg-surface-raised p-4 space-y-2">
+					<div className="text-sm font-medium text-text-secondary">Recovery · Past Year</div>
+					<YearHeatStrip data={yearData.days.map((d) => ({ day: d.day, value: d.recovery }))} />
+				</Card>
+			)}
 		</div>
 	);
 }

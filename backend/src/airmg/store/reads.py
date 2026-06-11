@@ -60,6 +60,14 @@ def get_journal_entries(conn: sqlite3.Connection, day: str) -> list[dict]:
     return [dict(r) for r in rows]
 
 
+def get_journal_entries_range(conn: sqlite3.Connection, start_day: str, end_day: str) -> list[dict]:
+    rows = conn.execute(
+        "SELECT * FROM journal_entries WHERE day >= ? AND day <= ? ORDER BY day",
+        (start_day, end_day),
+    ).fetchall()
+    return [dict(r) for r in rows]
+
+
 def get_steps_range(conn: sqlite3.Connection, start_day: str, end_day: str) -> list[dict]:
     rows = conn.execute(
         "SELECT * FROM steps WHERE day >= ? AND day <= ? ORDER BY day", (start_day, end_day)

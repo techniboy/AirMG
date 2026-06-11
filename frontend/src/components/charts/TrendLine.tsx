@@ -23,7 +23,7 @@ interface TrendLineProps {
 }
 
 function shortDay(day: string): string {
-	// day is yyyy-MM-dd → return "Jun 1"
+	if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return day;
 	const d = new Date(`${day}T00:00:00`);
 	return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }

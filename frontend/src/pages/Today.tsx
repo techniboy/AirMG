@@ -1,6 +1,7 @@
 import { useAtomValue } from "jotai";
 import { Card } from "@/components/ui/card";
 import {
+  controlCenterDayAtom,
   todayMetricsAtom,
   sparklinesAtom,
   readinessAtom,
@@ -9,6 +10,7 @@ import {
 } from "../atoms/api";
 import { RecoveryGauge } from "../components/charts/RecoveryGauge";
 import { TrendLine } from "../components/charts/TrendLine";
+import { DateNav } from "../components/shared/DateNav";
 import { ReadinessCard } from "../components/shared/ReadinessCard";
 import { StatTile } from "../components/shared/StatTile";
 import { SynthesisCard } from "../components/shared/SynthesisCard";
@@ -81,11 +83,13 @@ export default function Today() {
   const { data: hrTrend } = useAtomValue(hrTrendAtom);
   const { data: workoutsData } = useAtomValue(workoutsAtom);
 
+  const selectedDay = useAtomValue(controlCenterDayAtom);
   const workouts = workoutsData?.workouts?.slice(0, 6) ?? [];
 
   if (isPending) return <div className="text-text-secondary">Loading...</div>;
 
   const rec = today?.recovery ?? null;
+  const selectedDate = new Date(`${selectedDay}T00:00:00`);
 
   // Build HR trend points — use time string as "day" key for TrendLine
   const hrPoints =
@@ -104,15 +108,14 @@ export default function Today() {
         <div>
           <h1 className="text-2xl font-bold">Control Center</h1>
           <p className="text-sm text-text-secondary mt-0.5">
-            {new Date().toLocaleDateString("en-US", {
+            {selectedDate.toLocaleDateString("en-US", {
               weekday: "long",
               day: "numeric",
               month: "long",
             })}
           </p>
         </div>
-        <span className="text-sm text-text-tertiary">{greetingWord()}</span>
-      </div>
+        <DateNav dayAtom={controlCenterDayAtom} />
 
       {/* Hero — RecoveryGauge + SynthesisCard */}
       <div className="flex gap-4">

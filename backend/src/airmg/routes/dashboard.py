@@ -12,12 +12,16 @@ router = APIRouter(prefix="/api", tags=["dashboard"])
 
 
 @router.get("/today")
-def today():
+def today(day: str = Query(default=None, description="yyyy-MM-dd")):
     conn = get_connection(DB_PATH)
-    metrics = get_today_metrics(conn)
+    if day is None:
+        metrics = get_today_metrics(conn)
+    else:
+        row = conn.execute("SELECT * FROM daily_metrics WHERE day = ?", (day,)).fetchone()
+        metrics = dict(row) if row else None
     conn.close()
     if metrics is None:
-        return {"status": "no_data", "message": "No data for today. Sync first."}
+        return {"status": "no_data", "message": "No data for this day."}
     return metrics
 
 
@@ -39,10 +43,15 @@ SPARKLINE_METRICS = [
 
 
 @router.get("/sparklines")
-def sparklines(days: int = Query(14, ge=1, le=90)):
+def sparklines(days: int = Query(14, ge=1, le=90), end_day: str = Query(default=None)):
     conn = get_connection(DB_PATH)
-    end = date.today().isoformat()
-    start = (date.today() - timedelta(days=days - 1)).isoformat()
+    if end_day:
+        end = end_day
+        end_dt = datetime.strptime(end_day, "%Y-%m-%d").date()
+    else:
+        end = date.today().isoformat()
+        end_dt = date.today()
+    start = (end_dt - timedelta(days=days - 1)).isoformat()
     rows = get_daily_metrics_range(conn, start, end)
     conn.close()
     result: dict[str, list] = {m: [] for m in SPARKLINE_METRICS}

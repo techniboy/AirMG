@@ -24,6 +24,7 @@ function todayStr() {
 	return new Date().toISOString().slice(0, 10);
 }
 
+export const controlCenterDayAtom = atom(todayStr());
 export const sleepDayAtom = atom(todayStr());
 export const recoveryDayAtom = atom(todayStr());
 export const strainDayAtom = atom(todayStr());
@@ -33,10 +34,13 @@ export const journalDayAtom = atom(todayStr());
 // Dashboard
 // ---------------------------------------------------------------------------
 
-export const todayMetricsAtom = atomWithQuery(() => ({
-	queryKey: ["today"],
-	queryFn: () => api<DailyMetrics>("/api/today"),
-}));
+export const todayMetricsAtom = atomWithQuery((get) => {
+	const day = get(controlCenterDayAtom);
+	return {
+		queryKey: ["today", day],
+		queryFn: () => api<DailyMetrics>(`/api/today?day=${day}`),
+	};
+});
 
 export const weekMetricsAtom = atomWithQuery(() => ({
 	queryKey: ["week"],
@@ -214,10 +218,13 @@ export const settingsAtom = atomWithQuery(() => ({
 // Sparklines
 // ---------------------------------------------------------------------------
 
-export const sparklinesAtom = atomWithQuery(() => ({
-	queryKey: ["sparklines"],
-	queryFn: () => api<SparklineData>("/api/sparklines?days=14"),
-}));
+export const sparklinesAtom = atomWithQuery((get) => {
+	const day = get(controlCenterDayAtom);
+	return {
+		queryKey: ["sparklines", day],
+		queryFn: () => api<SparklineData>(`/api/sparklines?days=14&end_day=${day}`),
+	};
+});
 
 // ---------------------------------------------------------------------------
 // Readiness
@@ -232,10 +239,13 @@ export const readinessAtom = atomWithQuery(() => ({
 // HR Trend
 // ---------------------------------------------------------------------------
 
-export const hrTrendAtom = atomWithQuery(() => ({
-	queryKey: ["hr-trend"],
-	queryFn: () => api<HRTrendData>("/api/hr-trend"),
-}));
+export const hrTrendAtom = atomWithQuery((get) => {
+	const day = get(controlCenterDayAtom);
+	return {
+		queryKey: ["hr-trend", day],
+		queryFn: () => api<HRTrendData>(`/api/hr-trend?day=${day}`),
+	};
+});
 
 // ---------------------------------------------------------------------------
 // Baselines

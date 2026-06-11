@@ -21,6 +21,7 @@ from airmg.routes.strain import router as strain_router
 from airmg.routes.sync import router as sync_router
 from airmg.routes.trends import router as trends_router
 from airmg.routes.workouts import router as workouts_router
+from airmg.routes.baselines_route import router as baselines_router
 from airmg.store.db import init_db
 
 
@@ -56,6 +57,7 @@ app.include_router(journal_router)
 app.include_router(settings_router)
 app.include_router(explorer_router)
 app.include_router(export_router)
+app.include_router(baselines_router)
 
 
 @app.get("/health")

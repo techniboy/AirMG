@@ -116,6 +116,7 @@ export default function Today() {
           </p>
         </div>
         <DateNav dayAtom={controlCenterDayAtom} />
+      </div>
 
       {/* Hero — RecoveryGauge + SynthesisCard */}
       <div className="flex gap-4">

@@ -1,99 +1,46 @@
-import { useState } from "react";
+import { useAtomValue } from "jotai";
 import { Card } from "@/components/ui/card";
+import { recoveryDayAtom, recoveryDetailAtom, weekMetricsAtom } from "../atoms/api";
 import { RecoveryGauge } from "../components/charts/RecoveryGauge";
 import { TrendLine } from "../components/charts/TrendLine";
+import { DateNav } from "../components/shared/DateNav";
 import { MetricCard } from "../components/shared/MetricCard";
-import { useApi } from "../hooks/useApi";
 import { formatScore } from "../lib/format";
-import type { DailyMetrics } from "../lib/types";
-
-interface RecoveryDetail {
-	day: string;
-	recovery: number | null;
-	hrv_rmssd: number | null;
-	resting_hr: number | null;
-	resp_rate: number | null;
-	sleep_performance: number | null;
-}
-
-interface TrendResponse {
-	days: DailyMetrics[];
-}
-
-function todayStr() {
-	return new Date().toISOString().slice(0, 10);
-}
-
-function offsetDay(base: string, delta: number): string {
-	const d = new Date(`${base}T00:00:00`);
-	d.setDate(d.getDate() + delta);
-	return d.toISOString().slice(0, 10);
-}
 
 export default function Recovery() {
-	const [selectedDay, setSelectedDay] = useState(todayStr());
-	const { data, loading, error } = useApi<RecoveryDetail>(
-		`/api/recovery/${selectedDay}`,
-	);
-	const { data: trendData } = useApi<TrendResponse>("/api/week");
+	const { data, isPending, error } = useAtomValue(recoveryDetailAtom);
+	const { data: trendData } = useAtomValue(weekMetricsAtom);
 
-	// Build 14-day trend points from the week data (backend returns last 7; we use what we have)
 	const trendPoints =
 		trendData?.days?.map((d) => ({ day: d.day, value: d.recovery })) ?? [];
 
 	return (
 		<div className="mx-auto max-w-4xl space-y-6">
-			{/* Header + date nav */}
 			<div className="flex items-center justify-between">
 				<h1 className="text-2xl font-bold">Recovery</h1>
-				<div className="flex items-center gap-2">
-					<button
-						className="rounded-lg border border-hairline bg-surface-raised px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
-						onClick={() => setSelectedDay((d) => offsetDay(d, -1))}
-					>
-						←
-					</button>
-					<span className="min-w-[100px] text-center text-sm text-text-secondary">
-						{selectedDay}
-					</span>
-					<button
-						className="rounded-lg border border-hairline bg-surface-raised px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
-						onClick={() => setSelectedDay((d) => offsetDay(d, 1))}
-						disabled={selectedDay >= todayStr()}
-					>
-						→
-					</button>
-					<button
-						className="rounded-lg border border-hairline bg-surface-raised px-3 py-1.5 text-sm text-accent hover:opacity-80"
-						onClick={() => setSelectedDay(todayStr())}
-					>
-						Today
-					</button>
-				</div>
+				<DateNav dayAtom={recoveryDayAtom} />
 			</div>
 
-			{loading && <div className="text-text-secondary">Loading…</div>}
-			{error && <div className="text-sm text-status-critical">{error}</div>}
+			{isPending && <div className="text-text-secondary">Loading…</div>}
+			{error && <div className="text-sm text-status-critical">{String(error)}</div>}
 
-			{!loading && !data && (
+			{!isPending && !data && (
 				<Card className="border-hairline bg-surface-raised p-8 text-center text-text-tertiary">
-					No recovery data for {selectedDay}.
+					No recovery data for this day.
 				</Card>
 			)}
 
 			{data && (
 				<>
-					{/* Hero: gauge centered */}
 					<Card className="border-hairline bg-surface-raised p-8">
 						<div className="flex flex-col items-center gap-4">
 							<RecoveryGauge score={data.recovery} size={220} />
 							<div className="text-sm text-text-tertiary">
-								Recovery score for {selectedDay}
+								Recovery score for {data.day}
 							</div>
 						</div>
 					</Card>
 
-					{/* Contributing factors */}
 					<div>
 						<div className="mb-3 text-xs uppercase tracking-widest text-text-tertiary">
 							Contributing Factors
@@ -130,7 +77,6 @@ export default function Recovery() {
 						</div>
 					</div>
 
-					{/* Trend line */}
 					{trendPoints.length >= 2 && (
 						<Card className="border-hairline bg-surface-raised p-4 space-y-2">
 							<div className="text-sm font-medium text-text-secondary">

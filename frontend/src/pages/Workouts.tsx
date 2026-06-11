@@ -1,12 +1,8 @@
+import { useAtomValue } from "jotai";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useApi } from "../hooks/useApi";
+import { workoutsAtom } from "../atoms/api";
 import { strainColor } from "../lib/colors";
-import type { Workout } from "../lib/types";
-
-interface WorkoutsResponse {
-	workouts: Workout[];
-}
 
 function formatDuration(startTs: number, endTs: number): string {
 	const totalSec = endTs - startTs;
@@ -33,7 +29,7 @@ function formatTime(ts: number): string {
 }
 
 export default function Workouts() {
-	const { data, loading, error } = useApi<WorkoutsResponse>("/api/workouts");
+	const { data, isPending, error } = useAtomValue(workoutsAtom);
 	const workouts = data?.workouts ?? [];
 
 	return (
@@ -47,10 +43,10 @@ export default function Workouts() {
 				)}
 			</div>
 
-			{loading && <div className="text-text-secondary">Loading…</div>}
-			{error && <div className="text-sm text-status-critical">{error}</div>}
+			{isPending && <div className="text-text-secondary">Loading…</div>}
+			{error && <div className="text-sm text-status-critical">{String(error)}</div>}
 
-			{!loading && workouts.length === 0 && (
+			{!isPending && workouts.length === 0 && (
 				<Card className="border-hairline bg-surface-raised p-8 text-center text-text-tertiary">
 					No workouts yet. Sync your data to bring in sessions.
 				</Card>
@@ -61,7 +57,6 @@ export default function Workouts() {
 					<Card key={w.id} className="border-hairline bg-surface-raised p-4">
 						<div className="flex items-start justify-between gap-4">
 							<div className="min-w-0 flex-1 space-y-2">
-								{/* Top row: type + date */}
 								<div className="flex flex-wrap items-center gap-2">
 									<span className="font-semibold text-text-primary">
 										{w.type ?? "Activity"}
@@ -73,8 +68,6 @@ export default function Workouts() {
 										{formatDuration(w.start_ts, w.end_ts)}
 									</span>
 								</div>
-
-								{/* Stats row */}
 								<div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
 									{w.calories != null && (
 										<div>
@@ -104,8 +97,6 @@ export default function Workouts() {
 									)}
 								</div>
 							</div>
-
-							{/* Strain badge */}
 							{w.strain != null && (
 								<div className="flex flex-col items-end gap-1">
 									<span

@@ -1,84 +1,41 @@
-import { useState } from "react";
+import { useAtomValue } from "jotai";
 import { Card } from "@/components/ui/card";
+import { sleepDayAtom, sleepDetailAtom } from "../atoms/api";
 import { SleepStagesChart } from "../components/charts/SleepStagesChart";
+import { DateNav } from "../components/shared/DateNav";
 import { MetricCard } from "../components/shared/MetricCard";
-import { useApi } from "../hooks/useApi";
 import { formatMinutes, formatScore } from "../lib/format";
-import type { DailyMetrics, SleepSession } from "../lib/types";
-
-interface SleepApiResponse {
-	session: SleepSession;
-	metrics: DailyMetrics;
-}
-
-function todayStr() {
-	return new Date().toISOString().slice(0, 10);
-}
-
-function offsetDay(base: string, delta: number): string {
-	const d = new Date(`${base}T00:00:00`);
-	d.setDate(d.getDate() + delta);
-	return d.toISOString().slice(0, 10);
-}
 
 export default function Sleep() {
-	const [selectedDay, setSelectedDay] = useState(todayStr());
-	const { data, loading, error } = useApi<SleepApiResponse>(
-		`/api/sleep/${selectedDay}`,
-	);
+	const { data, isPending, error } = useAtomValue(sleepDetailAtom);
 
-	const session = data?.session ?? null;
-	const metrics = data?.metrics ?? null;
+	const hasData = data != null && !("status" in data && data.status === "no_data");
+	const session = hasData ? data : null;
 
-	const deepMin = metrics?.deep_minutes ?? null;
-	const remMin = metrics?.rem_minutes ?? null;
-	const lightMin = metrics?.light_minutes ?? null;
-	const wakeMin = metrics?.wake_minutes ?? null;
-	const totalMin = metrics?.sleep_minutes ?? null;
+	const deepMin = session?.deep_minutes ?? null;
+	const remMin = session?.rem_minutes ?? null;
+	const lightMin = session?.light_minutes ?? null;
+	const wakeMin = session?.wake_minutes ?? null;
+	const totalMin = session?.sleep_minutes ?? null;
 
 	return (
 		<div className="mx-auto max-w-4xl space-y-6">
-			{/* Header + date nav */}
 			<div className="flex items-center justify-between">
 				<h1 className="text-2xl font-bold">Sleep</h1>
-				<div className="flex items-center gap-2">
-					<button
-						className="rounded-lg border border-hairline bg-surface-raised px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
-						onClick={() => setSelectedDay((d) => offsetDay(d, -1))}
-					>
-						←
-					</button>
-					<span className="min-w-[100px] text-center text-sm text-text-secondary">
-						{selectedDay}
-					</span>
-					<button
-						className="rounded-lg border border-hairline bg-surface-raised px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
-						onClick={() => setSelectedDay((d) => offsetDay(d, 1))}
-						disabled={selectedDay >= todayStr()}
-					>
-						→
-					</button>
-					<button
-						className="rounded-lg border border-hairline bg-surface-raised px-3 py-1.5 text-sm text-accent hover:opacity-80 transition-opacity"
-						onClick={() => setSelectedDay(todayStr())}
-					>
-						Today
-					</button>
-				</div>
+				<DateNav dayAtom={sleepDayAtom} />
 			</div>
 
-			{loading && <div className="text-text-secondary">Loading…</div>}
-			{error && <div className="text-status-critical text-sm">{error}</div>}
+			{isPending && <div className="text-text-secondary">Loading…</div>}
+			{error && <div className="text-status-critical text-sm">{String(error)}</div>}
 
-			{!loading && !data && (
+			{!isPending && !hasData && (
 				<Card className="border-hairline bg-surface-raised p-8 text-center text-text-tertiary">
-					No sleep data for {selectedDay}.
+					No sleep data for this day.
 				</Card>
 			)}
 
-			{data && (
+			{hasData && (
 				<>
-					{/* Hero: stage breakdown */}
 					<Card className="border-hairline bg-surface-raised p-6 space-y-4">
 						<div className="flex items-center justify-between">
 							<div>
@@ -106,13 +63,12 @@ export default function Sleep() {
 						/>
 					</Card>
 
-					{/* Metric grid */}
 					<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
 						<MetricCard
 							label="Sleep Performance"
 							value={
-								metrics?.sleep_performance != null
-									? `${Math.round(metrics.sleep_performance)}`
+								session?.sleep_performance != null
+									? `${Math.round(session.sleep_performance)}`
 									: "--"
 							}
 							unit="%"
@@ -142,7 +98,6 @@ export default function Sleep() {
 						/>
 					</div>
 
-					{/* Stage duration cards */}
 					<div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
 						<MetricCard
 							label="Deep"
@@ -166,7 +121,6 @@ export default function Sleep() {
 						/>
 					</div>
 
-					{/* Session times */}
 					{session && (
 						<Card className="border-hairline bg-surface-raised p-4">
 							<div className="flex gap-6 text-sm text-text-secondary">

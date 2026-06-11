@@ -1,22 +1,8 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Card } from "@/components/ui/card";
 import { TrendLine } from "../components/charts/TrendLine";
-import { useApi } from "../hooks/useApi";
-
-interface TrendDay {
-	day: string;
-	recovery?: number | null;
-	strain?: number | null;
-	hrv_rmssd?: number | null;
-	resting_hr?: number | null;
-	sleep_performance?: number | null;
-	sleep_minutes?: number | null;
-	resp_rate?: number | null;
-}
-
-interface TrendsResponse {
-	days: TrendDay[];
-}
+import { trendsAtom, trendsRangeAtom, trendsMetricAtom } from "../atoms/api";
 
 type MetricKey =
 	| "recovery"
@@ -73,27 +59,13 @@ const RANGES: Array<{ key: RangeKey; label: string; days: number }> = [
 	{ key: "90d", label: "90D", days: 90 },
 ];
 
-function endOfToday(): string {
-	return new Date().toISOString().slice(0, 10);
-}
-
-function startOfRange(days: number): string {
-	const d = new Date();
-	d.setDate(d.getDate() - days + 1);
-	return d.toISOString().slice(0, 10);
-}
-
 export default function Trends() {
-	const [selectedMetric, setSelectedMetric] = useState<MetricKey>("recovery");
-	const [selectedRange, setSelectedRange] = useState<RangeKey>("30d");
+	const selectedMetric = useAtomValue(trendsMetricAtom) as MetricKey;
+	const setSelectedMetric = useSetAtom(trendsMetricAtom);
+	const selectedRange = useAtomValue(trendsRangeAtom);
+	const setSelectedRange = useSetAtom(trendsRangeAtom);
 
-	const rangeDays = RANGES.find((r) => r.key === selectedRange)?.days ?? 30;
-	const start = startOfRange(rangeDays);
-	const end = endOfToday();
-
-	const { data, loading, error } = useApi<TrendsResponse>(
-		`/api/trends?start=${start}&end=${end}&metrics=${selectedMetric}`,
-	);
+	const { data, isPending, error } = useAtomValue(trendsAtom);
 
 	const metricMeta = METRICS.find((m) => m.key === selectedMetric)!;
 
@@ -158,8 +130,8 @@ export default function Trends() {
 				))}
 			</div>
 
-			{loading && <div className="text-text-secondary">Loading…</div>}
-			{error && <div className="text-sm text-status-critical">{error}</div>}
+			{isPending && <div className="text-text-secondary">Loading…</div>}
+			{error && <div className="text-sm text-status-critical">{String(error)}</div>}
 
 			{/* Chart */}
 			<Card className="border-hairline bg-surface-raised p-4 space-y-3">

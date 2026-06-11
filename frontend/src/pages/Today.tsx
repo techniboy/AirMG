@@ -1,16 +1,16 @@
+import { useAtomValue } from "jotai";
+import { todayMetricsAtom, weekMetricsAtom } from "../atoms/api";
 import { WeekStrip } from "../components/charts/WeekStrip";
 import { MetricCard } from "../components/shared/MetricCard";
 import { ScoreBadge } from "../components/shared/ScoreBadge";
-import { useApi } from "../hooks/useApi";
 import { strainColor } from "../lib/colors";
 import { formatMinutes, formatScore } from "../lib/format";
-import type { DailyMetrics } from "../lib/types";
 
 export default function Today() {
-	const { data: today, loading } = useApi<DailyMetrics>("/api/today");
-	const { data: weekData } = useApi<{ days: DailyMetrics[] }>("/api/week");
+	const { data: today, isPending } = useAtomValue(todayMetricsAtom);
+	const { data: weekData } = useAtomValue(weekMetricsAtom);
 
-	if (loading) return <div className="text-text-secondary">Loading...</div>;
+	if (isPending) return <div className="text-text-secondary">Loading...</div>;
 
 	return (
 		<div className="mx-auto max-w-4xl space-y-6">

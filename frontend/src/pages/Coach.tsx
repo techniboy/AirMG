@@ -1,11 +1,7 @@
+import { useAtomValue } from "jotai";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useApi } from "../hooks/useApi";
-import type { Recommendation } from "../lib/types";
-
-interface CoachResponse {
-	recommendations: Recommendation[];
-}
+import { coachAtom } from "../atoms/api";
 
 function priorityColor(priority: number): string {
 	if (priority <= 1) return "text-status-critical";
@@ -42,10 +38,8 @@ function categoryIcon(category: string): string {
 }
 
 export default function Coach() {
-	const { data, loading, error } = useApi<CoachResponse>("/api/coach");
+	const { data, isPending, error } = useAtomValue(coachAtom);
 	const recs = data?.recommendations ?? [];
-
-	// Sort by priority ascending (1 = highest)
 	const sorted = [...recs].sort((a, b) => a.priority - b.priority);
 
 	return (
@@ -64,10 +58,10 @@ export default function Coach() {
 				)}
 			</div>
 
-			{loading && <div className="text-text-secondary">Loading…</div>}
-			{error && <div className="text-sm text-status-critical">{error}</div>}
+			{isPending && <div className="text-text-secondary">Loading…</div>}
+			{error && <div className="text-sm text-status-critical">{String(error)}</div>}
 
-			{!loading && recs.length === 0 && (
+			{!isPending && recs.length === 0 && (
 				<Card className="border-hairline bg-surface-raised p-8 text-center text-text-tertiary">
 					No recommendations right now. Sync more data and check back.
 				</Card>
@@ -77,14 +71,11 @@ export default function Coach() {
 				{sorted.map((rec, i) => (
 					<Card key={i} className="border-hairline bg-surface-raised p-5">
 						<div className="flex items-start gap-4">
-							{/* Icon */}
 							<div
 								className={`mt-0.5 text-xl shrink-0 ${priorityColor(rec.priority)}`}
 							>
 								{categoryIcon(rec.category)}
 							</div>
-
-							{/* Content */}
 							<div className="min-w-0 flex-1 space-y-2">
 								<div className="flex flex-wrap items-center gap-2">
 									<span className="text-xs uppercase tracking-widest text-text-tertiary">

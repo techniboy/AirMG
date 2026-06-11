@@ -1,39 +1,13 @@
 import { useCallback, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Card } from "@/components/ui/card";
 import { api } from "../api/client";
-import { useApi } from "../hooks/useApi";
-
-interface JournalQuestion {
-	id: string;
-	question: string;
-	category: string;
-}
-
-interface JournalEntry {
-	question_id: string;
-	question: string;
-	answer: boolean;
-	day: string;
-}
-
-interface CatalogResponse {
-	questions: JournalQuestion[];
-}
-
-interface EntriesResponse {
-	entries: JournalEntry[];
-}
-
-function todayStr() {
-	return new Date().toISOString().slice(0, 10);
-}
-
-function offsetDay(base: string, delta: number): string {
-	const d = new Date(`${base}T00:00:00`);
-	d.setDate(d.getDate() + delta);
-	return d.toISOString().slice(0, 10);
-}
+import {
+	journalCatalogAtom,
+	journalEntriesAtom,
+	journalDayAtom,
+} from "../atoms/api";
+import { DateNav } from "../components/shared/DateNav";
 
 function categoryIcon(category: string): string {
 	const map: Record<string, string> = {
@@ -54,18 +28,16 @@ function categoryIcon(category: string): string {
 }
 
 export default function Journal() {
-	const [selectedDay, setSelectedDay] = useState(todayStr());
+	const selectedDay = useAtomValue(journalDayAtom);
 	const [answers, setAnswers] = useState<Record<string, boolean>>({});
 	const [saving, setSaving] = useState<string | null>(null);
 
-	const { data: catalogData } = useApi<CatalogResponse>("/api/journal/catalog");
-	const { data: entriesData, error: entriesError } = useApi<EntriesResponse>(
-		`/api/journal?day=${selectedDay}`,
-	);
+	const { data: catalogData } = useAtomValue(journalCatalogAtom);
+	const { data: entriesData, error: entriesError } =
+		useAtomValue(journalEntriesAtom);
 
 	const questions = catalogData?.questions ?? [];
 
-	// Sync loaded entries into local answer state
 	useEffect(() => {
 		if (entriesData?.entries) {
 			const map: Record<string, boolean> = {};
@@ -95,7 +67,6 @@ export default function Journal() {
 					}),
 				});
 			} catch {
-				// Revert on error
 				setAnswers((prev) => ({ ...prev, [questionId]: current }));
 			} finally {
 				setSaving(null);
@@ -129,34 +100,11 @@ export default function Journal() {
 						</p>
 					)}
 				</div>
-				<div className="flex items-center gap-2">
-					<button
-						className="rounded-lg border border-hairline bg-surface-raised px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
-						onClick={() => setSelectedDay((d) => offsetDay(d, -1))}
-					>
-						←
-					</button>
-					<span className="min-w-[100px] text-center text-sm text-text-secondary">
-						{selectedDay}
-					</span>
-					<button
-						className="rounded-lg border border-hairline bg-surface-raised px-3 py-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
-						onClick={() => setSelectedDay((d) => offsetDay(d, 1))}
-						disabled={selectedDay >= todayStr()}
-					>
-						→
-					</button>
-					<button
-						className="rounded-lg border border-hairline bg-surface-raised px-3 py-1.5 text-sm text-accent hover:opacity-80"
-						onClick={() => setSelectedDay(todayStr())}
-					>
-						Today
-					</button>
-				</div>
+				<DateNav dayAtom={journalDayAtom} />
 			</div>
 
 			{entriesError && (
-				<div className="text-sm text-status-critical">{entriesError}</div>
+				<div className="text-sm text-status-critical">{String(entriesError)}</div>
 			)}
 
 			{questions.length === 0 && (

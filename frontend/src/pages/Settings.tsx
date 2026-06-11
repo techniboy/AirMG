@@ -1,18 +1,9 @@
 import { useState } from "react";
+import { useAtomValue } from "jotai";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { api } from "../api/client";
-import { useApi } from "../hooks/useApi";
-
-interface ProfileSettings {
-	age: number | null;
-	sex: string | null;
-	weight_kg: number | null;
-	height_cm: number | null;
-	unit_system: "metric" | "imperial";
-	hr_max: number | null;
-	sleep_need_hours: number | null;
-}
+import { settingsAtom, type ProfileSettings } from "../atoms/api";
 
 const DEFAULT_SETTINGS: ProfileSettings = {
 	age: null,
@@ -25,7 +16,7 @@ const DEFAULT_SETTINGS: ProfileSettings = {
 };
 
 export default function Settings() {
-	const { data, loading, error } = useApi<ProfileSettings>("/api/settings");
+	const { data, isPending, error } = useAtomValue(settingsAtom);
 
 	const [overrides, setOverrides] = useState<Partial<ProfileSettings>>({});
 	const form = { ...(data ?? DEFAULT_SETTINGS), ...overrides };
@@ -58,8 +49,8 @@ export default function Settings() {
 		}
 	}
 
-	if (loading) return <div className="text-text-secondary">Loading…</div>;
-	if (error) return <div className="text-sm text-status-critical">{error}</div>;
+	if (isPending) return <div className="text-text-secondary">Loading…</div>;
+	if (error) return <div className="text-sm text-status-critical">{String(error)}</div>;
 
 	return (
 		<div className="mx-auto max-w-lg space-y-6">

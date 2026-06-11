@@ -1,11 +1,7 @@
+import { useAtomValue } from "jotai";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { useApi } from "../hooks/useApi";
-import type { CorrelationResult } from "../lib/types";
-
-interface InsightsResponse {
-	correlations: CorrelationResult[];
-}
+import { insightsAtom } from "../atoms/api";
 
 function strengthWord(r: number): string {
 	const abs = Math.abs(r);
@@ -17,8 +13,7 @@ function strengthWord(r: number): string {
 }
 
 function correlationHex(r: number): string {
-	// Map r∈[-1,1] → recovery color scale (red → amber → green)
-	const t = (r + 1) / 2; // 0..1
+	const t = (r + 1) / 2;
 	if (t < 0.25) return "#FF4F73";
 	if (t < 0.45) return "#F5A623";
 	if (t < 0.55) return "#E8C24B";
@@ -48,10 +43,8 @@ function directionWord(r: number): string {
 }
 
 export default function Insights() {
-	const { data, loading, error } = useApi<InsightsResponse>("/api/insights");
+	const { data, isPending, error } = useAtomValue(insightsAtom);
 	const correlations = data?.correlations ?? [];
-
-	// Sort by |r| descending
 	const sorted = [...correlations].sort(
 		(a, b) => Math.abs(b.r) - Math.abs(a.r),
 	);
@@ -64,10 +57,10 @@ export default function Insights() {
 				metrics tend to move together; negative means they move oppositely.
 			</p>
 
-			{loading && <div className="text-text-secondary">Loading…</div>}
-			{error && <div className="text-sm text-status-critical">{error}</div>}
+			{isPending && <div className="text-text-secondary">Loading…</div>}
+			{error && <div className="text-sm text-status-critical">{String(error)}</div>}
 
-			{!loading && correlations.length === 0 && (
+			{!isPending && correlations.length === 0 && (
 				<Card className="border-hairline bg-surface-raised p-8 text-center text-text-tertiary">
 					Not enough overlapping history to compute correlations yet. Sync more
 					data and check back.
@@ -86,7 +79,6 @@ export default function Insights() {
 							key={i}
 							className="border-hairline bg-surface-raised p-5 space-y-3"
 						>
-							{/* Header */}
 							<div className="flex items-start justify-between gap-3">
 								<div className="font-semibold text-text-primary leading-snug">
 									{title}
@@ -107,12 +99,8 @@ export default function Insights() {
 									</Badge>
 								</div>
 							</div>
-
-							{/* r bar */}
 							<div className="relative h-2 overflow-hidden rounded-full bg-surface-inset">
-								{/* centre mark */}
 								<div className="absolute inset-y-0 left-1/2 w-px bg-hairline-strong" />
-								{/* fill */}
 								<div
 									className="absolute inset-y-0 rounded-full"
 									style={{
@@ -122,11 +110,7 @@ export default function Insights() {
 									}}
 								/>
 							</div>
-
-							{/* Interpretation */}
 							<p className="text-sm text-text-secondary">{sentence}</p>
-
-							{/* Footer */}
 							<div className="flex gap-4 text-xs text-text-tertiary">
 								<span>n = {c.n}</span>
 								<span>p = {c.p.toFixed(3)}</span>

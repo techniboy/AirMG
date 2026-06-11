@@ -1,7 +1,8 @@
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { insightsAtom } from "../atoms/api";
+import { insightsAtom, behaviourEffectsAtom, behaviourOutcomeAtom } from "../atoms/api";
+import { BehaviourCard } from "../components/shared/BehaviourCard";
 
 function strengthWord(r: number): string {
 	const abs = Math.abs(r);
@@ -49,6 +50,11 @@ export default function Insights() {
 		(a, b) => Math.abs(b.r) - Math.abs(a.r),
 	);
 
+	const selectedOutcome = useAtomValue(behaviourOutcomeAtom);
+	const setOutcome = useSetAtom(behaviourOutcomeAtom);
+	const { data: beData, isPending: bePending } = useAtomValue(behaviourEffectsAtom);
+	const effects = beData?.effects ?? [];
+
 	return (
 		<div className="mx-auto max-w-4xl space-y-6">
 			<h1 className="text-2xl font-bold">Insights</h1>
@@ -60,12 +66,48 @@ export default function Insights() {
 			{isPending && <div className="text-text-secondary">Loading…</div>}
 			{error && <div className="text-sm text-status-critical">{String(error)}</div>}
 
+			{/* Behaviour Effects */}
+			<div className="space-y-3">
+				<div className="text-[11px] uppercase tracking-widest text-text-tertiary">
+					Behaviour Effects
+				</div>
+				<div className="flex gap-2">
+					{(["recovery", "hrv", "sleep_performance", "resting_hr"] as const).map((o) => (
+						<button
+							key={o}
+							onClick={() => setOutcome(o)}
+							className={`rounded-lg px-3 py-1.5 text-sm font-medium transition-colors ${
+								selectedOutcome === o
+									? "bg-accent-muted text-accent"
+									: "text-text-secondary hover:bg-surface-overlay hover:text-text-primary"
+							}`}
+						>
+							{o === "recovery" ? "Recovery" : o === "hrv" ? "HRV" : o === "sleep_performance" ? "Sleep" : "RHR"}
+						</button>
+					))}
+				</div>
+				{bePending && <div className="text-text-secondary text-sm">Loading…</div>}
+				{effects.length === 0 && !bePending && (
+					<Card className="border-hairline bg-surface-raised p-6 text-center text-text-tertiary text-sm">
+						Log more journal entries to see behaviour effects. At least 5 days with and without each behaviour needed.
+					</Card>
+				)}
+				{effects.map((e) => (
+					<BehaviourCard key={e.question_key} effect={e} />
+				))}
+			</div>
+
+			{/* Metric Relationships */}
 			{!isPending && correlations.length === 0 && (
 				<Card className="border-hairline bg-surface-raised p-8 text-center text-text-tertiary">
 					Not enough overlapping history to compute correlations yet. Sync more
 					data and check back.
 				</Card>
 			)}
+
+			<div className="text-[11px] uppercase tracking-widest text-text-tertiary">
+				Metric Relationships
+			</div>
 
 			<div className="space-y-3">
 				{sorted.map((c, i) => {

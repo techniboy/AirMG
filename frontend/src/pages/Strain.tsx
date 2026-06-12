@@ -5,6 +5,7 @@ import { StrainGauge } from "../components/charts/StrainGauge";
 import { TrendLine } from "../components/charts/TrendLine";
 import { DateNav } from "../components/shared/DateNav";
 import { MetricCard } from "../components/shared/MetricCard";
+import { AlgoInfo } from "../components/shared/AlgoInfo";
 import { formatScore } from "../lib/format";
 
 export default function Strain() {
@@ -34,8 +35,8 @@ export default function Strain() {
 					<Card className="border-hairline bg-surface-raised p-8">
 						<div className="flex flex-col items-center gap-4">
 							<StrainGauge strain={data.strain} size={220} />
-							<div className="text-sm text-text-tertiary">
-								Day strain for {data.day}
+							<div className="text-sm text-text-tertiary flex items-center gap-1.5">
+								Day strain for {data.day} <AlgoInfo algo="strain" />
 							</div>
 						</div>
 					</Card>

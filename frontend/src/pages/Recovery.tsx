@@ -5,6 +5,7 @@ import { RecoveryGauge } from "../components/charts/RecoveryGauge";
 import { TrendLine } from "../components/charts/TrendLine";
 import { DateNav } from "../components/shared/DateNav";
 import { MetricCard } from "../components/shared/MetricCard";
+import { AlgoInfo } from "../components/shared/AlgoInfo";
 import { formatScore } from "../lib/format";
 
 export default function Recovery() {
@@ -35,8 +36,8 @@ export default function Recovery() {
 					<Card className="border-hairline bg-surface-raised p-8">
 						<div className="flex flex-col items-center gap-4">
 							<RecoveryGauge score={data.recovery} size={220} />
-							<div className="text-sm text-text-tertiary">
-								Recovery score for {data.day}
+							<div className="text-sm text-text-tertiary flex items-center gap-1.5">
+								Recovery score for {data.day} <AlgoInfo algo="recovery" />
 							</div>
 						</div>
 					</Card>

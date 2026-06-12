@@ -5,6 +5,7 @@ import { SleepStagesChart } from "../components/charts/SleepStagesChart";
 import { TrendLine } from "../components/charts/TrendLine";
 import { DateNav } from "../components/shared/DateNav";
 import { StatTile } from "../components/shared/StatTile";
+import { AlgoInfo } from "../components/shared/AlgoInfo";
 import { formatMinutes, formatScore } from "../lib/format";
 
 export default function Sleep() {
@@ -47,8 +48,8 @@ export default function Sleep() {
 					<Card className="border-hairline bg-surface-raised p-6 space-y-4">
 						<div className="flex items-center justify-between">
 							<div>
-								<div className="text-xs uppercase tracking-widest text-text-tertiary">
-									Sleep
+								<div className="text-xs uppercase tracking-widest text-text-tertiary flex items-center gap-1.5">
+									Sleep <AlgoInfo algo="sleepScore" />
 								</div>
 								<div className="text-base font-semibold text-text-primary">
 									Stage Breakdown

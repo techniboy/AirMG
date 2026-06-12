@@ -14,6 +14,7 @@ import { DateNav } from "../components/shared/DateNav";
 import { ReadinessCard } from "../components/shared/ReadinessCard";
 import { StatTile } from "../components/shared/StatTile";
 import { SynthesisCard } from "../components/shared/SynthesisCard";
+import { AlgoInfo } from "../components/shared/AlgoInfo";
 import { strainColor } from "../lib/colors";
 import { formatMinutes, formatScore } from "../lib/format";
 
@@ -123,9 +124,9 @@ export default function Today() {
         <Card className="flex-1 border-hairline bg-surface-raised p-6 flex items-center justify-center">
           <div className="flex flex-col items-center gap-2">
             <RecoveryGauge score={rec} size={168} />
-            {rec == null && (
-              <div className="text-sm text-text-tertiary">No data</div>
-            )}
+            <div className="text-sm text-text-tertiary flex items-center gap-1.5">
+              {rec == null ? "No data" : "Recovery"} <AlgoInfo algo="recovery" />
+            </div>
           </div>
         </Card>
         <div className="flex-1">

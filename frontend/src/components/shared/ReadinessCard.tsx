@@ -1,5 +1,6 @@
 import type { ReadinessResult } from "../../lib/types";
 import { Card } from "@/components/ui/card";
+import { AlgoInfo } from "./AlgoInfo";
 
 const LEVEL_COLORS: Record<string, string> = {
 	primed: "#18C98B",
@@ -27,8 +28,8 @@ export function ReadinessCard({ result }: ReadinessCardProps) {
 
 	return (
 		<Card className="border-hairline bg-surface-raised p-4 space-y-3">
-			<div className="text-[11px] uppercase tracking-widest text-text-tertiary">
-				Should you push today?
+			<div className="text-[11px] uppercase tracking-widest text-text-tertiary flex items-center gap-1.5">
+				Should you push today? <AlgoInfo algo="readiness" />
 			</div>
 			<div className="flex items-center justify-between gap-3">
 				<div className="flex items-center gap-2">

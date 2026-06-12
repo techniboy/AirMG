@@ -69,7 +69,8 @@ export function computeWorldState(i: WorldInputs): WorldState {
 		atmosphereHue: rec,
 		surfaceSaturation: 0.1 + 0.9 * rec,
 		stormCount: Math.round(6 * clamp01((40 - nz(i.recovery, 50)) / 40)),
-		auroraIntensity: clamp01(0.5 + hrvZ * 0.35),
+		// gentle slope so a suppressed HRV still leaves a faint violet whisper
+		auroraIntensity: clamp01(0.5 + hrvZ / 6),
 		auroraVioletShift: clamp01(0.5 - hrvZ * 0.5),
 		rotationSpeed: 0.01 + 0.02 * clamp01(nz(i.rhrDelta, 0) / 8 + 0.5),
 		coronaActivity: clamp01(nz(i.strainToday, 0) / 21),

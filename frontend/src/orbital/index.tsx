@@ -3,6 +3,8 @@ import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { useLocation } from "react-router";
 import * as THREE from "three/webgpu";
+import Atmosphere from "./scene/Atmosphere";
+import Aurora from "./scene/Aurora";
 import Effects from "./scene/Effects";
 import Planet, { SUN_POSITION } from "./scene/Planet";
 import Starfield from "./scene/Starfield";
@@ -47,7 +49,11 @@ export default function OrbitalWorld() {
             intensity={1.4}
             color="#dbe7ff"
           />
-          <Planet world={world} />
+          <group>
+            <Planet world={world} />
+            <Atmosphere world={world} />
+            <Aurora world={world} />
+          </group>
           <Starfield />
           <Effects quality="high" />
         </Canvas>

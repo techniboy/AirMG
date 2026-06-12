@@ -34,11 +34,15 @@ export default function OrbitalWorld() {
       if (e.key !== "Escape") return;
       // don't hijack Esc from form fields (console pages, Task 11)
       const t = e.target as HTMLElement | null;
-      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
-      navigate("/");
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.tagName === "SELECT" || t.isContentEditable)) return;
+      navigate("/", { replace: true });
     };
     window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+      // unmount mid-hover (theme switch) never fires pointerout — unstick cursor
+      document.body.style.cursor = "";
+    };
   }, [navigate]);
 
   return (

@@ -1,0 +1,119 @@
+import { atom } from "jotai";
+import {
+	baselinesAtom,
+	controlCenterDayAtom,
+	todayMetricsAtom,
+} from "../atoms/api";
+import type { DailyMetrics } from "../lib/types";
+
+export interface WorldInputs {
+	recovery: number | null;
+	strainToday: number | null;
+	hrvZ: number | null;
+	rhrDelta: number | null;
+	sleepPerf: number | null;
+	sleepMinutes: number | null;
+	sleepNeedMinutes: number;
+	steps: number | null;
+	syncStale: boolean;
+	hasData: boolean;
+}
+
+export interface WorldState {
+	atmosphereDensity: number; // 0..1
+	atmosphereHue: number; // 0 grey-blue .. 1 deep teal
+	surfaceSaturation: number; // 0 ashen .. 1 lush
+	stormCount: number; // integer 0..6
+	auroraIntensity: number; // 0..1
+	auroraVioletShift: number; // 0 teal .. 1 violet
+	rotationSpeed: number; // rad/s, subtle
+	coronaActivity: number; // 0..1
+	cityCalm: number; // 0 flicker .. 1 steady
+	moonPhase: number; // 0 new .. 1 full
+	satelliteSpeed: number; // rad/s
+	desaturate: number; // 0..0.3 sync-stale wash
+}
+
+const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+const nz = (v: number | null, fallback: number) => (v == null ? fallback : v);
+
+export const DORMANT: WorldState = {
+	atmosphereDensity: 0.15,
+	atmosphereHue: 0,
+	surfaceSaturation: 0.05,
+	stormCount: 0,
+	auroraIntensity: 0,
+	auroraVioletShift: 0,
+	rotationSpeed: 0.01,
+	coronaActivity: 0.05,
+	cityCalm: 0.2,
+	moonPhase: 0.3,
+	satelliteSpeed: 0.05,
+	desaturate: 0.3,
+};
+
+export function computeWorldState(i: WorldInputs): WorldState {
+	if (!i.hasData) return DORMANT;
+	const rec = clamp01(nz(i.recovery, 50) / 100);
+	const hrvZ = nz(i.hrvZ, 0);
+	return {
+		atmosphereDensity: 0.25 + 0.75 * rec,
+		atmosphereHue: rec,
+		surfaceSaturation: 0.1 + 0.9 * rec,
+		stormCount: Math.round(6 * clamp01((40 - nz(i.recovery, 50)) / 40)),
+		auroraIntensity: clamp01(0.5 + hrvZ * 0.35),
+		auroraVioletShift: clamp01(0.5 - hrvZ * 0.5),
+		rotationSpeed: 0.01 + 0.02 * clamp01(nz(i.rhrDelta, 0) / 8 + 0.5),
+		coronaActivity: clamp01(nz(i.strainToday, 0) / 21),
+		cityCalm: clamp01(nz(i.sleepPerf, 50) / 100),
+		moonPhase: clamp01(nz(i.sleepMinutes, 0) / i.sleepNeedMinutes),
+		satelliteSpeed: 0.05 + 0.25 * clamp01(nz(i.steps, 0) / 10000),
+		desaturate: i.syncStale ? 0.3 : 0,
+	};
+}
+
+const SLEEP_NEED_MINUTES = 480;
+
+// /api/today actually returns DailyMetrics OR {status:"no_data", message} —
+// the typed client claims DailyMetrics, so we narrow at runtime.
+function asMetrics(data: unknown): DailyMetrics | null {
+	if (data == null || typeof data !== "object") return null;
+	if ("status" in data && (data as { status?: string }).status === "no_data")
+		return null;
+	return data as DailyMetrics;
+}
+
+export const worldStateAtom = atom<WorldState>((get) => {
+	const today = asMetrics(get(todayMetricsAtom).data);
+	const baselines = get(baselinesAtom).data ?? {};
+
+	if (today == null) return DORMANT;
+
+	const hrvBase = baselines.hrv;
+	const hrvZ =
+		today.hrv_rmssd != null && hrvBase != null
+			? (today.hrv_rmssd - hrvBase.mean) /
+				Math.max(1.253 * hrvBase.spread, 1e-9)
+			: null;
+
+	const rhrBase = baselines.resting_hr;
+	const rhrDelta =
+		today.resting_hr != null && rhrBase != null
+			? today.resting_hr - rhrBase.mean
+			: null;
+
+	return computeWorldState({
+		recovery: today.recovery,
+		strainToday: today.strain,
+		hrvZ,
+		rhrDelta,
+		sleepPerf: today.sleep_performance,
+		sleepMinutes: today.sleep_minutes,
+		sleepNeedMinutes: SLEEP_NEED_MINUTES,
+		steps: today.steps,
+		syncStale: false, // no staleness signal exposed yet
+		hasData: true,
+	});
+});
+
+export const worldDayAtom = controlCenterDayAtom;

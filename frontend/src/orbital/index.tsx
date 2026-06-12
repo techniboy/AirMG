@@ -1,9 +1,18 @@
 import { Canvas } from "@react-three/fiber";
 import { useAtomValue } from "jotai";
+import type { ComponentType } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import * as THREE from "three/webgpu";
+import Coach from "../pages/Coach";
+import HealthAge from "../pages/HealthAge";
+import Insights from "../pages/Insights";
+import Journal from "../pages/Journal";
+import Settings from "../pages/Settings";
+import Trends from "../pages/Trends";
+import Workouts from "../pages/Workouts";
 import CameraRig from "./cameraRig";
+import ConsolePanel from "./hud/ConsolePanel";
 import Dock from "./hud/Dock";
 import { hoveredObjectAtom } from "./hud/hoverAtom";
 import LandingHud from "./hud/LandingHud";
@@ -17,6 +26,20 @@ import Starfield from "./scene/Starfield";
 import { worldStateAtom } from "./worldState";
 import "./orbital.css";
 
+// console routes — existing 2D pages rendered as glass panels over the scene.
+// Shell renders OrbitalWorld INSTEAD of the router <Outlet/>, so the
+// pathname→component map lives here (camera flies to CONSOLE_TARGET for
+// any of these — see cameraRig.tsx).
+const CONSOLE_PAGES: Record<string, { title: string; Page: ComponentType }> = {
+  "/workouts": { title: "Workouts", Page: Workouts },
+  "/trends": { title: "Trends", Page: Trends },
+  "/insights": { title: "Insights", Page: Insights },
+  "/coach": { title: "Coach", Page: Coach },
+  "/journal": { title: "Journal", Page: Journal },
+  "/health-age": { title: "Health Age", Page: HealthAge },
+  "/settings": { title: "Settings", Page: Settings },
+};
+
 export default function OrbitalWorld() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -25,6 +48,7 @@ export default function OrbitalWorld() {
   // HUD panel hover → scene highlight (same constraint: atom read out here)
   const hudHover = useAtomValue(hoveredObjectAtom);
   const [ready, setReady] = useState(false);
+  const consolePage = CONSOLE_PAGES[location.pathname];
 
   // navigation handlers live in the DOM root (router context is not
   // available inside the Canvas — it is a separate React root)
@@ -52,7 +76,9 @@ export default function OrbitalWorld() {
 
   return (
     <div className="orbital-root">
-      <div className={`orbital-fade${ready ? " is-ready" : ""}`}>
+      <div
+        className={`orbital-fade${ready ? " is-ready" : ""}${consolePage ? " is-console" : ""}`}
+      >
         <Canvas
           dpr={[1, 2]}
           camera={{ fov: 45, position: [0, 1.2, 9], near: 0.1, far: 2000 }}
@@ -95,6 +121,12 @@ export default function OrbitalWorld() {
         </Canvas>
       </div>
       <LandingHud world={world} visible={location.pathname === "/"} />
+      {consolePage && (
+        // keyed by pathname — route changes remount and replay the entrance
+        <ConsolePanel key={location.pathname} title={consolePage.title}>
+          <consolePage.Page />
+        </ConsolePanel>
+      )}
       <Dock pathname={location.pathname} />
       {/* a11y mirrors for the clickable bodies (canvas raycast targets) */}
       <div className="orbital-sr-nav">

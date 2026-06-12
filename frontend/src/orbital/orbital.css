@@ -9,11 +9,18 @@
   position: absolute;
   inset: 0;
   opacity: 0;
-  transition: opacity 1s ease;
+  transition:
+    opacity 1s ease,
+    filter 0.4s ease;
 }
 
 .orbital-fade.is-ready {
   opacity: 1;
+}
+
+/* console open — scene recedes but keeps animating beneath the glass */
+.orbital-fade.is-console {
+  filter: blur(6px) brightness(0.6);
 }
 
 /* floating label chip shown when hovering a celestial body */
@@ -378,4 +385,205 @@
   height: 18px;
   margin: 0 5px;
   background: rgba(46, 230, 168, 0.2);
+}
+
+/* ===========================================================================
+   Orbital theme tokens — same var contract as .dark / .liquid-glass in
+   index.css. Pages rendered inside console panels consume these through
+   Tailwind utilities (bg-surface-raised, text-text-primary, border-hairline…)
+   and restyle automatically: near-black blue surfaces, teal accent.
+   =========================================================================== */
+
+.orbital {
+  /* Surfaces — #070b14 family, translucent raises so the glass reads through */
+  --color-surface-base: #070b14;
+  --color-surface-raised: rgba(15, 26, 40, 0.55);
+  --color-surface-overlay: rgba(20, 34, 50, 0.7);
+  --color-surface-inset: rgba(4, 8, 15, 0.6);
+  --color-hairline: rgba(46, 230, 168, 0.15);
+  --color-hairline-strong: rgba(46, 230, 168, 0.26);
+
+  /* Text — mist on deep space */
+  --color-text-primary: #ecfff7;
+  --color-text-secondary: rgba(176, 214, 199, 0.78);
+  --color-text-tertiary: rgba(148, 198, 180, 0.52);
+
+  /* Accent — HUD teal */
+  --color-accent: #2ee6a8;
+  --color-accent-hover: #5cf0c0;
+  --color-accent-muted: rgba(46, 230, 168, 0.12);
+
+  /* Status */
+  --color-status-positive: #2ee6a8;
+  --color-status-warning: #f5b840;
+  --color-status-critical: #ff5d7a;
+
+  /* Glow */
+  --color-glow-ambient: rgba(46, 230, 168, 0.06);
+
+  /* Charts — teal tracks on glass */
+  --color-chart-track: rgba(46, 230, 168, 0.08);
+  --color-chart-track-strong: rgba(46, 230, 168, 0.16);
+  --color-chart-bead: #ecfff7;
+
+  /* Legacy aliases */
+  --color-bg-primary: #070b14;
+  --color-bg-secondary: #0f1a28;
+  --color-bg-tertiary: #142232;
+
+  /* shadcn surface vars (Card/Button fall back to these when not overridden) */
+  --card: rgba(15, 26, 40, 0.55);
+  --card-foreground: #ecfff7;
+  --popover: #0c1624;
+  --popover-foreground: #ecfff7;
+  --foreground: #ecfff7;
+  --background: #070b14;
+  --border: rgba(46, 230, 168, 0.15);
+  --input: rgba(46, 230, 168, 0.18);
+  --ring: rgba(46, 230, 168, 0.45);
+  --primary: #2ee6a8;
+  --primary-foreground: #04130c;
+  --muted: rgba(20, 34, 50, 0.7);
+  --muted-foreground: rgba(148, 198, 180, 0.6);
+}
+
+/* ===========================================================================
+   Console panels — 2D pages as holo-glass surfaces over the live scene
+   =========================================================================== */
+
+.console-layer {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 24px 96px; /* bottom clearance for the dock */
+  pointer-events: none; /* panel re-enables; dock stays reachable */
+  font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+}
+
+.console-panel {
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 48rem; /* max-w-3xl */
+  max-height: min(80vh, 100%);
+  border-radius: 18px;
+  background: linear-gradient(
+    180deg,
+    rgba(11, 22, 32, 0.72) 0%,
+    rgba(6, 12, 20, 0.62) 100%
+  );
+  border: 1px solid rgba(46, 230, 168, 0.2);
+  box-shadow:
+    inset 0 1px 0 rgba(220, 255, 240, 0.1),
+    inset 0 0 32px rgba(46, 230, 168, 0.03),
+    0 1px 2px rgba(0, 0, 0, 0.5),
+    0 24px 80px rgba(0, 0, 0, 0.6),
+    0 0 60px rgba(46, 230, 168, 0.05);
+  backdrop-filter: blur(22px) saturate(1.25);
+  -webkit-backdrop-filter: blur(22px) saturate(1.25);
+  animation: console-enter 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@keyframes console-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.985);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .console-panel {
+    animation: none;
+  }
+}
+
+.console-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-shrink: 0;
+  padding: 16px 22px 13px;
+  border-bottom: 1px solid rgba(46, 230, 168, 0.12);
+}
+
+.console-title {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: #2ee6a8;
+  text-shadow: 0 0 14px rgba(46, 230, 168, 0.35);
+}
+
+.console-close {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  border: 1px solid rgba(46, 230, 168, 0.16);
+  background: rgba(46, 230, 168, 0.05);
+  color: rgba(176, 214, 199, 0.7);
+  font-size: 12px;
+  line-height: 1;
+  cursor: pointer;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background-color 0.2s ease;
+}
+
+.console-close:hover {
+  color: #ecfff7;
+  border-color: rgba(46, 230, 168, 0.45);
+  background: rgba(46, 230, 168, 0.12);
+}
+
+.console-close:focus-visible {
+  outline: 1px solid rgba(46, 230, 168, 0.6);
+  outline-offset: 1px;
+}
+
+.console-body {
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 22px;
+  color: #ecfff7;
+  /* pages were designed for a wider main column — long unbreakable tokens
+     (e.g. STRENGTH_TRAINING stat values) wrap instead of escaping the glass */
+  overflow-wrap: anywhere;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(46, 230, 168, 0.3) transparent;
+}
+
+.console-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.console-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.console-body::-webkit-scrollbar-thumb {
+  background: rgba(46, 230, 168, 0.22);
+  border-radius: 3px;
+}
+
+.console-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(46, 230, 168, 0.4);
+}
+
+/* page h1s double the header title — calm them down inside the console */
+.console-body h1 {
+  font-size: 18px;
+  font-weight: 550;
+  letter-spacing: 0.01em;
 }

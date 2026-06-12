@@ -1,7 +1,7 @@
 import { atom } from "jotai";
 import {
 	baselinesAtom,
-	controlCenterDayAtom,
+	settingsAtom,
 	todayMetricsAtom,
 } from "../atoms/api";
 import type { DailyMetrics } from "../lib/types";
@@ -37,6 +37,14 @@ export interface WorldState {
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const nz = (v: number | null, fallback: number) => (v == null ? fallback : v);
 
+export function baselineZ(
+	value: number | null,
+	baseline: { mean: number; spread: number } | null | undefined,
+): number | null {
+	if (value == null || baseline == null) return null;
+	return (value - baseline.mean) / Math.max(1.253 * baseline.spread, 1e-9);
+}
+
 export const DORMANT: WorldState = {
 	atmosphereDensity: 0.15,
 	atmosphereHue: 0,
@@ -66,13 +74,11 @@ export function computeWorldState(i: WorldInputs): WorldState {
 		rotationSpeed: 0.01 + 0.02 * clamp01(nz(i.rhrDelta, 0) / 8 + 0.5),
 		coronaActivity: clamp01(nz(i.strainToday, 0) / 21),
 		cityCalm: clamp01(nz(i.sleepPerf, 50) / 100),
-		moonPhase: clamp01(nz(i.sleepMinutes, 0) / i.sleepNeedMinutes),
+		moonPhase: clamp01(nz(i.sleepMinutes, 0) / Math.max(1, i.sleepNeedMinutes)),
 		satelliteSpeed: 0.05 + 0.25 * clamp01(nz(i.steps, 0) / 10000),
 		desaturate: i.syncStale ? 0.3 : 0,
 	};
 }
-
-const SLEEP_NEED_MINUTES = 480;
 
 // /api/today actually returns DailyMetrics OR {status:"no_data", message} —
 // the typed client claims DailyMetrics, so we narrow at runtime.
@@ -86,21 +92,23 @@ function asMetrics(data: unknown): DailyMetrics | null {
 export const worldStateAtom = atom<WorldState>((get) => {
 	const today = asMetrics(get(todayMetricsAtom).data);
 	const baselines = get(baselinesAtom).data ?? {};
+	const settings = get(settingsAtom);
 
 	if (today == null) return DORMANT;
 
 	const hrvBase = baselines.hrv;
-	const hrvZ =
-		today.hrv_rmssd != null && hrvBase != null
-			? (today.hrv_rmssd - hrvBase.mean) /
-				Math.max(1.253 * hrvBase.spread, 1e-9)
-			: null;
+	const hrvZ = baselineZ(today.hrv_rmssd ?? null, hrvBase);
 
 	const rhrBase = baselines.resting_hr;
 	const rhrDelta =
 		today.resting_hr != null && rhrBase != null
 			? today.resting_hr - rhrBase.mean
 			: null;
+
+	const sleepNeedMinutes = Math.max(
+		60,
+		(settings.data?.sleep_need_hours ?? 8) * 60,
+	);
 
 	return computeWorldState({
 		recovery: today.recovery,
@@ -109,11 +117,9 @@ export const worldStateAtom = atom<WorldState>((get) => {
 		rhrDelta,
 		sleepPerf: today.sleep_performance,
 		sleepMinutes: today.sleep_minutes,
-		sleepNeedMinutes: SLEEP_NEED_MINUTES,
+		sleepNeedMinutes,
 		steps: today.steps,
 		syncStale: false, // no staleness signal exposed yet
 		hasData: true,
 	});
 });
-
-export const worldDayAtom = controlCenterDayAtom;

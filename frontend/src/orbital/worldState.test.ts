@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeWorldState, DORMANT } from "./worldState";
+import { baselineZ, computeWorldState, DORMANT } from "./worldState";
 
 const base = {
 	recovery: 70,
@@ -57,5 +57,31 @@ describe("computeWorldState", () => {
 		});
 		for (const v of Object.values(s))
 			expect(Number.isNaN(v as number)).toBe(false);
+	});
+	it("desaturate > 0 when syncStale, 0 otherwise", () => {
+		expect(computeWorldState({ ...base, syncStale: true }).desaturate).toBeGreaterThan(0);
+		expect(computeWorldState({ ...base, syncStale: false }).desaturate).toBe(0);
+	});
+});
+
+describe("baselineZ", () => {
+	it("returns null when value is null", () => {
+		expect(baselineZ(null, { mean: 50, spread: 10 })).toBeNull();
+	});
+	it("returns null when baseline is null", () => {
+		expect(baselineZ(60, null)).toBeNull();
+	});
+	it("returns null when baseline is undefined", () => {
+		expect(baselineZ(60, undefined)).toBeNull();
+	});
+	it("returns positive z when value is above mean", () => {
+		const z = baselineZ(60, { mean: 50, spread: 10 });
+		expect(z).not.toBeNull();
+		expect(z!).toBeGreaterThan(0);
+	});
+	it("returns finite value when spread is zero", () => {
+		const z = baselineZ(60, { mean: 50, spread: 0 });
+		expect(z).not.toBeNull();
+		expect(Number.isFinite(z!)).toBe(true);
 	});
 });

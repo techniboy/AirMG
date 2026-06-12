@@ -1,33 +1,18 @@
 import { Canvas } from "@react-three/fiber";
-import { useEffect, useMemo, useState } from "react";
+import { useAtomValue } from "jotai";
+import { useState } from "react";
 import { useLocation } from "react-router";
 import * as THREE from "three/webgpu";
 import Effects from "./scene/Effects";
+import Planet, { SUN_POSITION } from "./scene/Planet";
 import Starfield from "./scene/Starfield";
+import { worldStateAtom } from "./worldState";
 import "./orbital.css";
-
-/** Temporary planet stand-in so bloom/tonemap have something to frame. */
-function Planet() {
-  const material = useMemo(
-    () =>
-      new THREE.MeshStandardNodeMaterial({
-        color: new THREE.Color("#27303d"),
-        roughness: 0.6,
-        metalness: 0.2,
-      }),
-    [],
-  );
-  useEffect(() => () => material.dispose(), [material]);
-
-  return (
-    <mesh material={material}>
-      <sphereGeometry args={[1.5, 96, 96]} />
-    </mesh>
-  );
-}
 
 export default function OrbitalWorld() {
   const location = useLocation();
+  // read here (main React root) — the Canvas reconciler doesn't see JotaiProvider
+  const world = useAtomValue(worldStateAtom);
   const [ready, setReady] = useState(false);
 
   return (
@@ -56,9 +41,13 @@ export default function OrbitalWorld() {
         >
           <color attach="background" args={["#04060d"]} />
           <ambientLight intensity={0.12} color="#a8c2ff" />
-          <directionalLight position={[6, 4, 5]} intensity={1.4} color="#dbe7ff" />
-          <directionalLight position={[-7, -2, -4]} intensity={0.3} color="#41527f" />
-          <Planet />
+          {/* key light sits where the star will live (Task 8) */}
+          <directionalLight
+            position={SUN_POSITION.toArray()}
+            intensity={1.4}
+            color="#dbe7ff"
+          />
+          <Planet world={world} />
           <Starfield />
           <Effects quality="high" />
         </Canvas>

@@ -80,6 +80,54 @@ export function computeWorldState(i: WorldInputs): WorldState {
 	};
 }
 
+// Canned inputs for screenshot fixtures: ?worldFixture=great|avg|bad
+// Pure read-side override — live atoms are never subscribed when active.
+const FIXTURE_INPUTS: Record<string, WorldInputs> = {
+	great: {
+		recovery: 95,
+		strainToday: 6,
+		hrvZ: 1.5,
+		rhrDelta: -2,
+		sleepPerf: 95,
+		sleepMinutes: 480,
+		sleepNeedMinutes: 480,
+		steps: 12000,
+		syncStale: false,
+		hasData: true,
+	},
+	avg: {
+		recovery: 60,
+		strainToday: 10,
+		hrvZ: 0,
+		rhrDelta: 0,
+		sleepPerf: 75,
+		sleepMinutes: 420,
+		sleepNeedMinutes: 480,
+		steps: 7000,
+		syncStale: false,
+		hasData: true,
+	},
+	bad: {
+		recovery: 15,
+		strainToday: 19,
+		hrvZ: -2,
+		rhrDelta: 5,
+		sleepPerf: 45,
+		sleepMinutes: 280,
+		sleepNeedMinutes: 480,
+		steps: 2000,
+		syncStale: false,
+		hasData: true,
+	},
+};
+
+function readFixtureInputs(): WorldInputs | null {
+	if (typeof location === "undefined") return null;
+	const name = new URLSearchParams(location.search).get("worldFixture");
+	if (name == null) return null;
+	return FIXTURE_INPUTS[name] ?? null;
+}
+
 // /api/today actually returns DailyMetrics OR {status:"no_data", message} —
 // the typed client claims DailyMetrics, so we narrow at runtime.
 function asMetrics(data: unknown): DailyMetrics | null {
@@ -90,6 +138,9 @@ function asMetrics(data: unknown): DailyMetrics | null {
 }
 
 export const worldStateAtom = atom<WorldState>((get) => {
+	const fixture = readFixtureInputs();
+	if (fixture != null) return computeWorldState(fixture);
+
 	const today = asMetrics(get(todayMetricsAtom).data);
 	const baselines = get(baselinesAtom).data ?? {};
 	const settings = get(settingsAtom);

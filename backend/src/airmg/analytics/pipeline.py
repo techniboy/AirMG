@@ -6,9 +6,10 @@ from datetime import datetime
 
 from airmg.analytics.baselines import Baselines, BaselineState, BaselineStatus
 from airmg.analytics.recovery import RecoveryScorer
+from airmg.analytics.sleep_score import compute_sleep_score
 from airmg.analytics.strain import StrainScorer
 from airmg.store.reads import get_baseline, get_samples_range
-from airmg.store.writes import upsert_baseline, upsert_daily_metrics
+from airmg.store.writes import upsert_baseline, upsert_daily_metrics, upsert_steps
 
 
 def _day_ts_range(day: str) -> tuple[int, int]:
@@ -45,7 +46,7 @@ def _save_baseline(conn: sqlite3.Connection, metric: str, state: BaselineState) 
 def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
     start_ts, end_ts = _day_ts_range(day)
     hr_data = get_samples_range(conn, "hr", start_ts, end_ts)
-    hrv_data = get_samples_range(conn, "hrv", start_ts - 43200, end_ts)
+    hrv_data = get_samples_range(conn, "hrv", start_ts - 43200, start_ts + 43200)
 
     nightly_hrv = None
     if hrv_data:
@@ -53,9 +54,10 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
 
     sleep_row = conn.execute(
         "SELECT * FROM sleep_sessions"
-        " WHERE start_ts >= ? AND end_ts <= ?"
-        " ORDER BY start_ts DESC LIMIT 1",
-        (start_ts - 43200, end_ts),
+        " WHERE end_ts > ? AND end_ts <= ?"
+        " AND (end_ts - start_ts) >= 3600"
+        " ORDER BY (end_ts - start_ts) DESC LIMIT 1",
+        (start_ts, end_ts + 43200),
     ).fetchone()
 
     resting_hr = None
@@ -103,6 +105,13 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
             except (json.JSONDecodeError, TypeError):
                 pass
 
+    # SpO2 — wrist sensors produce noisy low readings; discard below 85% and use median
+    spo2_vals = sorted(s["value"] for s in get_samples_range(conn, "spo2", start_ts, end_ts) if s["value"] >= 85)
+    spo2 = None
+    if spo2_vals:
+        mid = len(spo2_vals) // 2
+        spo2 = round(spo2_vals[mid] if len(spo2_vals) % 2 else (spo2_vals[mid - 1] + spo2_vals[mid]) / 2, 1)
+
     # Resp rate
     resp_data = get_samples_range(conn, "resp_rate", start_ts, end_ts)
     resp_rate = None
@@ -127,6 +136,22 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
     rhr_baseline = Baselines.update(rhr_baseline, rhr_val, Baselines.RHR_CFG)
     _save_baseline(conn, "resting_hr", rhr_baseline)
 
+    # Sleep score (composite: duration + efficiency + architecture + autonomic)
+    if sleep_minutes and sleep_minutes > 0:
+        ss = compute_sleep_score(
+            sleep_min=sleep_minutes,
+            efficiency=sleep_perf,
+            deep_min=deep_minutes,
+            rem_min=rem_minutes,
+            hrv=nightly_hrv,
+            rhr=rhr_val,
+            hrv_baseline=hrv_baseline.baseline if hrv_baseline.usable else None,
+            hrv_spread=hrv_baseline.spread if hrv_baseline.usable else None,
+            rhr_baseline=rhr_baseline.baseline if rhr_baseline.usable else None,
+            rhr_spread=rhr_baseline.spread if rhr_baseline.usable else None,
+        )
+        sleep_perf = ss.total / 100.0
+
     # Recovery
     recovery = None
     if nightly_hrv is not None and resting_hr is not None:
@@ -146,9 +171,11 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
         rhr_for_strain = float(resting_hr) if resting_hr else StrainScorer.DEFAULT_RESTING_HR
         strain_val = StrainScorer.strain(hr_data, resting_hr=rhr_for_strain, age=30)
 
-    # Steps
-    steps_row = conn.execute("SELECT total FROM steps WHERE day = ?", (day,)).fetchone()
-    steps = steps_row["total"] if steps_row else None
+    # Steps — aggregate from deduplicated interval samples
+    step_samples = get_samples_range(conn, "steps", start_ts, end_ts)
+    steps = int(sum(s["value"] for s in step_samples)) if step_samples else None
+    if steps:
+        upsert_steps(conn, day, steps)
 
     upsert_daily_metrics(
         conn,
@@ -166,6 +193,7 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
             "light_minutes": light_minutes,
             "wake_minutes": wake_minutes,
             "steps": steps,
+            "spo2": spo2,
             "calories": calories,
         },
     )

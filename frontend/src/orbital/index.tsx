@@ -4,6 +4,9 @@ import { useCallback, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import * as THREE from "three/webgpu";
 import CameraRig from "./cameraRig";
+import Dock from "./hud/Dock";
+import { hoveredObjectAtom } from "./hud/hoverAtom";
+import LandingHud from "./hud/LandingHud";
 import Atmosphere from "./scene/Atmosphere";
 import Aurora from "./scene/Aurora";
 import Effects from "./scene/Effects";
@@ -19,6 +22,8 @@ export default function OrbitalWorld() {
   const navigate = useNavigate();
   // read here (main React root) — the Canvas reconciler doesn't see JotaiProvider
   const world = useAtomValue(worldStateAtom);
+  // HUD panel hover → scene highlight (same constraint: atom read out here)
+  const hudHover = useAtomValue(hoveredObjectAtom);
   const [ready, setReady] = useState(false);
 
   // navigation handlers live in the DOM root (router context is not
@@ -78,17 +83,19 @@ export default function OrbitalWorld() {
           <ambientLight intensity={0.12} color="#a8c2ff" />
           <CameraRig pathname={location.pathname} />
           {/* key light lives inside Star, at SUN_POSITION; Task 13 feeds flares */}
-          <Star world={world} onSelect={goStrain} />
+          <Star world={world} onSelect={goStrain} hovered={hudHover === "star"} />
           <group>
-            <Planet world={world} onSelect={goRecovery} />
+            <Planet world={world} onSelect={goRecovery} hovered={hudHover === "planet"} />
             <Atmosphere world={world} />
             <Aurora world={world} />
           </group>
-          <MoonSat world={world} onSelectMoon={goSleep} />
+          <MoonSat world={world} onSelectMoon={goSleep} hovered={hudHover === "moon"} />
           <Starfield />
           <Effects quality="high" />
         </Canvas>
       </div>
+      <LandingHud world={world} visible={location.pathname === "/"} />
+      <Dock pathname={location.pathname} />
       {/* a11y mirrors for the clickable bodies (canvas raycast targets) */}
       <div className="orbital-sr-nav">
         <button type="button" className="orbital-sr-only" onClick={goRecovery}>

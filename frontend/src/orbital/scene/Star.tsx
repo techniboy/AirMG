@@ -222,16 +222,20 @@ export default function Star({
   world,
   flares = [],
   onSelect,
+  hovered = false,
 }: {
   world: WorldState;
   flares?: Flare[];
   onSelect?: () => void;
+  /** external highlight (HUD panel hover) — treated like pointer hover */
+  hovered?: boolean;
 }) {
   const activity = useRef(DORMANT.coronaActivity);
   const light = useRef<THREE.DirectionalLight>(null);
   const coreMesh = useRef<THREE.Mesh>(null);
   const shellRefs = useRef<Array<THREE.Mesh | null>>([]);
-  const [hovered, setHovered] = useState(false);
+  const [pointerHover, setPointerHover] = useState(false);
+  const hot = hovered || pointerHover;
 
   const { uniforms, core, shells, flareKit } = useMemo(() => {
     const u = makeUniforms();
@@ -290,10 +294,10 @@ export default function Star({
   useFrame((_, rawDelta) => {
     const dt = Math.min(rawDelta, 0.1);
     damp(activity, "current", world.coronaActivity, 1.8, dt);
-    damp(uniforms.hover, "value", hovered ? 1 : 0, 0.18, dt);
+    damp(uniforms.hover, "value", hot ? 1 : 0, 0.18, dt);
     if (coreMesh.current) {
       const s = coreMesh.current.scale;
-      damp(s, "x", hovered ? 1.04 : 1, 0.18, dt);
+      damp(s, "x", hot ? 1.04 : 1, 0.18, dt);
       s.setScalar(s.x);
     }
 
@@ -320,11 +324,11 @@ export default function Star({
         }}
         onPointerOver={(e) => {
           e.stopPropagation();
-          setHovered(true);
+          setPointerHover(true);
           document.body.style.cursor = "pointer";
         }}
         onPointerOut={() => {
-          setHovered(false);
+          setPointerHover(false);
           document.body.style.cursor = "";
         }}
       >
@@ -335,7 +339,7 @@ export default function Star({
           <sphereGeometry args={[STAR_RADIUS * 1.6, 16, 16]} />
         </mesh>
       </mesh>
-      {hovered && (
+      {hot && (
         <Html
           position={[0, STAR_RADIUS + 1.9, 0]}
           center

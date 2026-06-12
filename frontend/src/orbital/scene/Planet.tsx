@@ -217,15 +217,19 @@ function buildStorm(slot: (typeof STORM_SLOTS)[number], seed: number): StormCell
 export default function Planet({
   world,
   onSelect,
+  hovered = false,
 }: {
   world: WorldState;
   onSelect?: () => void;
+  /** external highlight (HUD panel hover) — treated like pointer hover */
+  hovered?: boolean;
 }) {
   const group = useRef<THREE.Group>(null);
   // start from the dormant pose and ease awake on first data
   const rotSpeed = useRef(DORMANT.rotationSpeed);
   const stormAnim = useRef(0);
-  const [hovered, setHovered] = useState(false);
+  const [pointerHover, setPointerHover] = useState(false);
+  const hot = hovered || pointerHover;
 
   const { material, uniforms, storms } = useMemo(() => {
     const u = makeUniforms();
@@ -256,7 +260,7 @@ export default function Planet({
     damp(stormAnim, "current", world.stormCount, 2.5, dt);
     // glow only — no scale boost: the atmosphere shell sits at 1.028×R and
     // the aurora at 1.012×R, so a 1.04 scale would poke through both
-    damp(uniforms.hover, "value", hovered ? 1 : 0, 0.18, dt);
+    damp(uniforms.hover, "value", hot ? 1 : 0, 0.18, dt);
 
     if (group.current) group.current.rotation.y += rotSpeed.current * dt;
     for (let i = 0; i < storms.length; i += 1) {
@@ -276,11 +280,11 @@ export default function Planet({
           }}
           onPointerOver={(e) => {
             e.stopPropagation();
-            setHovered(true);
+            setPointerHover(true);
             document.body.style.cursor = "pointer";
           }}
           onPointerOut={() => {
-            setHovered(false);
+            setPointerHover(false);
             document.body.style.cursor = "";
           }}
         >
@@ -290,7 +294,7 @@ export default function Planet({
           <primitive key={i} object={storm.pivot} />
         ))}
       </group>
-      {hovered && (
+      {hot && (
         <Html
           position={[0, PLANET_RADIUS + 0.65, 0]}
           center

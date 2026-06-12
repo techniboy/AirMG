@@ -107,9 +107,12 @@ function buildSatMaterials() {
 export default function MoonSat({
   world,
   onSelectMoon,
+  hovered = false,
 }: {
   world: WorldState;
   onSelectMoon?: () => void;
+  /** external highlight (HUD panel hover) — treated like pointer hover */
+  hovered?: boolean;
 }) {
   const moonOrbit = useRef<THREE.Group>(null);
   const moonMesh = useRef<THREE.Mesh>(null);
@@ -117,7 +120,8 @@ export default function MoonSat({
   const satOrbit = useRef<THREE.Group>(null);
   const satBody = useRef<THREE.Group>(null);
   const satSpeed = useRef(DORMANT.satelliteSpeed);
-  const [hovered, setHovered] = useState(false);
+  const [pointerHover, setPointerHover] = useState(false);
+  const hot = hovered || pointerHover;
 
   const { moonUniforms, moonMaterial, satMaterials } = useMemo(() => {
     const u = makeMoonUniforms();
@@ -142,10 +146,10 @@ export default function MoonSat({
     const dt = Math.min(rawDelta, 0.1);
     damp(moonUniforms.phase, "value", world.moonPhase, 1.5, dt);
     damp(satSpeed, "current", world.satelliteSpeed, 2, dt);
-    damp(moonUniforms.hover, "value", hovered ? 1 : 0, 0.18, dt);
+    damp(moonUniforms.hover, "value", hot ? 1 : 0, 0.18, dt);
     if (moonAnchor.current) {
       const s = moonAnchor.current.scale;
-      damp(s, "x", hovered ? 1.04 : 1, 0.18, dt);
+      damp(s, "x", hot ? 1.04 : 1, 0.18, dt);
       s.setScalar(s.x);
     }
 
@@ -174,11 +178,11 @@ export default function MoonSat({
             }}
             onPointerOver={(e) => {
               e.stopPropagation();
-              setHovered(true);
+              setPointerHover(true);
               document.body.style.cursor = "pointer";
             }}
             onPointerOut={() => {
-              setHovered(false);
+              setPointerHover(false);
               document.body.style.cursor = "";
             }}
           >
@@ -189,7 +193,7 @@ export default function MoonSat({
             <mesh visible={false}>
               <sphereGeometry args={[MOON_RADIUS * 1.8, 12, 12]} />
             </mesh>
-            {hovered && (
+            {hot && (
               <Html
                 position={[0, MOON_RADIUS + 0.35, 0]}
                 center

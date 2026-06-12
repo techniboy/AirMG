@@ -122,7 +122,7 @@ const FIXTURE_INPUTS: Record<string, WorldInputs> = {
 	},
 };
 
-function readFixtureInputs(): WorldInputs | null {
+export function readFixtureInputs(): WorldInputs | null {
 	if (typeof location === "undefined") return null;
 	const name = new URLSearchParams(location.search).get("worldFixture");
 	if (name == null) return null;
@@ -131,7 +131,7 @@ function readFixtureInputs(): WorldInputs | null {
 
 // /api/today actually returns DailyMetrics OR {status:"no_data", message} —
 // the typed client claims DailyMetrics, so we narrow at runtime.
-function asMetrics(data: unknown): DailyMetrics | null {
+export function asMetrics(data: unknown): DailyMetrics | null {
 	if (data == null || typeof data !== "object") return null;
 	if ("status" in data && (data as { status?: string }).status === "no_data")
 		return null;

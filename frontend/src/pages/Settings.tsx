@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useAtom } from "jotai";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { api } from "../api/client";
 import { settingsAtom, type ProfileSettings } from "../atoms/api";
+import { themeAtom, type Theme } from "../atoms/theme";
 
 const DEFAULT_SETTINGS: ProfileSettings = {
 	age: null,
@@ -49,12 +50,42 @@ export default function Settings() {
 		}
 	}
 
+	const [theme, setTheme] = useAtom(themeAtom);
+
 	if (isPending) return <div className="text-text-secondary">Loading…</div>;
 	if (error) return <div className="text-sm text-status-critical">{String(error)}</div>;
+
+	const THEMES: { value: Theme; label: string; desc: string }[] = [
+		{ value: "dark", label: "Dark", desc: "NOOP-inspired dark theme" },
+		{ value: "liquid-glass", label: "Liquid Glass", desc: "Apple iOS 26 translucent glass" },
+	];
 
 	return (
 		<div className="mx-auto max-w-lg space-y-6">
 			<h1 className="text-2xl font-bold">Settings</h1>
+
+			<Card className="border-hairline bg-surface-raised p-5 space-y-4">
+				<div className="text-xs uppercase tracking-widest text-text-tertiary">
+					Appearance
+				</div>
+				<div className="flex gap-2">
+					{THEMES.map((t) => (
+						<button
+							key={t.value}
+							type="button"
+							onClick={() => setTheme(t.value)}
+							className={`flex-1 rounded-lg border px-3 py-3 text-left transition-colors ${
+								theme === t.value
+									? "border-accent bg-accent-muted text-accent"
+									: "border-hairline text-text-secondary hover:text-text-primary"
+							}`}
+						>
+							<div className="text-sm font-medium">{t.label}</div>
+							<div className="text-[11px] mt-0.5 opacity-60">{t.desc}</div>
+						</button>
+					))}
+				</div>
+			</Card>
 
 			<form onSubmit={handleSave} className="space-y-4">
 				<Card className="border-hairline bg-surface-raised p-5 space-y-4">

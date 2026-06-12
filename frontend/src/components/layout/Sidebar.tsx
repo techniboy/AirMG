@@ -1,4 +1,6 @@
+import { useAtomValue } from "jotai";
 import { NavLink } from "react-router";
+import { themeAtom } from "../../atoms/theme";
 
 const NAV_ITEMS = [
 	{ path: "/", label: "Today", icon: "◉" },
@@ -14,8 +16,11 @@ const NAV_ITEMS = [
 ];
 
 export function Sidebar() {
+	const theme = useAtomValue(themeAtom);
+	const isGlass = theme === "liquid-glass";
+
 	return (
-		<nav className="flex w-56 flex-col gap-1 border-r border-hairline bg-surface-raised p-4">
+		<nav className={`relative z-[1] flex w-56 flex-col gap-1 border-r border-hairline p-4 ${isGlass ? "lg-sidebar" : "bg-surface-raised"}`}>
 			<div className="mb-6 px-2 text-xl font-bold text-accent">AirMG</div>
 			{NAV_ITEMS.map((item) => (
 				<NavLink
@@ -25,7 +30,9 @@ export function Sidebar() {
 					className={({ isActive }) =>
 						`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
 							isActive
-								? "bg-accent-muted text-accent"
+								? isGlass
+									? "lg-nav-active text-accent"
+									: "bg-accent-muted text-accent"
 								: "text-text-secondary hover:bg-surface-overlay hover:text-text-primary"
 						}`
 					}

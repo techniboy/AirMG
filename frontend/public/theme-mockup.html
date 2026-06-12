@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AirMG — Liquid Glass</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --glass-blur: 60px;
+  --glass-radius: 24px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html, body { height: 100%; overflow: hidden; }
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  color: #1d1d1f;
+}
+
+/* ═══════════════════════════════════════════════════ */
+/* Vivid mesh gradient background — iOS 26 wallpaper  */
+/* ═══════════════════════════════════════════════════ */
+.bg-canvas {
+  position: fixed; inset: 0; z-index: 0;
+  background: linear-gradient(135deg, #e8f0fe 0%, #f5e6f0 25%, #fce4ec 40%, #fff3e0 55%, #e0f7fa 75%, #e8eaf6 100%);
+  overflow: hidden;
+}
+.bg-orb {
+  position: absolute; border-radius: 50%;
+  filter: blur(80px);
+  animation: drift 20s ease-in-out infinite alternate;
+}
+.bg-orb.o1 { width: 500px; height: 500px; top: -10%; right: -5%; background: radial-gradient(circle, rgba(0,122,255,0.35), rgba(88,86,214,0.2)); }
+.bg-orb.o2 { width: 600px; height: 600px; bottom: -15%; left: -10%; background: radial-gradient(circle, rgba(255,45,85,0.25), rgba(255,149,0,0.2)); animation-delay: -7s; }
+.bg-orb.o3 { width: 450px; height: 450px; top: 30%; left: 40%; background: radial-gradient(circle, rgba(52,199,89,0.2), rgba(0,199,190,0.15)); animation-delay: -14s; }
+.bg-orb.o4 { width: 350px; height: 350px; top: 10%; left: 15%; background: radial-gradient(circle, rgba(175,82,222,0.2), rgba(90,200,250,0.15)); animation-delay: -3s; }
+
+@keyframes drift {
+  0% { transform: translate(0,0) scale(1); }
+  33% { transform: translate(30px,-20px) scale(1.05); }
+  66% { transform: translate(-20px,30px) scale(0.95); }
+  100% { transform: translate(10px,10px) scale(1.02); }
+}
+
+/* ═══════════════════════════════════════════════════ */
+/* SVG filter for glass refraction/lensing            */
+/* ═══════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════ */
+/* Layout                                              */
+/* ═══════════════════════════════════════════════════ */
+.app {
+  position: relative; z-index: 1;
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  padding: 28px 16px;
+  background: rgba(255,255,255,0.45);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border-right: 0.5px solid rgba(255,255,255,0.6);
+  display: flex; flex-direction: column;
+}
+.logo { padding: 2px 14px 0; margin-bottom: 36px; display: flex; align-items: center; gap: 11px; }
+.logo-icon {
+  width: 34px; height: 34px; border-radius: 10px;
+  background: linear-gradient(135deg, #007AFF, #5AC8FA);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 14px; color: #fff;
+  box-shadow: 0 2px 12px rgba(0,122,255,0.3);
+}
+.logo-name { font-size: 16px; font-weight: 600; letter-spacing: 0.02em; color: #1d1d1f; }
+
+.nav-group-label {
+  font-size: 11px; font-weight: 600; color: rgba(60,60,67,0.4);
+  padding: 20px 14px 6px; letter-spacing: 0.04em; text-transform: uppercase;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 9px 14px; border-radius: 12px; cursor: pointer;
+  font-size: 14px; font-weight: 400; color: rgba(60,60,67,0.7);
+  transition: all 0.25s ease;
+}
+.nav-item:hover {
+  background: rgba(255,255,255,0.5);
+  color: #1d1d1f;
+}
+.nav-item.active {
+  background: rgba(255,255,255,0.65);
+  backdrop-filter: blur(30px) saturate(200%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%);
+  color: #007AFF;
+  font-weight: 500;
+  box-shadow:
+    0 0.5px 0 rgba(255,255,255,0.9) inset,
+    0 -0.5px 0 rgba(0,0,0,0.04) inset,
+    0 2px 8px rgba(0,0,0,0.06),
+    0 0 0 0.5px rgba(0,0,0,0.03);
+}
+.nav-icon { font-size: 17px; width: 24px; text-align: center; }
+.sidebar-spacer { flex: 1; }
+
+/* ── Main ── */
+.main {
+  padding: 32px 36px;
+  overflow-y: auto;
+  position: relative;
+}
+.page-header {
+  display: flex; justify-content: space-between; align-items: baseline;
+  margin-bottom: 28px;
+}
+.page-title { font-size: 32px; font-weight: 700; letter-spacing: -0.03em; color: #1d1d1f; }
+.page-date { font-size: 14px; font-weight: 400; color: rgba(60,60,67,0.45); }
+
+/* ═══════════════════════════════════════════════════ */
+/* Glass card — pure Liquid Glass                      */
+/* ═══════════════════════════════════════════════════ */
+.glass-card {
+  position: relative;
+  background: rgba(255,255,255,0.45);
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  border-radius: var(--glass-radius);
+  border: 0.5px solid rgba(255,255,255,0.7);
+  box-shadow:
+    0 0.5px 0 rgba(255,255,255,0.95) inset,
+    0 -0.5px 0 rgba(0,0,0,0.04) inset,
+    0 8px 32px rgba(0,0,0,0.06),
+    0 2px 8px rgba(0,0,0,0.04);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.glass-card:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0.5px 0 rgba(255,255,255,0.95) inset,
+    0 -0.5px 0 rgba(0,0,0,0.04) inset,
+    0 12px 40px rgba(0,0,0,0.08),
+    0 4px 12px rgba(0,0,0,0.05);
+}
+/* Top specular highlight — the signature Liquid Glass shine */
+.glass-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 50%;
+  background: linear-gradient(
+    180deg,
+    rgba(255,255,255,0.5) 0%,
+    rgba(255,255,255,0.15) 30%,
+    transparent 100%
+  );
+  border-radius: var(--glass-radius) var(--glass-radius) 0 0;
+  pointer-events: none;
+  z-index: 1;
+}
+/* Edge refraction highlight */
+.glass-card::after {
+  content: '';
+  position: absolute;
+  top: 0; left: 5%; right: 5%;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(255,255,255,0.9) 30%,
+    rgba(255,255,255,1) 50%,
+    rgba(255,255,255,0.9) 70%,
+    transparent
+  );
+  z-index: 2;
+}
+
+/* ═══════════════════════════════════════════════════ */
+/* Hero row — Recovery / Strain / Sleep               */
+/* ═══════════════════════════════════════════════════ */
+.hero-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+
+.hero-card { padding: 24px 26px; position: relative; z-index: 0; }
+.hero-card .label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.08em; margin-bottom: 14px; position: relative; z-index: 2;
+}
+.hero-card .value {
+  font-size: 52px; font-weight: 700; letter-spacing: -0.04em; line-height: 1;
+  position: relative; z-index: 2;
+}
+.hero-card .unit { font-size: 20px; font-weight: 400; opacity: 0.5; }
+.hero-card .delta {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-top: 14px; font-size: 12px; font-weight: 500;
+  padding: 4px 12px; border-radius: 10px;
+  position: relative; z-index: 2;
+}
+
+/* Tinted glass — each hero card has subtle color tint */
+.hero-card.recovery { background: rgba(52,199,89,0.08); }
+.hero-card.recovery .label { color: rgba(52,199,89,0.7); }
+.hero-card.recovery .value { color: #28a745; }
+.hero-card.recovery .delta { color: #28a745; background: rgba(52,199,89,0.1); }
+
+.hero-card.strain { background: rgba(255,149,0,0.06); }
+.hero-card.strain .label { color: rgba(255,149,0,0.7); }
+.hero-card.strain .value { color: #e68600; }
+.hero-card.strain .delta { color: rgba(60,60,67,0.5); background: rgba(0,0,0,0.04); }
+
+.hero-card.sleep { background: rgba(0,122,255,0.06); }
+.hero-card.sleep .label { color: rgba(0,122,255,0.7); }
+.hero-card.sleep .value { color: #007AFF; }
+.hero-card.sleep .delta { color: rgba(60,60,67,0.5); background: rgba(0,0,0,0.04); }
+
+/* Progress bar */
+.progress { height: 4px; border-radius: 2px; background: rgba(0,0,0,0.06); margin-top: 20px; overflow: hidden; position: relative; z-index: 2; }
+.progress-fill { height: 100%; border-radius: 2px; }
+
+/* ═══════════════════════════════════════════════════ */
+/* Metric cards                                        */
+/* ═══════════════════════════════════════════════════ */
+.metric-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 16px; }
+.metric-card { padding: 20px 22px; }
+.metric-card .label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: rgba(60,60,67,0.45); margin-bottom: 6px;
+  position: relative; z-index: 2;
+}
+.metric-card .val {
+  font-size: 30px; font-weight: 600; letter-spacing: -0.03em;
+  color: #1d1d1f; line-height: 1.2; position: relative; z-index: 2;
+}
+.metric-card .val .u { font-size: 14px; font-weight: 400; color: rgba(60,60,67,0.45); margin-left: 2px; }
+.metric-card .sub { font-size: 11px; color: rgba(60,60,67,0.4); margin-top: 4px; font-weight: 400; position: relative; z-index: 2; }
+
+/* Sparkline */
+.sparkline { display: flex; align-items: end; gap: 2px; height: 36px; margin-top: 12px; position: relative; z-index: 2; }
+.spark-bar { flex: 1; border-radius: 2px 2px 0 0; min-height: 3px; }
+
+/* Readiness */
+.readiness-label { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin-top: 4px; position: relative; z-index: 2; }
+.readiness-tag {
+  display: inline-flex; align-items: center; gap: 6px;
+  margin-top: 12px; padding: 5px 14px; border-radius: 20px;
+  font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+  position: relative; z-index: 2;
+}
+.readiness-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  box-shadow: 0 0 8px currentColor;
+}
+
+/* ═══════════════════════════════════════════════════ */
+/* Vitals list                                         */
+/* ═══════════════════════════════════════════════════ */
+.vitals-card { padding: 24px 28px; }
+.vitals-card .section-label {
+  font-size: 11px; font-weight: 600; text-transform: uppercase;
+  letter-spacing: 0.06em; color: rgba(60,60,67,0.4); margin-bottom: 18px;
+  position: relative; z-index: 2;
+}
+.vital-row {
+  display: grid; grid-template-columns: 130px 90px 1fr; align-items: center;
+  padding: 11px 0;
+  border-bottom: 0.5px solid rgba(0,0,0,0.05);
+  position: relative; z-index: 2;
+}
+.vital-row:last-child { border-bottom: none; }
+.vital-name { font-size: 13px; font-weight: 400; color: rgba(60,60,67,0.6); }
+.vital-val { font-size: 14px; font-weight: 600; color: #1d1d1f; font-variant-numeric: tabular-nums; }
+.vital-bar { height: 4px; border-radius: 2px; background: rgba(0,0,0,0.06); overflow: hidden; }
+.vital-bar-fill { height: 100%; border-radius: 2px; }
+
+/* ═══════════════════════════════════════════════════ */
+/* Animations                                          */
+/* ═══════════════════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.hero-grid .glass-card:nth-child(1) { animation: fadeUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) both; }
+.hero-grid .glass-card:nth-child(2) { animation: fadeUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) 0.06s both; }
+.hero-grid .glass-card:nth-child(3) { animation: fadeUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) 0.12s both; }
+.metric-grid .glass-card:nth-child(1) { animation: fadeUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) 0.15s both; }
+.metric-grid .glass-card:nth-child(2) { animation: fadeUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) 0.19s both; }
+.metric-grid .glass-card:nth-child(3) { animation: fadeUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) 0.23s both; }
+.metric-grid .glass-card:nth-child(4) { animation: fadeUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) 0.27s both; }
+.vitals-card { animation: fadeUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) 0.32s both; }
+
+</style>
+</head>
+<body>
+
+<!-- SVG filter for glass refraction -->
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <filter id="glass-refract">
+      <feTurbulence type="fractalNoise" baseFrequency="0.015" numOctaves="3" seed="2" result="noise"/>
+      <feDisplacementMap in="SourceGraphic" in2="noise" scale="3" xChannelSelector="R" yChannelSelector="G"/>
+    </filter>
+  </defs>
+</svg>
+
+<div class="bg-canvas">
+  <div class="bg-orb o1"></div>
+  <div class="bg-orb o2"></div>
+  <div class="bg-orb o3"></div>
+  <div class="bg-orb o4"></div>
+</div>
+
+<div class="app">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <div class="logo-icon">A</div>
+      <div class="logo-name">AirMG</div>
+    </div>
+    <div class="nav-group-label">Dashboard</div>
+    <div class="nav-item active"><span class="nav-icon">◉</span> Control Center</div>
+    <div class="nav-item"><span class="nav-icon">◑</span> Sleep</div>
+    <div class="nav-item"><span class="nav-icon">♡</span> Recovery</div>
+    <div class="nav-item"><span class="nav-icon">⚡</span> Strain</div>
+    <div class="nav-group-label">Analytics</div>
+    <div class="nav-item"><span class="nav-icon">◎</span> Workouts</div>
+    <div class="nav-item"><span class="nav-icon">↗</span> Trends</div>
+    <div class="nav-item"><span class="nav-icon">◇</span> Insights</div>
+    <div class="nav-group-label">Log</div>
+    <div class="nav-item"><span class="nav-icon">✎</span> Journal</div>
+    <div class="sidebar-spacer"></div>
+    <div class="nav-item"><span class="nav-icon">⚙</span> Settings</div>
+  </div>
+
+  <!-- Main content -->
+  <div class="main">
+    <div class="page-header">
+      <div class="page-title">Control Center</div>
+      <div class="page-date">Thursday, June 12</div>
+    </div>
+
+    <!-- Hero row -->
+    <div class="hero-grid">
+      <div class="glass-card hero-card recovery">
+        <div class="label">Recovery</div>
+        <div class="value">72<span class="unit">%</span></div>
+        <div class="delta">↑ 8% vs yesterday</div>
+        <div class="progress"><div class="progress-fill" style="width:72%;background:linear-gradient(90deg,#34C759,#30D158)"></div></div>
+      </div>
+      <div class="glass-card hero-card strain">
+        <div class="label">Day Strain</div>
+        <div class="value">8.4</div>
+        <div class="delta">Moderate</div>
+        <div class="progress"><div class="progress-fill" style="width:40%;background:linear-gradient(90deg,#FF9500,#FF6B00)"></div></div>
+      </div>
+      <div class="glass-card hero-card sleep">
+        <div class="label">Sleep Score</div>
+        <div class="value">85<span class="unit">%</span></div>
+        <div class="delta">7h 24m</div>
+        <div class="progress"><div class="progress-fill" style="width:85%;background:linear-gradient(90deg,#007AFF,#5AC8FA)"></div></div>
+      </div>
+    </div>
+
+    <!-- Metric cards -->
+    <div class="metric-grid">
+      <div class="glass-card metric-card">
+        <div class="label">HRV</div>
+        <div class="val">62<span class="u">ms</span></div>
+        <div class="sub">baseline 68 ms</div>
+        <div class="sparkline" id="sp-hrv"></div>
+      </div>
+      <div class="glass-card metric-card">
+        <div class="label">Resting HR</div>
+        <div class="val">54<span class="u">bpm</span></div>
+        <div class="sub">baseline 56 bpm</div>
+        <div class="sparkline" id="sp-rhr"></div>
+      </div>
+      <div class="glass-card metric-card">
+        <div class="label">SpO₂</div>
+        <div class="val">97.2<span class="u">%</span></div>
+        <div class="sub">normal range</div>
+        <div class="sparkline" id="sp-spo2"></div>
+      </div>
+      <div class="glass-card metric-card">
+        <div class="label">Readiness</div>
+        <div class="readiness-label" style="color:#28a745">Push</div>
+        <div class="readiness-tag" style="color:#28a745;background:rgba(52,199,89,0.1);border:0.5px solid rgba(52,199,89,0.2)">
+          <span class="readiness-dot" style="background:#34C759"></span>
+          Good to train
+        </div>
+      </div>
+    </div>
+
+    <!-- Vitals -->
+    <div class="glass-card vitals-card">
+      <div class="section-label">Today's Vitals</div>
+      <div class="vital-row">
+        <span class="vital-name">HRV rMSSD</span>
+        <span class="vital-val">62 ms</span>
+        <div class="vital-bar"><div class="vital-bar-fill" style="width:65%;background:linear-gradient(90deg,#5AC8FA,#007AFF)"></div></div>
+      </div>
+      <div class="vital-row">
+        <span class="vital-name">Resting HR</span>
+        <span class="vital-val">54 bpm</span>
+        <div class="vital-bar"><div class="vital-bar-fill" style="width:45%;background:linear-gradient(90deg,#34C759,#30D158)"></div></div>
+      </div>
+      <div class="vital-row">
+        <span class="vital-name">SpO₂</span>
+        <span class="vital-val">97.2%</span>
+        <div class="vital-bar"><div class="vital-bar-fill" style="width:97%;background:linear-gradient(90deg,#5AC8FA,#64D2FF)"></div></div>
+      </div>
+      <div class="vital-row">
+        <span class="vital-name">Steps</span>
+        <span class="vital-val">9,137</span>
+        <div class="vital-bar"><div class="vital-bar-fill" style="width:61%;background:linear-gradient(90deg,#FF9500,#FFCC00)"></div></div>
+      </div>
+      <div class="vital-row">
+        <span class="vital-name">Calories</span>
+        <span class="vital-val">2,410</span>
+        <div class="vital-bar"><div class="vital-bar-fill" style="width:80%;background:linear-gradient(90deg,#FF2D55,#FF6482)"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function spark(id, colors, data) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const max = Math.max(...data);
+  data.forEach((v, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'spark-bar';
+    const pct = v / max;
+    bar.style.height = Math.max(8, pct * 100) + '%';
+    bar.style.background = colors[1];
+    bar.style.opacity = (0.25 + pct * 0.55).toFixed(2);
+    if (i === data.length - 1) { bar.style.opacity = '0.85'; bar.style.background = colors[0]; }
+    el.appendChild(bar);
+  });
+}
+spark('sp-hrv',  ['#007AFF','#5AC8FA'], [45,52,68,72,55,48,63,75,80,62,58,70,65,62]);
+spark('sp-rhr',  ['#34C759','#86EFAC'], [6,4,5,7,3,4,6,8,7,5,6,7,5,6]);
+spark('sp-spo2', ['#5AC8FA','#A5E8FF'], [30,40,36,44,38,42,40,34,46,42,36,44,40,44]);
+</script>
+
+</body>
+</html>

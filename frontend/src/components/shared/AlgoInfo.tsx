@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 
 interface AlgoInfoProps {
 	algo: keyof typeof ALGO_DETAILS;
@@ -149,7 +150,10 @@ export function AlgoInfo({ algo }: AlgoInfoProps) {
 				i
 			</button>
 
-			{open && (
+			{open &&
+				// Portal: backdrop-filter on ancestor cards (liquid-glass theme)
+				// turns them into the containing block for position:fixed.
+				createPortal(
 				<div
 					className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm"
 					onClick={() => setOpen(false)}
@@ -211,7 +215,8 @@ export function AlgoInfo({ algo }: AlgoInfoProps) {
 							</div>
 						</div>
 					</div>
-				</div>
+				</div>,
+				document.body,
 			)}
 		</>
 	);

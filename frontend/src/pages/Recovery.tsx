@@ -69,7 +69,7 @@ export default function Recovery() {
 								label="Sleep Perf"
 								value={
 									data.sleep_performance != null
-										? `${Math.round(data.sleep_performance <= 1 ? data.sleep_performance * 100 : data.sleep_performance)}`
+										? `${Math.round(data.sleep_performance)}`
 										: "--"
 								}
 								unit="%"

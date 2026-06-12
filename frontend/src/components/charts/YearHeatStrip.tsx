@@ -50,7 +50,7 @@ export function YearHeatStrip({
 	for (let i = 364; i >= 0; i--) {
 		const d = new Date(today);
 		d.setDate(d.getDate() - i);
-		const dayStr = d.toISOString().slice(0, 10);
+		const dayStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 		const dayOfWeek = (d.getDay() + 6) % 7;
 		const col = Math.floor(
 			(364 - i + ((today.getDay() + 6) % 7)) / 7,

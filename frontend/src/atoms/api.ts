@@ -20,8 +20,14 @@ import type {
 // Shared date atoms
 // ---------------------------------------------------------------------------
 
+// Local calendar date — toISOString() is UTC and disagrees with the
+// backend's local-time day boundaries in the evening/morning.
+function dayStr(d: Date) {
+	return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function todayStr() {
-	return new Date().toISOString().slice(0, 10);
+	return dayStr(new Date());
 }
 
 export const controlCenterDayAtom = atom(todayStr());
@@ -133,7 +139,7 @@ export const trendsAtom = atomWithQuery((get) => {
 	const rangeDays = rangeMap[get(trendsRangeAtom)] ?? 30;
 	const d = new Date();
 	d.setDate(d.getDate() - rangeDays + 1);
-	const start = d.toISOString().slice(0, 10);
+	const start = dayStr(d);
 	const end = todayStr();
 	return {
 		queryKey: ["trends", start, end],
@@ -296,8 +302,8 @@ export const workoutsSummaryAtom = atomWithQuery((get) => {
 export const sleepTrendAtom = atomWithQuery(() => {
 	const d = new Date();
 	d.setDate(d.getDate() - 29);
-	const start = d.toISOString().slice(0, 10);
-	const end = new Date().toISOString().slice(0, 10);
+	const start = dayStr(d);
+	const end = todayStr();
 	return {
 		queryKey: ["sleep-trend"],
 		queryFn: () =>
@@ -314,8 +320,8 @@ export const sleepTrendAtom = atomWithQuery(() => {
 export const yearRecoveryAtom = atomWithQuery(() => {
 	const d = new Date();
 	d.setDate(d.getDate() - 364);
-	const start = d.toISOString().slice(0, 10);
-	const end = new Date().toISOString().slice(0, 10);
+	const start = dayStr(d);
+	const end = todayStr();
 	return {
 		queryKey: ["year-recovery"],
 		queryFn: () =>
@@ -324,6 +330,34 @@ export const yearRecoveryAtom = atomWithQuery(() => {
 			),
 	};
 });
+
+// ---------------------------------------------------------------------------
+// Health Age
+// ---------------------------------------------------------------------------
+
+export interface HealthAgeMetric {
+	key: string;
+	label: string;
+	value: number | null;
+	unit: string;
+	target: string;
+	delta_years: number | null;
+}
+
+export interface HealthAgeResult {
+	status: "ok" | "needs_profile" | "insufficient_data";
+	message?: string;
+	chronological_age?: number;
+	health_age?: number;
+	delta_years?: number;
+	window_days?: number;
+	metrics?: HealthAgeMetric[];
+}
+
+export const healthAgeAtom = atomWithQuery(() => ({
+	queryKey: ["health-age"],
+	queryFn: () => api<HealthAgeResult>("/api/health-age"),
+}));
 
 // ---------------------------------------------------------------------------
 // Auth

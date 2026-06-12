@@ -1,6 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { Shell } from "./components/layout/Shell";
 import Coach from "./pages/Coach";
+import HealthAge from "./pages/HealthAge";
 import Insights from "./pages/Insights";
 import Journal from "./pages/Journal";
 import Onboarding from "./pages/Onboarding";
@@ -25,6 +26,7 @@ export default function App() {
 					<Route path="workouts" element={<Workouts />} />
 					<Route path="trends" element={<Trends />} />
 					<Route path="insights" element={<Insights />} />
+					<Route path="health-age" element={<HealthAge />} />
 					<Route path="coach" element={<Coach />} />
 					<Route path="journal" element={<Journal />} />
 					<Route path="settings" element={<Settings />} />

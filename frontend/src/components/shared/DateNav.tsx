@@ -1,17 +1,21 @@
 import type { PrimitiveAtom } from "jotai";
 import { useAtom } from "jotai";
 
-function todayStr() {
-	return new Date().toISOString().slice(0, 10);
-}
-
-function offsetDay(base: string, delta: number): string {
-	const [y, m, d] = base.split("-").map(Number);
-	const dt = new Date(y, m - 1, d + delta);
+function localDayStr(dt: Date): string {
 	const yy = dt.getFullYear();
 	const mm = String(dt.getMonth() + 1).padStart(2, "0");
 	const dd = String(dt.getDate()).padStart(2, "0");
 	return `${yy}-${mm}-${dd}`;
+}
+
+function todayStr() {
+	// Local date, not toISOString() (UTC) — backend day boundaries are local.
+	return localDayStr(new Date());
+}
+
+function offsetDay(base: string, delta: number): string {
+	const [y, m, d] = base.split("-").map(Number);
+	return localDayStr(new Date(y, m - 1, d + delta));
 }
 
 interface DateNavProps {

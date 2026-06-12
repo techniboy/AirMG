@@ -10,6 +10,7 @@ const NAV_ITEMS = [
 	{ path: "/workouts", label: "Workouts", icon: "▶" },
 	{ path: "/trends", label: "Trends", icon: "↗" },
 	{ path: "/insights", label: "Insights", icon: "◇" },
+	{ path: "/health-age", label: "Health Age", icon: "∞" },
 	{ path: "/coach", label: "Coach", icon: "★" },
 	{ path: "/journal", label: "Journal", icon: "✎" },
 	{ path: "/settings", label: "Settings", icon: "⚙" },

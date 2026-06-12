@@ -230,10 +230,13 @@ export const sparklinesAtom = atomWithQuery((get) => {
 // Readiness
 // ---------------------------------------------------------------------------
 
-export const readinessAtom = atomWithQuery(() => ({
-	queryKey: ["readiness"],
-	queryFn: () => api<ReadinessResult>("/api/readiness"),
-}));
+export const readinessAtom = atomWithQuery((get) => {
+	const day = get(controlCenterDayAtom);
+	return {
+		queryKey: ["readiness", day],
+		queryFn: () => api<ReadinessResult>(`/api/readiness?day=${day}`),
+	};
+});
 
 // ---------------------------------------------------------------------------
 // HR Trend

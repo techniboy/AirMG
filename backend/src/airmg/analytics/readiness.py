@@ -229,8 +229,8 @@ class ReadinessEngine:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def evaluate(conn: sqlite3.Connection) -> ReadinessResult:
-        today = date.today()
+    def evaluate(conn: sqlite3.Connection, day: str | None = None) -> ReadinessResult:
+        today = date.fromisoformat(day) if day else date.today()
         start_28 = (today - timedelta(days=28)).isoformat()
         end_today = today.isoformat()
 

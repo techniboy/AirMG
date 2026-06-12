@@ -72,7 +72,7 @@ export default function Sleep() {
 					</Card>
 
 					<div className="grid grid-cols-[repeat(auto-fill,minmax(168px,1fr))] gap-2">
-						<StatTile label="Sleep Performance" value={session?.sleep_performance != null ? `${Math.round(session.sleep_performance)}%` : "--"} color="text-accent" sparkline={sparklines?.sleep_performance} sparkColor="#18C98B" />
+						<StatTile label="Sleep Performance" value={session?.sleep_performance != null ? `${Math.round(session.sleep_performance <= 1 ? session.sleep_performance * 100 : session.sleep_performance)}%` : "--"} color="text-accent" sparkline={sparklines?.sleep_performance} sparkColor="#18C98B" />
 						<StatTile label="Efficiency" value={session?.efficiency != null ? `${Math.round(session.efficiency <= 1 ? session.efficiency * 100 : session.efficiency)}%` : "--"} color="text-status-positive" />
 						<StatTile label="Restorative" value={totalMin && deepMin != null && remMin != null ? `${Math.round(((deepMin + remMin) / totalMin) * 100)}%` : "--"} caption="deep+rem" color="text-metric-purple" />
 						<StatTile label="Deep" value={formatMinutes(deepMin)} color="text-metric-purple" sparkline={sparklines?.deep_minutes} sparkColor="#5C6FB1" />

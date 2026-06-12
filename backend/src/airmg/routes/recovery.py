@@ -6,7 +6,7 @@ from fastapi import APIRouter
 
 from airmg.config import DB_PATH
 from airmg.store.db import get_connection
-from airmg.store.reads import get_all_baselines, get_daily_metrics_range
+from airmg.store.reads import get_all_baselines, get_daily_metrics_range, normalize_daily_metrics
 
 router = APIRouter(prefix="/api/recovery", tags=["recovery"])
 
@@ -21,6 +21,7 @@ def recovery_detail(day: str):
     conn.close()
     if daily is None:
         return {"status": "no_data"}
+    daily = normalize_daily_metrics(dict(daily))
     return {
         "day": day,
         "recovery": daily["recovery"],

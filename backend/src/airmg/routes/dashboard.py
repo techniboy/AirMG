@@ -6,7 +6,7 @@ from fastapi import APIRouter, Query
 
 from airmg.config import DB_PATH
 from airmg.store.db import get_connection
-from airmg.store.reads import get_daily_metrics_range, get_samples_range, get_today_metrics
+from airmg.store.reads import get_daily_metrics_range, get_samples_range, normalize_daily_metrics
 
 router = APIRouter(prefix="/api", tags=["dashboard"])
 
@@ -14,15 +14,12 @@ router = APIRouter(prefix="/api", tags=["dashboard"])
 @router.get("/today")
 def today(day: str = Query(default=None, description="yyyy-MM-dd")):
     conn = get_connection(DB_PATH)
-    if day is None:
-        metrics = get_today_metrics(conn)
-    else:
-        row = conn.execute("SELECT * FROM daily_metrics WHERE day = ?", (day,)).fetchone()
-        metrics = dict(row) if row else None
+    day = day or date.today().isoformat()
+    row = conn.execute("SELECT * FROM daily_metrics WHERE day = ?", (day,)).fetchone()
     conn.close()
-    if metrics is None:
+    if row is None:
         return {"status": "no_data", "message": "No data for this day."}
-    return metrics
+    return normalize_daily_metrics(dict(row))
 
 
 @router.get("/week")

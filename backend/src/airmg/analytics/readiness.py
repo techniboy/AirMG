@@ -247,7 +247,7 @@ class ReadinessEngine:
             )
 
         hrv_baseline = get_baseline(conn, "hrv")
-        rhr_baseline = get_baseline(conn, "rhr")
+        rhr_baseline = get_baseline(conn, "resting_hr")
 
         sleep_need_str = get_profile(conn, "sleep_need_hours")
         sleep_need_hours = float(sleep_need_str) if sleep_need_str else 8.0

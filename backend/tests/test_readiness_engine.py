@@ -33,7 +33,7 @@ def _seed_days(conn, n: int, hrv=55.0, rhr=58.0, strain=10.0, sleep_minutes=420)
 
 def _seed_baselines(conn, hrv_mean=55.0, hrv_spread=8.0, rhr_mean=58.0, rhr_spread=3.0):
     upsert_baseline(conn, "hrv", mean=hrv_mean, spread=hrv_spread, n_valid=14, status="trusted")
-    upsert_baseline(conn, "rhr", mean=rhr_mean, spread=rhr_spread, n_valid=14, status="trusted")
+    upsert_baseline(conn, "resting_hr", mean=rhr_mean, spread=rhr_spread, n_valid=14, status="trusted")
 
 
 def _seed_profile(conn, sleep_need_hours=7.0):

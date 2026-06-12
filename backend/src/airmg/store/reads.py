@@ -30,17 +30,25 @@ def get_workouts_range(conn: sqlite3.Connection, start_ts: int, end_ts: int) -> 
     return [dict(r) for r in rows]
 
 
+def normalize_daily_metrics(row: dict) -> dict:
+    """Canonical API scale: sleep_performance is 0-100. DB stores a 0-1 fraction."""
+    sp = row.get("sleep_performance")
+    if sp is not None and sp <= 1:
+        row["sleep_performance"] = round(sp * 100, 1)
+    return row
+
+
 def get_daily_metrics_range(conn: sqlite3.Connection, start_day: str, end_day: str) -> list[dict]:
     rows = conn.execute(
         "SELECT * FROM daily_metrics WHERE day >= ? AND day <= ? ORDER BY day", (start_day, end_day)
     ).fetchall()
-    return [dict(r) for r in rows]
+    return [normalize_daily_metrics(dict(r)) for r in rows]
 
 
 def get_today_metrics(conn: sqlite3.Connection) -> dict | None:
     today = date.today().isoformat()
     row = conn.execute("SELECT * FROM daily_metrics WHERE day = ?", (today,)).fetchone()
-    return dict(row) if row else None
+    return normalize_daily_metrics(dict(row)) if row else None
 
 
 def get_baseline(conn: sqlite3.Connection, metric: str) -> dict | None:

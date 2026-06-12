@@ -8,7 +8,7 @@ from fastapi import APIRouter, Query
 from airmg.analytics.zones import build_zones, time_in_zones
 from airmg.config import DB_PATH
 from airmg.store.db import get_connection
-from airmg.store.reads import get_samples_range
+from airmg.store.reads import get_profile, get_samples_range
 
 router = APIRouter(prefix="/api/workouts", tags=["workouts"])
 
@@ -52,7 +52,12 @@ def workouts_summary(days: int = Query(30, ge=1, le=9999)):
         "hr_sum": 0, "hr_n": 0,
     })
 
-    zone_set = build_zones()
+    age_str = get_profile(conn, "age")
+    hr_max_str = get_profile(conn, "hr_max")
+    zone_set = build_zones(
+        age=int(age_str) if age_str else None,
+        manual_max_hr=float(hr_max_str) if hr_max_str else None,
+    )
     total_zones: dict[int, int] = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
 
     for w in workouts:

@@ -13,15 +13,12 @@ class RecoveryScorer:
 
     LOGISTIC_K = 1.6
     LOGISTIC_Z0 = -0.20
-    POPULATION_MEAN = 58.0
 
     BAND_RED_MAX = 34.0
     BAND_YELLOW_MAX = 67.0
 
     SLEEP_PERF_CENTER = 0.85
     SLEEP_PERF_SCALE = 0.12
-
-    RESTING_HR_WINDOW_S = 5 * 60
 
     @staticmethod
     def z_score(value: float, mean: float, spread: float) -> float:
@@ -35,22 +32,6 @@ class RecoveryScorer:
         if score < RecoveryScorer.BAND_YELLOW_MAX:
             return "yellow"
         return "green"
-
-    @staticmethod
-    def resting_hr(hr_samples: list[dict], start_ts: int, end_ts: int) -> int | None:
-        seg = [s for s in hr_samples if start_ts <= s["ts"] <= end_ts]
-        if not seg:
-            return None
-        window = RecoveryScorer.RESTING_HR_WINDOW_S
-        means: list[float] = []
-        t = start_ts
-        while t < end_ts:
-            win = [s for s in seg if t <= s["ts"] < t + window]
-            if win:
-                means.append(sum(s["value"] for s in win) / len(win))
-            t += window
-        floor_val = min(means) if means else sum(s["value"] for s in seg) / len(seg)
-        return round(floor_val)
 
     @staticmethod
     def recovery(

@@ -12,6 +12,7 @@ from airmg.routes.auth import router as auth_router
 from airmg.routes.coach import router as coach_router
 from airmg.routes.dashboard import router as dashboard_router
 from airmg.routes.explorer import router as explorer_router
+from airmg.routes.health_age import router as health_age_router
 from airmg.routes.export import router as export_router
 from airmg.routes.insights import router as insights_router
 from airmg.routes.journal import router as journal_router
@@ -70,6 +71,7 @@ app.include_router(settings_router)
 app.include_router(explorer_router)
 app.include_router(export_router)
 app.include_router(baselines_router)
+app.include_router(health_age_router)
 
 
 @app.get("/health")

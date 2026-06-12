@@ -8,7 +8,7 @@ from airmg.analytics.baselines import Baselines, BaselineState, BaselineStatus
 from airmg.analytics.recovery import RecoveryScorer
 from airmg.analytics.sleep_score import compute_sleep_score
 from airmg.analytics.strain import StrainScorer
-from airmg.store.reads import get_baseline, get_samples_range
+from airmg.store.reads import get_baseline, get_profile, get_samples_range
 from airmg.store.writes import upsert_baseline, upsert_daily_metrics, upsert_steps
 
 
@@ -43,6 +43,33 @@ def _save_baseline(conn: sqlite3.Connection, metric: str, state: BaselineState) 
     )
 
 
+def recompute_strain_history(conn: sqlite3.Connection) -> int:
+    """Recompute strain for all days using the current profile (age / hr_max).
+
+    Strain-only on purpose: a full compute_daily_metrics replay would re-fold
+    historical values into the EWMA baselines.
+    """
+    age = int(get_profile(conn, "age") or StrainScorer.DEFAULT_AGE)
+    hr_max_str = get_profile(conn, "hr_max")
+    max_hr = float(hr_max_str) if hr_max_str else None
+
+    updated = 0
+    rows = conn.execute("SELECT day, resting_hr FROM daily_metrics").fetchall()
+    for row in rows:
+        start_ts, end_ts = _day_ts_range(row["day"])
+        hr_data = get_samples_range(conn, "hr", start_ts, end_ts)
+        if not hr_data:
+            continue
+        rhr = float(row["resting_hr"]) if row["resting_hr"] else StrainScorer.DEFAULT_RESTING_HR
+        strain_val = StrainScorer.strain(hr_data, resting_hr=rhr, age=age, max_hr=max_hr)
+        conn.execute(
+            "UPDATE daily_metrics SET strain = ? WHERE day = ?", (strain_val, row["day"])
+        )
+        updated += 1
+    conn.commit()
+    return updated
+
+
 def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
     start_ts, end_ts = _day_ts_range(day)
     hr_data = get_samples_range(conn, "hr", start_ts, end_ts)
@@ -52,12 +79,14 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
     if hrv_data:
         nightly_hrv = sum(s["value"] for s in hrv_data) / len(hrv_data)
 
+    # A sleep session belongs to the day it ends on (the wake day) — no
+    # spill-over margin, or tomorrow's longer night gets picked for today.
     sleep_row = conn.execute(
         "SELECT * FROM sleep_sessions"
         " WHERE end_ts > ? AND end_ts <= ?"
         " AND (end_ts - start_ts) >= 3600"
         " ORDER BY (end_ts - start_ts) DESC LIMIT 1",
-        (start_ts, end_ts + 43200),
+        (start_ts, end_ts),
     ).fetchone()
 
     resting_hr = None
@@ -126,15 +155,17 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
     cal_vals = [r["calories"] for r in workout_rows if r["calories"] is not None]
     calories = round(sum(cal_vals)) if cal_vals else None
 
-    # Update baselines
+    # Score today against the baseline as it stood *before* today's data,
+    # then fold today's values in afterwards — otherwise today's value pulls
+    # the baseline toward itself and damps its own z-score.
     hrv_baseline = _baseline_from_db(conn, "hrv")
-    hrv_baseline = Baselines.update(hrv_baseline, nightly_hrv, Baselines.HRV_CFG)
-    _save_baseline(conn, "hrv", hrv_baseline)
-
     rhr_baseline = _baseline_from_db(conn, "resting_hr")
+    resp_baseline = _baseline_from_db(conn, "resp_rate")
     rhr_val = float(resting_hr) if resting_hr else None
-    rhr_baseline = Baselines.update(rhr_baseline, rhr_val, Baselines.RHR_CFG)
-    _save_baseline(conn, "resting_hr", rhr_baseline)
+
+    hrv_usable = hrv_baseline is not None and hrv_baseline.usable
+    rhr_usable = rhr_baseline is not None and rhr_baseline.usable
+    resp_usable = resp_baseline is not None and resp_baseline.usable
 
     # Sleep score (composite: duration + efficiency + architecture + autonomic)
     if sleep_minutes and sleep_minutes > 0:
@@ -145,36 +176,41 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
             rem_min=rem_minutes,
             hrv=nightly_hrv,
             rhr=rhr_val,
-            hrv_baseline=hrv_baseline.baseline if hrv_baseline.usable else None,
-            hrv_spread=hrv_baseline.spread if hrv_baseline.usable else None,
-            rhr_baseline=rhr_baseline.baseline if rhr_baseline.usable else None,
-            rhr_spread=rhr_baseline.spread if rhr_baseline.usable else None,
+            hrv_baseline=hrv_baseline.baseline if hrv_usable else None,
+            hrv_spread=hrv_baseline.spread if hrv_usable else None,
+            rhr_baseline=rhr_baseline.baseline if rhr_usable else None,
+            rhr_spread=rhr_baseline.spread if rhr_usable else None,
         )
         sleep_perf = ss.total / 100.0
 
-    # Resp baseline
-    resp_baseline = _baseline_from_db(conn, "resp_rate")
-    resp_baseline = Baselines.update(resp_baseline, resp_rate, Baselines.RESP_CFG)
-    _save_baseline(conn, "resp_rate", resp_baseline)
-
     # Recovery
     recovery = None
-    if nightly_hrv is not None and resting_hr is not None:
+    if nightly_hrv is not None and resting_hr is not None and hrv_baseline is not None:
         recovery = RecoveryScorer.recovery(
             hrv=nightly_hrv,
             rhr=float(resting_hr),
             resp=resp_rate,
             hrv_baseline=hrv_baseline,
-            rhr_baseline=rhr_baseline if rhr_baseline.usable else None,
-            resp_baseline=resp_baseline if resp_baseline.usable else None,
+            rhr_baseline=rhr_baseline if rhr_usable else None,
+            resp_baseline=resp_baseline if resp_usable else None,
             sleep_perf=sleep_perf,
         )
 
-    # Strain
+    # Fold today's values into the baselines for tomorrow
+    _save_baseline(conn, "hrv", Baselines.update(hrv_baseline, nightly_hrv, Baselines.HRV_CFG))
+    _save_baseline(conn, "resting_hr", Baselines.update(rhr_baseline, rhr_val, Baselines.RHR_CFG))
+    _save_baseline(
+        conn, "resp_rate", Baselines.update(resp_baseline, resp_rate, Baselines.RESP_CFG)
+    )
+
+    # Strain — use profile age / manual HR max when set
     strain_val = None
     if hr_data:
         rhr_for_strain = float(resting_hr) if resting_hr else StrainScorer.DEFAULT_RESTING_HR
-        strain_val = StrainScorer.strain(hr_data, resting_hr=rhr_for_strain, age=30)
+        age = int(get_profile(conn, "age") or StrainScorer.DEFAULT_AGE)
+        hr_max_str = get_profile(conn, "hr_max")
+        max_hr = float(hr_max_str) if hr_max_str else None
+        strain_val = StrainScorer.strain(hr_data, resting_hr=rhr_for_strain, age=age, max_hr=max_hr)
 
     # Steps — aggregate from deduplicated interval samples
     step_samples = get_samples_range(conn, "steps", start_ts, end_ts)

@@ -13,7 +13,7 @@ class Recommendation:
 class CoachEngine:
     BAND_RED_MAX = 34.0
     BAND_YELLOW_MAX = 67.0
-    SLEEP_DEBT_THRESHOLD = 0.70
+    SLEEP_DEBT_THRESHOLD = 70.0  # sleep_performance on the canonical 0-100 scale
     HIGH_STRAIN_THRESHOLD = 15.0
 
     @staticmethod
@@ -70,7 +70,7 @@ class CoachEngine:
                 Recommendation(
                     category="sleep",
                     message=(
-                        f"Sleep performance is low ({sleep_perf:.0%})."
+                        f"Sleep performance is low ({sleep_perf:.0f}%)."
                         " Prioritize an earlier bedtime tonight"
                         " to reduce sleep debt."
                     ),

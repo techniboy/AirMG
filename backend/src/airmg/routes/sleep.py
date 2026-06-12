@@ -7,7 +7,7 @@ from fastapi import APIRouter
 
 from airmg.config import DB_PATH
 from airmg.store.db import get_connection
-from airmg.store.reads import get_samples_range
+from airmg.store.reads import get_samples_range, normalize_daily_metrics
 
 router = APIRouter(prefix="/api/sleep", tags=["sleep"])
 
@@ -17,11 +17,14 @@ def sleep_detail(day: str):
     conn = get_connection(DB_PATH)
     start_ts = int(datetime.strptime(day, "%Y-%m-%d").timestamp())
     end_ts = start_ts + 86400
+    # Same session-selection rule as pipeline.compute_daily_metrics so the
+    # sleep page shows the session the daily metrics were derived from.
     row = conn.execute(
         "SELECT * FROM sleep_sessions"
-        " WHERE start_ts >= ? AND start_ts < ?"
-        " ORDER BY start_ts DESC LIMIT 1",
-        (start_ts - 43200, end_ts),
+        " WHERE end_ts > ? AND end_ts <= ?"
+        " AND (end_ts - start_ts) >= 3600"
+        " ORDER BY (end_ts - start_ts) DESC LIMIT 1",
+        (start_ts, end_ts),
     ).fetchone()
     daily = conn.execute("SELECT * FROM daily_metrics WHERE day = ?", (day,)).fetchone()
     if row is None:
@@ -52,10 +55,8 @@ def sleep_detail(day: str):
             p5_idx = max(0, len(values) * 5 // 100)
             session["resting_hr"] = round(values[p5_idx])
     if daily:
-        sp = daily["sleep_performance"]
-        session["sleep_performance"] = (
-            round(sp * 100) if sp is not None and sp <= 1 else sp
-        )
+        daily = normalize_daily_metrics(dict(daily))
+        session["sleep_performance"] = daily["sleep_performance"]
         if not session.get("resting_hr"):
             session["resting_hr"] = daily["resting_hr"]
         session["avg_hrv"] = session.get("avg_hrv") or daily["hrv_rmssd"]

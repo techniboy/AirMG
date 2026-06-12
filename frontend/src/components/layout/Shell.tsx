@@ -1,7 +1,10 @@
 import { useAtomValue } from "jotai";
+import { lazy, Suspense } from "react";
 import { Outlet } from "react-router";
 import { themeAtom } from "../../atoms/theme";
 import { Sidebar } from "./Sidebar";
+
+const OrbitalWorld = lazy(() => import("../../orbital"));
 
 function GlassBackground() {
 	return (
@@ -17,6 +20,16 @@ function GlassBackground() {
 export function Shell() {
 	const theme = useAtomValue(themeAtom);
 	const isGlass = theme === "liquid-glass";
+
+	if (theme === "orbital") {
+		return (
+			<div className="orbital">
+				<Suspense fallback={<div className="h-screen w-screen bg-black" />}>
+					<OrbitalWorld />
+				</Suspense>
+			</div>
+		);
+	}
 
 	return (
 		<div className={`flex h-screen text-text-primary ${isGlass ? "liquid-glass bg-transparent" : "bg-surface-base"}`}>

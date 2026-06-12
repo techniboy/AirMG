@@ -58,6 +58,7 @@ export default function Settings() {
 	const THEMES: { value: Theme; label: string; desc: string }[] = [
 		{ value: "dark", label: "Dark", desc: "NOOP-inspired dark theme" },
 		{ value: "liquid-glass", label: "Liquid Glass", desc: "Apple iOS 26 translucent glass" },
+		{ value: "orbital", label: "Orbital", desc: "Living 3D world (WebGPU)" },
 	];
 
 	return (

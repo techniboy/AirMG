@@ -18,14 +18,17 @@ import Dock from "./hud/Dock";
 import { hoveredObjectAtom } from "./hud/hoverAtom";
 import LandingHud from "./hud/LandingHud";
 import RecoveryHud from "./hud/RecoveryHud";
+import SleepHud from "./hud/SleepHud";
 import Atmosphere from "./scene/Atmosphere";
 import Aurora from "./scene/Aurora";
 import Effects from "./scene/Effects";
 import MoonSat from "./scene/MoonSat";
 import Planet from "./scene/Planet";
 import RecoveryRings from "./scene/RecoveryRings";
+import SleepDescent from "./scene/SleepDescent";
 import Star from "./scene/Star";
 import Starfield from "./scene/Starfield";
+import { asSleepSession, decimateStages, orbitalSleepAtom } from "./sleepData";
 import { asMetrics, computeRingMetrics, worldStateAtom } from "./worldState";
 import "./orbital.css";
 
@@ -53,6 +56,7 @@ export default function OrbitalWorld() {
   const [ready, setReady] = useState(false);
   const consolePage = CONSOLE_PAGES[location.pathname];
   const onRecovery = location.pathname === "/recovery";
+  const onSleep = location.pathname === "/sleep";
 
   // recovery diorama data — read here (atoms invisible to the Canvas root),
   // passed down as props like `world`
@@ -63,6 +67,15 @@ export default function OrbitalWorld() {
   const ringMetrics = useMemo(
     () => computeRingMetrics(today, baselines ?? {}),
     [today, baselines],
+  );
+
+  // sleep diorama data — day follows controlCenterDayAtom (DateNav time
+  // travel re-draws the descent track); decimation memoized per session
+  const sleepQuery = useAtomValue(orbitalSleepAtom);
+  const sleepSession = asSleepSession(sleepQuery.data);
+  const sleepTrack = useMemo(
+    () => (sleepSession?.stages ? decimateStages(sleepSession.stages) : null),
+    [sleepSession],
   );
 
   // navigation handlers live in the DOM root (router context is not
@@ -132,6 +145,7 @@ export default function OrbitalWorld() {
           </group>
           <MoonSat world={world} onSelectMoon={goSleep} hovered={hudHover === "moon"} />
           <RecoveryRings metrics={ringMetrics} active={onRecovery} />
+          <SleepDescent track={sleepTrack} active={onSleep} />
           <Starfield />
           <Effects quality="high" />
         </Canvas>
@@ -142,6 +156,7 @@ export default function OrbitalWorld() {
         recovery={today?.recovery ?? null}
         visible={onRecovery}
       />
+      <SleepHud session={sleepSession} visible={onSleep} />
       {consolePage && (
         // keyed by pathname — route changes remount and replay the entrance
         <ConsolePanel key={location.pathname} title={consolePage.title}>

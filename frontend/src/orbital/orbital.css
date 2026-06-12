@@ -397,6 +397,92 @@
   color: rgba(148, 198, 180, 0.45);
 }
 
+/* ---- sleep diorama layer (/sleep) ---- */
+
+.orbital-hud-sleep {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  color: #d6f5e8;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.orbital-hud-sleep.is-hidden {
+  opacity: 0;
+  transform: translateX(-14px);
+}
+
+.hud-sleep-detail {
+  width: 272px;
+  margin-left: 28px;
+  padding: 18px 20px 15px;
+  pointer-events: auto;
+}
+
+.hud-stage-list {
+  margin: 14px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid rgba(46, 230, 168, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  list-style: none;
+}
+
+.hud-stage-row {
+  display: grid;
+  grid-template-columns: 48px 1fr 58px;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+}
+
+.hud-stage-name {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(148, 198, 180, 0.7);
+}
+
+.hud-stage-bar {
+  display: block;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(214, 245, 232, 0.07);
+  overflow: hidden;
+}
+
+.hud-stage-bar > span {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  box-shadow: 0 0 8px rgba(124, 152, 224, 0.45);
+  transition: width 0.6s ease;
+}
+
+.hud-stage-min {
+  justify-self: end;
+  font-size: 11px;
+  color: #ecfff7;
+}
+
+/* tiny altitude-band labels riding the ghost arcs in the scene */
+.orbital-chip--band {
+  padding: 3px 9px;
+  font-size: 8.5px;
+  letter-spacing: 0.2em;
+  background: rgba(5, 12, 20, 0.42);
+  border-color: rgba(155, 184, 255, 0.16);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
 /* ---- dock — all routes ---- */
 
 .hud-dock {

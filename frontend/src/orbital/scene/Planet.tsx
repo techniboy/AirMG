@@ -1,6 +1,7 @@
+import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { damp } from "maath/easing";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three/webgpu";
 import {
   atan,
@@ -54,6 +55,7 @@ const makeUniforms = () => ({
   saturation: uniform(DORMANT.surfaceSaturation),
   cityCalm: uniform(DORMANT.cityCalm),
   desaturate: uniform(DORMANT.desaturate),
+  hover: uniform(0),
 });
 type PlanetUniforms = ReturnType<typeof makeUniforms>;
 type FloatUniform = PlanetUniforms["saturation"];
@@ -147,7 +149,9 @@ function buildSurfaceMaterial(u: PlanetUniforms): THREE.MeshBasicNodeMaterial {
   );
 
   // sync-stale wash toward grey
-  const finalColor = mix(withCities, vec3(luminance(withCities)), u.desaturate);
+  const washed = mix(withCities, vec3(luminance(withCities)), u.desaturate);
+  // hover glow: gentle overall lift so the planet reads as the active target
+  const finalColor = washed.mul(u.hover.mul(0.22).add(1));
   material.colorNode = vec4(finalColor, 1);
   return material;
 }
@@ -210,11 +214,18 @@ function buildStorm(slot: (typeof STORM_SLOTS)[number], seed: number): StormCell
   return { pivot, opacity, drift: slot.drift, material, geometry };
 }
 
-export default function Planet({ world }: { world: WorldState }) {
+export default function Planet({
+  world,
+  onSelect,
+}: {
+  world: WorldState;
+  onSelect?: () => void;
+}) {
   const group = useRef<THREE.Group>(null);
   // start from the dormant pose and ease awake on first data
   const rotSpeed = useRef(DORMANT.rotationSpeed);
   const stormAnim = useRef(0);
+  const [hovered, setHovered] = useState(false);
 
   const { material, uniforms, storms } = useMemo(() => {
     const u = makeUniforms();
@@ -243,6 +254,9 @@ export default function Planet({ world }: { world: WorldState }) {
     damp(uniforms.desaturate, "value", world.desaturate, 1.5, dt);
     damp(rotSpeed, "current", world.rotationSpeed, 1.8, dt);
     damp(stormAnim, "current", world.stormCount, 2.5, dt);
+    // glow only — no scale boost: the atmosphere shell sits at 1.028×R and
+    // the aurora at 1.012×R, so a 1.04 scale would poke through both
+    damp(uniforms.hover, "value", hovered ? 1 : 0, 0.18, dt);
 
     if (group.current) group.current.rotation.y += rotSpeed.current * dt;
     for (let i = 0; i < storms.length; i += 1) {
@@ -252,13 +266,40 @@ export default function Planet({ world }: { world: WorldState }) {
   });
 
   return (
-    <group ref={group}>
-      <mesh material={material}>
-        <sphereGeometry args={[PLANET_RADIUS, 64, 64]} />
-      </mesh>
-      {storms.map((storm, i) => (
-        <primitive key={i} object={storm.pivot} />
-      ))}
+    <group>
+      <group ref={group}>
+        <mesh
+          material={material}
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect?.();
+          }}
+          onPointerOver={(e) => {
+            e.stopPropagation();
+            setHovered(true);
+            document.body.style.cursor = "pointer";
+          }}
+          onPointerOut={() => {
+            setHovered(false);
+            document.body.style.cursor = "";
+          }}
+        >
+          <sphereGeometry args={[PLANET_RADIUS, 64, 64]} />
+        </mesh>
+        {storms.map((storm, i) => (
+          <primitive key={i} object={storm.pivot} />
+        ))}
+      </group>
+      {hovered && (
+        <Html
+          position={[0, PLANET_RADIUS + 0.65, 0]}
+          center
+          style={{ pointerEvents: "none" }}
+          zIndexRange={[5, 0]}
+        >
+          <div className="orbital-chip">Recovery · Planet</div>
+        </Html>
+      )}
     </group>
   );
 }

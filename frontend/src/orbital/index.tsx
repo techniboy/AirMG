@@ -1,8 +1,9 @@
 import { Canvas } from "@react-three/fiber";
 import { useAtomValue } from "jotai";
-import { useState } from "react";
-import { useLocation } from "react-router";
+import { useCallback, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router";
 import * as THREE from "three/webgpu";
+import CameraRig from "./cameraRig";
 import Atmosphere from "./scene/Atmosphere";
 import Aurora from "./scene/Aurora";
 import Effects from "./scene/Effects";
@@ -15,14 +16,33 @@ import "./orbital.css";
 
 export default function OrbitalWorld() {
   const location = useLocation();
+  const navigate = useNavigate();
   // read here (main React root) — the Canvas reconciler doesn't see JotaiProvider
   const world = useAtomValue(worldStateAtom);
   const [ready, setReady] = useState(false);
 
+  // navigation handlers live in the DOM root (router context is not
+  // available inside the Canvas — it is a separate React root)
+  const goRecovery = useCallback(() => navigate("/recovery"), [navigate]);
+  const goSleep = useCallback(() => navigate("/sleep"), [navigate]);
+  const goStrain = useCallback(() => navigate("/strain"), [navigate]);
+
+  // Esc returns to orbit. Listener only exists while the orbital theme is
+  // mounted; cleaned up on unmount/theme switch.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Escape") return;
+      // don't hijack Esc from form fields (console pages, Task 11)
+      const t = e.target as HTMLElement | null;
+      if (t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable)) return;
+      navigate("/");
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [navigate]);
+
   return (
     <div className="orbital-root">
-      {/* debug: keep location wired so routing stays alive */}
-      <span style={{ display: "none" }}>{location.pathname}</span>
       <div className={`orbital-fade${ready ? " is-ready" : ""}`}>
         <Canvas
           dpr={[1, 2]}
@@ -41,21 +61,41 @@ export default function OrbitalWorld() {
             );
             return renderer;
           }}
-          onCreated={() => setReady(true)}
+          onCreated={(state) => {
+            setReady(true);
+            if (import.meta.env.DEV) {
+              // dev-only escape hatch for Playwright verification (moving
+              // bodies need live projection to be clicked reliably)
+              (window as unknown as { __orbital?: unknown }).__orbital = state;
+            }
+          }}
         >
           <color attach="background" args={["#04060d"]} />
           <ambientLight intensity={0.12} color="#a8c2ff" />
+          <CameraRig pathname={location.pathname} />
           {/* key light lives inside Star, at SUN_POSITION; Task 13 feeds flares */}
-          <Star world={world} />
+          <Star world={world} onSelect={goStrain} />
           <group>
-            <Planet world={world} />
+            <Planet world={world} onSelect={goRecovery} />
             <Atmosphere world={world} />
             <Aurora world={world} />
           </group>
-          <MoonSat world={world} />
+          <MoonSat world={world} onSelectMoon={goSleep} />
           <Starfield />
           <Effects quality="high" />
         </Canvas>
+      </div>
+      {/* a11y mirrors for the clickable bodies (canvas raycast targets) */}
+      <div className="orbital-sr-nav">
+        <button type="button" className="orbital-sr-only" onClick={goRecovery}>
+          View recovery planet
+        </button>
+        <button type="button" className="orbital-sr-only" onClick={goSleep}>
+          View sleep moon
+        </button>
+        <button type="button" className="orbital-sr-only" onClick={goStrain}>
+          View strain star
+        </button>
       </div>
     </div>
   );

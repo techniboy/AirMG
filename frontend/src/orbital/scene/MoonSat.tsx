@@ -1,6 +1,7 @@
+import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
 import { damp } from "maath/easing";
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three/webgpu";
 import {
   color,
@@ -33,6 +34,7 @@ const SAT_SCALE = 0.16;
 
 const makeMoonUniforms = () => ({
   phase: uniform(DORMANT.moonPhase),
+  hover: uniform(0),
 });
 type MoonUniforms = ReturnType<typeof makeMoonUniforms>;
 
@@ -70,7 +72,11 @@ function buildMoonMaterial(u: MoonUniforms): THREE.MeshBasicNodeMaterial {
   const rgb = albedo
     .mul(lit.mul(1.18).add(0.035))
     .add(color("#26344e").mul(oneMinus(lit)).mul(0.08));
-  material.colorNode = vec4(rgb, 1);
+  // hover glow: lift + a whisper of cool rim so the dark limb stays visible
+  const glowing = rgb
+    .mul(u.hover.mul(0.35).add(1))
+    .add(color("#9fd8ff").mul(u.hover).mul(0.05));
+  material.colorNode = vec4(glowing, 1);
   return material;
 }
 
@@ -98,12 +104,20 @@ function buildSatMaterials() {
   return { body, panel, beacon };
 }
 
-export default function MoonSat({ world }: { world: WorldState }) {
+export default function MoonSat({
+  world,
+  onSelectMoon,
+}: {
+  world: WorldState;
+  onSelectMoon?: () => void;
+}) {
   const moonOrbit = useRef<THREE.Group>(null);
   const moonMesh = useRef<THREE.Mesh>(null);
+  const moonAnchor = useRef<THREE.Group>(null);
   const satOrbit = useRef<THREE.Group>(null);
   const satBody = useRef<THREE.Group>(null);
   const satSpeed = useRef(DORMANT.satelliteSpeed);
+  const [hovered, setHovered] = useState(false);
 
   const { moonUniforms, moonMaterial, satMaterials } = useMemo(() => {
     const u = makeMoonUniforms();
@@ -128,6 +142,12 @@ export default function MoonSat({ world }: { world: WorldState }) {
     const dt = Math.min(rawDelta, 0.1);
     damp(moonUniforms.phase, "value", world.moonPhase, 1.5, dt);
     damp(satSpeed, "current", world.satelliteSpeed, 2, dt);
+    damp(moonUniforms.hover, "value", hovered ? 1 : 0, 0.18, dt);
+    if (moonAnchor.current) {
+      const s = moonAnchor.current.scale;
+      damp(s, "x", hovered ? 1.04 : 1, 0.18, dt);
+      s.setScalar(s.x);
+    }
 
     if (moonOrbit.current) moonOrbit.current.rotation.y += MOON_ORBIT_SPEED * dt;
     if (moonMesh.current) moonMesh.current.rotation.y += 0.012 * dt;
@@ -144,13 +164,42 @@ export default function MoonSat({ world }: { world: WorldState }) {
       {/* -- moon -- */}
       <group rotation-x={MOON_INCLINATION}>
         <group ref={moonOrbit} rotation-y={MOON_START_ANGLE}>
-          <mesh
-            ref={moonMesh}
-            material={moonMaterial}
+          {/* anchor rides the orbit, so hover chip + hit proxy track the moon */}
+          <group
+            ref={moonAnchor}
             position={[MOON_ORBIT_RADIUS, 0, 0]}
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelectMoon?.();
+            }}
+            onPointerOver={(e) => {
+              e.stopPropagation();
+              setHovered(true);
+              document.body.style.cursor = "pointer";
+            }}
+            onPointerOut={() => {
+              setHovered(false);
+              document.body.style.cursor = "";
+            }}
           >
-            <sphereGeometry args={[MOON_RADIUS, 48, 48]} />
-          </mesh>
+            <mesh ref={moonMesh} material={moonMaterial}>
+              <sphereGeometry args={[MOON_RADIUS, 48, 48]} />
+            </mesh>
+            {/* invisible, generous hit target (raycaster ignores `visible`) */}
+            <mesh visible={false}>
+              <sphereGeometry args={[MOON_RADIUS * 1.8, 12, 12]} />
+            </mesh>
+            {hovered && (
+              <Html
+                position={[0, MOON_RADIUS + 0.35, 0]}
+                center
+                style={{ pointerEvents: "none" }}
+                zIndexRange={[5, 0]}
+              >
+                <div className="orbital-chip">Sleep · Moon</div>
+              </Html>
+            )}
+          </group>
         </group>
       </group>
 

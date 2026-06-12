@@ -242,6 +242,7 @@ export default function Star({
       for (const m of shells) m.dispose();
       flareKit.material.dispose();
       flareKit.geometry.dispose();
+      flareKit.mesh.dispose();
     },
     [core, shells, flareKit],
   );

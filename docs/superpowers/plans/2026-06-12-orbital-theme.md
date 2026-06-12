@@ -328,7 +328,7 @@ import * as THREE from "three/webgpu";
 - Create: `frontend/src/orbital/scene/Star.tsx`
 - Create: `frontend/src/orbital/scene/MoonSat.tsx`
 
-- [ ] **Step 1:** Star at (38, 6, −20): emissive sphere + 3 additive corona shells (noise-scrolled fresnel), shell scale/turbulence × `coronaActivity`; light source (directional) aimed at planet.
+- [ ] **Step 1:** Star at SUN_POSITION (22, 5, −36): emissive sphere + 3 additive corona shells (noise-scrolled fresnel), shell scale/turbulence × `coronaActivity`; light source (directional) aimed at planet.
 - [ ] **Step 2:** Flares (used fully in Task 13): instanced arc sprites on an equatorial ring, count/height from props — render 0 by default here.
 - [ ] **Step 3:** Moon: sphere radius 0.5, orbit radius 4.5; phase = shader mask driven by `moonPhase` (terminator offset). Satellite: small box+panel group, orbit radius 3.2, angular speed = `satelliteSpeed`.
 - [ ] **Step 4:** Screenshots: strain 0 vs 21 fixtures → corona delta obvious.

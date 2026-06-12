@@ -152,16 +152,21 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
         )
         sleep_perf = ss.total / 100.0
 
+    # Resp baseline
+    resp_baseline = _baseline_from_db(conn, "resp_rate")
+    resp_baseline = Baselines.update(resp_baseline, resp_rate, Baselines.RESP_CFG)
+    _save_baseline(conn, "resp_rate", resp_baseline)
+
     # Recovery
     recovery = None
     if nightly_hrv is not None and resting_hr is not None:
         recovery = RecoveryScorer.recovery(
             hrv=nightly_hrv,
             rhr=float(resting_hr),
-            resp=None,
+            resp=resp_rate,
             hrv_baseline=hrv_baseline,
             rhr_baseline=rhr_baseline if rhr_baseline.usable else None,
-            resp_baseline=None,
+            resp_baseline=resp_baseline if resp_baseline.usable else None,
             sleep_perf=sleep_perf,
         )
 

@@ -7,3 +7,6 @@ __pycache__/
 node_modules/
 dist/
 .env
+.playwright-mcp/
+*.png
+.superpowers/

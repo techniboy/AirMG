@@ -122,14 +122,15 @@ def upsert_baseline(
 def upsert_journal_entry(
     conn: sqlite3.Connection,
     day: str,
-    question_key: str,
-    answer: str,
+    question_id: str,
+    question: str,
+    answer: bool,
     created_at: int | None = None,
 ) -> None:
     conn.execute(
-        """INSERT INTO journal_entries (day, question_key, answer, created_at) VALUES (?, ?, ?, ?)
-           ON CONFLICT(day, question_key) DO UPDATE SET answer=excluded.answer""",
-        (day, question_key, answer, created_at or int(time.time())),
+        """INSERT INTO journal_entries (day, question_key, answer, question, created_at) VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(day, question_key) DO UPDATE SET answer=excluded.answer, question=excluded.question""",
+        (day, question_id, int(answer), question, created_at or int(time.time())),
     )
     conn.commit()
 

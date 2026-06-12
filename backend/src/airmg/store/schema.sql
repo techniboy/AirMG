@@ -54,7 +54,8 @@ CREATE TABLE IF NOT EXISTS baselines (
 CREATE TABLE IF NOT EXISTS journal_entries (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     day TEXT NOT NULL, question_key TEXT NOT NULL,
-    answer TEXT NOT NULL, created_at INTEGER,
+    answer TEXT NOT NULL, question TEXT,
+    created_at INTEGER,
     UNIQUE(day, question_key)
 );
 

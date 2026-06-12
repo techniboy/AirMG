@@ -55,9 +55,17 @@ def get_all_baselines(conn: sqlite3.Connection) -> dict[str, dict]:
 
 def get_journal_entries(conn: sqlite3.Connection, day: str) -> list[dict]:
     rows = conn.execute(
-        "SELECT * FROM journal_entries WHERE day = ? ORDER BY question_key", (day,)
+        "SELECT day, question_key, answer, question FROM journal_entries WHERE day = ? ORDER BY question_key", (day,)
     ).fetchall()
-    return [dict(r) for r in rows]
+    return [
+        {
+            "question_id": r["question_key"],
+            "question": r["question"] or r["question_key"],
+            "answer": bool(int(r["answer"])) if r["answer"] not in (None, "") else False,
+            "day": r["day"],
+        }
+        for r in rows
+    ]
 
 
 def get_journal_entries_range(conn: sqlite3.Connection, start_day: str, end_day: str) -> list[dict]:

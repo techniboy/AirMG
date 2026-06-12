@@ -74,6 +74,7 @@ def exchange_code(code: str, state: str | None = None) -> dict:
     resp = httpx.post(client_cfg["token_uri"], data=body, timeout=30)
     resp.raise_for_status()
     tokens = resp.json()
+    import time
     return {
         "token": tokens["access_token"],
         "refresh_token": tokens.get("refresh_token"),
@@ -81,4 +82,5 @@ def exchange_code(code: str, state: str | None = None) -> dict:
         "client_id": client_cfg["client_id"],
         "client_secret": client_cfg["client_secret"],
         "scopes": tokens.get("scope", "").split(),
+        "expires_at": time.time() + tokens.get("expires_in", 3600),
     }

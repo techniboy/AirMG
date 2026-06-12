@@ -8,6 +8,10 @@ export async function api<T>(path: string, options?: RequestInit): Promise<T> {
 			...options?.headers,
 		},
 	});
+	if (res.status === 401) {
+		window.location.href = "/auth/login";
+		throw new Error("Session expired — redirecting to login");
+	}
 	if (!res.ok) {
 		throw new Error(`API error: ${res.status} ${res.statusText}`);
 	}

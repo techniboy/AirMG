@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import time
 
 from airmg.config import TOKENS_PATH
 
@@ -23,4 +24,8 @@ def clear_credentials() -> None:
 
 def is_authenticated() -> bool:
     creds = load_credentials()
-    return creds is not None and "token" in creds
+    if creds is None or "token" not in creds:
+        return False
+    if not creds.get("refresh_token"):
+        return time.time() < creds.get("expires_at", 0)
+    return True

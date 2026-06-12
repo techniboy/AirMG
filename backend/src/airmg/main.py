@@ -2,9 +2,11 @@
 from contextlib import asynccontextmanager
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
+from airmg.auth.tokens import is_authenticated
 from airmg.config import BACKEND_PORT, DB_PATH, FRONTEND_ORIGIN, ensure_dirs
 from airmg.routes.auth import router as auth_router
 from airmg.routes.coach import router as coach_router
@@ -41,6 +43,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def auth_guard(request: Request, call_next):
+    path = request.url.path
+    open_paths = ("/auth/", "/health", "/docs", "/openapi.json", "/redoc")
+    if any(path.startswith(p) for p in open_paths):
+        return await call_next(request)
+    if path.startswith(("/api/", "/sync/")) and not is_authenticated():
+        return JSONResponse({"detail": "Not authenticated"}, status_code=401)
+    return await call_next(request)
 
 app.include_router(auth_router)
 app.include_router(sync_router)

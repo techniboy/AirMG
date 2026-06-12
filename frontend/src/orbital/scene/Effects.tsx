@@ -76,6 +76,8 @@ export default function Effects({ quality }: EffectsProps) {
     // very subtle chromatic aberration, growing quadratically toward edges
     const composed = convertToTexture(graded);
     disposables.push(composed);
+    // RTTNode.dispose() doesn't free its render target in r184 — free it explicitly
+    disposables.push({ dispose: () => composed.renderTarget?.dispose() } as { dispose(): void });
     const shift = offCenter.mul(offCenter.length()).mul(CA_AMOUNT * 2);
     fx.outputNode = vec4(
       composed.sample(uv().add(shift)).r,

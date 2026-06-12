@@ -3,3 +3,15 @@
   inset: 0;
   background: #000;
 }
+
+/* black -> starfield fade once the renderer is live */
+.orbital-fade {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 1s ease;
+}
+
+.orbital-fade.is-ready {
+  opacity: 1;
+}

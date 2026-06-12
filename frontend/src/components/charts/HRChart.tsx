@@ -75,7 +75,7 @@ export function HRChart({ data, color = "#FF4F73" }: HRChartProps) {
 						color: tooltipText,
 						fontSize: 12,
 					}}
-					formatter={(val: number) => [`${val} bpm`, "HR"]}
+					formatter={(val: any) => [`${Number(val)} bpm`, "HR"]}
 				/>
 				<Area
 					type="monotone"

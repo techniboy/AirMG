@@ -18,13 +18,6 @@ import { AlgoInfo } from "../components/shared/AlgoInfo";
 import { strainColor } from "../lib/colors";
 import { formatMinutes, formatScore } from "../lib/format";
 
-function greetingWord(): string {
-  const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 17) return "Good afternoon";
-  return "Good evening";
-}
-
 function synthesisWord(score: number | null): string {
   if (score == null) return "No Data";
   if (score < 25) return "Depleted";

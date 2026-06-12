@@ -102,9 +102,9 @@ export function TrendLine({
 						fontSize: 12,
 						...(isGlass ? { backdropFilter: "blur(20px)" } : {}),
 					}}
-					labelFormatter={shortDay}
-					formatter={(val: number) => [
-						`${val !== null && val !== undefined ? val.toFixed(1) : "--"}${unit ? " " + unit : ""}`,
+					labelFormatter={(val: any) => shortDay(String(val))}
+					formatter={(val: any) => [
+						`${val !== null && val !== undefined ? Number(val).toFixed(1) : "--"}${unit ? " " + unit : ""}`,
 						"",
 					]}
 				/>

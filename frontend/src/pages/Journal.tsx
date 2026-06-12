@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
-import { useAtomValue, useSetAtom } from "jotai";
+import { useAtomValue } from "jotai";
+import type { JournalQuestion } from "../atoms/api";
 import { Card } from "@/components/ui/card";
 import { api } from "../api/client";
 import {

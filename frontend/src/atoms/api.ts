@@ -9,7 +9,6 @@ import type {
 	HRTrendData,
 	ReadinessResult,
 	Recommendation,
-	SleepSession,
 	SparklineData,
 	StageSegment,
 	Workout,
@@ -174,7 +173,7 @@ export const coachAtom = atomWithQuery(() => ({
 // Journal
 // ---------------------------------------------------------------------------
 
-interface JournalQuestion {
+export interface JournalQuestion {
 	id: string;
 	question: string;
 	category: string;

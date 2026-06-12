@@ -29,11 +29,15 @@ import {
 } from "three/tsl";
 import { DORMANT, type WorldState } from "../worldState";
 
-/** The star lives here from Task 8 onward; light the planet from it now. */
-export const SUN_POSITION = new THREE.Vector3(38, 6, -20);
+/**
+ * Where the star lives (see Star.tsx). Chosen so the sun reads upper-right
+ * from the landing camera (fov 45 @ [0,1.2,9]) while keeping the planet's
+ * crescent lit from the right.
+ */
+export const SUN_POSITION = new THREE.Vector3(22, 5, -36);
 const SUN_DIR = SUN_POSITION.clone().normalize();
 
-const PLANET_RADIUS = 2;
+export const PLANET_RADIUS = 2;
 const STORM_ALTITUDE = 2.06;
 
 /** Deterministic storm slots in a low-latitude band (lat in radians). */

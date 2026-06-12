@@ -347,7 +347,7 @@ const CAMERA_TARGETS: Record<string, { pos: [number,number,number]; look: [numbe
   "/":         { pos: [0, 1.2, 9],   look: [0, 0, 0] },
   "/recovery": { pos: [0.5, 0.8, 4], look: [0, 0, 0] },
   "/sleep":    { pos: [-2.6, 0.6, 3.4], look: [-0.8, 0, 0] },   // night side
-  "/strain":   { pos: [14, 3, -4],  look: [38, 6, -20] },
+  "/strain":   { pos: [8, 2, -13],  look: [22, 5, -36] },   // derive from SUN_POSITION (moved in Task 8 so the sun frames on-screen)
 };
 const CONSOLE_TARGET = { pos: [0, 2.2, 11], look: [0, 0, 0] };  // pulled back, scene blurred behind panel
 ```

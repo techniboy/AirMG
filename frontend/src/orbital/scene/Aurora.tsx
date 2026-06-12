@@ -19,8 +19,8 @@ import {
   vec4,
 } from "three/tsl";
 import { DORMANT, type WorldState } from "../worldState";
+import { PLANET_RADIUS } from "./Planet";
 
-const PLANET_RADIUS = 2;
 const BASE_ALTITUDE = PLANET_RADIUS * 1.012;
 
 interface RibbonSpec {

@@ -15,11 +15,10 @@ import {
   vec4,
 } from "three/tsl";
 import { DORMANT, type WorldState } from "../worldState";
-import { SUN_POSITION } from "./Planet";
+import { PLANET_RADIUS, SUN_POSITION } from "./Planet";
 
 const SUN_DIR = SUN_POSITION.clone().normalize();
 
-const PLANET_RADIUS = 2;
 /** Thin haze film hugging the surface — gives the limb its bright inner edge. */
 const INNER_RADIUS = PLANET_RADIUS * 1.028;
 /** Back-side halo shell — the scattering glow that bleeds past the limb. */

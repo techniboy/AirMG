@@ -6,7 +6,9 @@ import * as THREE from "three/webgpu";
 import Atmosphere from "./scene/Atmosphere";
 import Aurora from "./scene/Aurora";
 import Effects from "./scene/Effects";
-import Planet, { SUN_POSITION } from "./scene/Planet";
+import MoonSat from "./scene/MoonSat";
+import Planet from "./scene/Planet";
+import Star from "./scene/Star";
 import Starfield from "./scene/Starfield";
 import { worldStateAtom } from "./worldState";
 import "./orbital.css";
@@ -43,17 +45,14 @@ export default function OrbitalWorld() {
         >
           <color attach="background" args={["#04060d"]} />
           <ambientLight intensity={0.12} color="#a8c2ff" />
-          {/* key light sits where the star will live (Task 8) */}
-          <directionalLight
-            position={SUN_POSITION.toArray()}
-            intensity={1.4}
-            color="#dbe7ff"
-          />
+          {/* key light lives inside Star, at SUN_POSITION; Task 13 feeds flares */}
+          <Star world={world} />
           <group>
             <Planet world={world} />
             <Atmosphere world={world} />
             <Aurora world={world} />
           </group>
+          <MoonSat world={world} />
           <Starfield />
           <Effects quality="high" />
         </Canvas>

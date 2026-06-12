@@ -124,6 +124,21 @@ def map_spo2(data_points: list[dict]) -> list[dict]:
     return samples
 
 
+def map_resp_rate(data_points: list[dict]) -> list[dict]:
+    samples = []
+    for dp in data_points:
+        rr = dp.get("respiratoryRate") or dp.get("dailyRespiratoryRate")
+        if not rr:
+            continue
+        ts = _parse_ts(
+            rr.get("sampleTime", {}).get("physicalTime")
+        ) or _parse_date_obj(rr.get("date"))
+        rpm = rr.get("breathsPerMinute") or rr.get("respiratoryRateBreathsPerMinute")
+        if rpm is not None:
+            samples.append({"type": "resp_rate", "ts": ts, "value": float(rpm)})
+    return samples
+
+
 def map_steps(data_points: list[dict]) -> list[dict]:
     steps = []
     for dp in data_points:
@@ -131,10 +146,11 @@ def map_steps(data_points: list[dict]) -> list[dict]:
         if not s:
             continue
         interval = s.get("interval", {})
-        ts = _parse_ts(interval.get("startTime"))
+        start = _parse_ts(interval.get("startTime"))
+        end = _parse_ts(interval.get("endTime"))
         count = s.get("stepCount") or s.get("count")
-        if count is not None:
-            steps.append({"ts": ts, "value": int(count)})
+        if count is not None and start and end:
+            steps.append({"ts": start, "end_ts": end, "value": int(count)})
     return steps
 
 

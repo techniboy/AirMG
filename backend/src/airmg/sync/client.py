@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import time
+
 import httpx
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -12,26 +14,37 @@ def _get_credentials() -> Credentials:
     creds_data = load_credentials()
     if creds_data is None:
         raise RuntimeError("Not authenticated. Connect Google Health first.")
-    creds = Credentials(
+
+    expires_at = creds_data.get("expires_at", 0)
+    token_expired = time.time() >= expires_at - 60
+
+    if token_expired and creds_data.get("refresh_token"):
+        creds = Credentials(
+            token=creds_data["token"],
+            refresh_token=creds_data["refresh_token"],
+            token_uri=creds_data.get("token_uri"),
+            client_id=creds_data.get("client_id"),
+            client_secret=creds_data.get("client_secret"),
+        )
+        creds.refresh(Request())
+        creds_data = {
+            "token": creds.token,
+            "refresh_token": creds.refresh_token,
+            "token_uri": creds.token_uri,
+            "client_id": creds.client_id,
+            "client_secret": creds.client_secret,
+            "scopes": list(creds.scopes or []),
+            "expires_at": time.time() + 3600,
+        }
+        save_credentials(creds_data)
+
+    return Credentials(
         token=creds_data["token"],
         refresh_token=creds_data.get("refresh_token"),
         token_uri=creds_data.get("token_uri"),
         client_id=creds_data.get("client_id"),
         client_secret=creds_data.get("client_secret"),
     )
-    if creds.expired and creds.refresh_token:
-        creds.refresh(Request())
-        save_credentials(
-            {
-                "token": creds.token,
-                "refresh_token": creds.refresh_token,
-                "token_uri": creds.token_uri,
-                "client_id": creds.client_id,
-                "client_secret": creds.client_secret,
-                "scopes": list(creds.scopes or []),
-            }
-        )
-    return creds
 
 
 def fetch_data_points(

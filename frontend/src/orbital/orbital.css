@@ -418,6 +418,12 @@
   --color-status-warning: #f5b840;
   --color-status-critical: #ff5d7a;
 
+  /* Metric accents — tuned toward the teal HUD palette */
+  --color-metric-purple: #b78fff;
+  --color-metric-amber: #f5c842;
+  --color-metric-rose: #ff6e85;
+  --color-metric-cyan: #50d8ff;
+
   /* Glow */
   --color-glow-ambient: rgba(46, 230, 168, 0.06);
 

@@ -304,6 +304,99 @@
   background: rgba(46, 230, 168, 0.22);
 }
 
+/* ---- recovery diorama layer (/recovery) ---- */
+
+.orbital-hud-recovery {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  color: #d6f5e8;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.orbital-hud-recovery.is-hidden {
+  opacity: 0;
+  transform: translateX(-14px);
+}
+
+.hud-recovery-detail {
+  width: 296px;
+  margin-left: 28px;
+  padding: 18px 20px 15px;
+  pointer-events: auto;
+}
+
+.hud-ring-list {
+  margin: 14px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid rgba(46, 230, 168, 0.1);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  list-style: none;
+}
+
+.hud-ring-row {
+  display: grid;
+  grid-template-columns: 70px 1fr auto 54px;
+  align-items: baseline;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.hud-ring-name {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(148, 198, 180, 0.7);
+}
+
+.hud-ring-value {
+  font-weight: 460;
+  color: #ecfff7;
+}
+
+.hud-ring-base {
+  font-size: 11px;
+  color: rgba(170, 211, 195, 0.55);
+}
+
+.hud-ring-z {
+  justify-self: end;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  color: rgba(170, 211, 195, 0.5);
+}
+
+.hud-ring-z.is-good {
+  color: #2ee6a8;
+  text-shadow: 0 0 12px rgba(46, 230, 168, 0.4);
+}
+
+.hud-ring-z.is-bad {
+  color: #ff5d7a;
+  text-shadow: 0 0 12px rgba(255, 93, 122, 0.4);
+}
+
+.hud-ring-foot {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(46, 230, 168, 0.1);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(148, 198, 180, 0.45);
+}
+
 /* ---- dock — all routes ---- */
 
 .hud-dock {

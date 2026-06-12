@@ -4,7 +4,11 @@ import {
 	settingsAtom,
 	todayMetricsAtom,
 } from "../atoms/api";
-import type { DailyMetrics } from "../lib/types";
+import type {
+	BaselineInfo,
+	BaselinesResponse,
+	DailyMetrics,
+} from "../lib/types";
 
 export interface WorldInputs {
 	recovery: number | null;
@@ -127,6 +131,96 @@ export function readFixtureInputs(): WorldInputs | null {
 	const name = new URLSearchParams(location.search).get("worldFixture");
 	if (name == null) return null;
 	return FIXTURE_INPUTS[name] ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Recovery diorama (Task 12) — per-ring metric data vs baseline
+// ---------------------------------------------------------------------------
+
+export type RingKey = "hrv" | "rhr" | "resp" | "sleep";
+
+export interface RingMetric {
+	key: RingKey;
+	label: string;
+	unit: string;
+	decimals: number;
+	value: number | null;
+	baselineMean: number | null;
+	baselineSpread: number | null;
+	/** signed deviation vs baseline — physical marker offset uses this sign */
+	z: number | null;
+	/** semantic direction (RHR/resp invert: below baseline is good); null = no data */
+	good: boolean | null;
+}
+
+// No sleep-performance baseline exists server-side; mirror the backend
+// RecoveryScorer convention (SLEEP_PERF_CENTER 0.85 / SCALE 0.12, ×100 here).
+const SLEEP_PERF_CENTER = 85;
+const SLEEP_PERF_SPREAD = 12;
+
+function ringMetric(
+	key: RingKey,
+	label: string,
+	unit: string,
+	decimals: number,
+	value: number | null,
+	base: BaselineInfo | undefined,
+	invert: boolean,
+): RingMetric {
+	const z = baselineZ(value, base);
+	return {
+		key,
+		label,
+		unit,
+		decimals,
+		value,
+		baselineMean: base?.mean ?? null,
+		baselineSpread: base?.spread ?? null,
+		z,
+		good: z == null ? null : invert ? z <= 0 : z >= 0,
+	};
+}
+
+/** Ring order = ring radius order in the scene (innermost first). */
+export function computeRingMetrics(
+	today: DailyMetrics | null,
+	baselines: BaselinesResponse,
+): RingMetric[] {
+	const sleepValue = today?.sleep_performance ?? null;
+	const sleepZ =
+		sleepValue == null ? null : (sleepValue - SLEEP_PERF_CENTER) / SLEEP_PERF_SPREAD;
+	return [
+		ringMetric("hrv", "HRV", "ms", 0, today?.hrv_rmssd ?? null, baselines.hrv, false),
+		ringMetric(
+			"rhr",
+			"RHR",
+			"bpm",
+			0,
+			today?.resting_hr ?? null,
+			baselines.resting_hr,
+			true,
+		),
+		ringMetric(
+			"resp",
+			"Resp",
+			"/min",
+			1,
+			today?.resp_rate ?? null,
+			baselines.resp_rate,
+			true,
+		),
+		{
+			key: "sleep",
+			label: "Sleep perf",
+			unit: "%",
+			decimals: 0,
+			value: sleepValue,
+			baselineMean: SLEEP_PERF_CENTER,
+			baselineSpread: SLEEP_PERF_SPREAD,
+			z: sleepZ,
+			good: sleepZ == null ? null : sleepZ >= 0,
+		},
+	];
 }
 
 // /api/today actually returns DailyMetrics OR {status:"no_data", message} —

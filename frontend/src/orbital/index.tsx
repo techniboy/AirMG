@@ -1,9 +1,10 @@
 import { Canvas } from "@react-three/fiber";
 import { useAtomValue } from "jotai";
 import type { ComponentType } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import * as THREE from "three/webgpu";
+import { baselinesAtom, todayMetricsAtom } from "../atoms/api";
 import Coach from "../pages/Coach";
 import HealthAge from "../pages/HealthAge";
 import Insights from "../pages/Insights";
@@ -16,14 +17,16 @@ import ConsolePanel from "./hud/ConsolePanel";
 import Dock from "./hud/Dock";
 import { hoveredObjectAtom } from "./hud/hoverAtom";
 import LandingHud from "./hud/LandingHud";
+import RecoveryHud from "./hud/RecoveryHud";
 import Atmosphere from "./scene/Atmosphere";
 import Aurora from "./scene/Aurora";
 import Effects from "./scene/Effects";
 import MoonSat from "./scene/MoonSat";
 import Planet from "./scene/Planet";
+import RecoveryRings from "./scene/RecoveryRings";
 import Star from "./scene/Star";
 import Starfield from "./scene/Starfield";
-import { worldStateAtom } from "./worldState";
+import { asMetrics, computeRingMetrics, worldStateAtom } from "./worldState";
 import "./orbital.css";
 
 // console routes — existing 2D pages rendered as glass panels over the scene.
@@ -49,6 +52,18 @@ export default function OrbitalWorld() {
   const hudHover = useAtomValue(hoveredObjectAtom);
   const [ready, setReady] = useState(false);
   const consolePage = CONSOLE_PAGES[location.pathname];
+  const onRecovery = location.pathname === "/recovery";
+
+  // recovery diorama data — read here (atoms invisible to the Canvas root),
+  // passed down as props like `world`
+  const todayQuery = useAtomValue(todayMetricsAtom);
+  const baselinesQuery = useAtomValue(baselinesAtom);
+  const today = asMetrics(todayQuery.data);
+  const baselines = baselinesQuery.data;
+  const ringMetrics = useMemo(
+    () => computeRingMetrics(today, baselines ?? {}),
+    [today, baselines],
+  );
 
   // navigation handlers live in the DOM root (router context is not
   // available inside the Canvas — it is a separate React root)
@@ -116,11 +131,17 @@ export default function OrbitalWorld() {
             <Aurora world={world} />
           </group>
           <MoonSat world={world} onSelectMoon={goSleep} hovered={hudHover === "moon"} />
+          <RecoveryRings metrics={ringMetrics} active={onRecovery} />
           <Starfield />
           <Effects quality="high" />
         </Canvas>
       </div>
       <LandingHud world={world} visible={location.pathname === "/"} />
+      <RecoveryHud
+        metrics={ringMetrics}
+        recovery={today?.recovery ?? null}
+        visible={onRecovery}
+      />
       {consolePage && (
         // keyed by pathname — route changes remount and replay the entrance
         <ConsolePanel key={location.pathname} title={consolePage.title}>

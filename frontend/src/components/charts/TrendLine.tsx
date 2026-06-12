@@ -1,3 +1,4 @@
+import { useAtomValue } from "jotai";
 import {
 	CartesianGrid,
 	Line,
@@ -8,6 +9,7 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
+import { themeAtom } from "../../atoms/theme";
 
 interface TrendPoint {
 	day: string;
@@ -35,6 +37,16 @@ export function TrendLine({
 	domain,
 	referenceValue,
 }: TrendLineProps) {
+	const theme = useAtomValue(themeAtom);
+	const isGlass = theme === "liquid-glass";
+	const gridColor = isGlass ? "rgba(0,0,0,0.08)" : "#1B2620";
+	const tickColor = isGlass ? "rgba(60,60,67,0.45)" : "#6F7A74";
+	const refColor = isGlass ? "rgba(0,0,0,0.12)" : "#27362E";
+	const tooltipBg = isGlass ? "rgba(255,255,255,0.85)" : "#0D1512";
+	const tooltipBorder = isGlass ? "rgba(0,0,0,0.1)" : "#1B2620";
+	const tooltipText = isGlass ? "#1d1d1f" : "#F4F7F5";
+	const dotStroke = isGlass ? "#fff" : "#060A08";
+
 	const filtered = data.filter((d) => d.value !== null);
 
 	if (filtered.length < 2) {
@@ -55,20 +67,20 @@ export function TrendLine({
 			<LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
 				<CartesianGrid
 					strokeDasharray="3 3"
-					stroke="#1B2620"
+					stroke={gridColor}
 					vertical={false}
 				/>
 				<XAxis
 					dataKey="day"
 					tickFormatter={shortDay}
 					interval={tickInterval}
-					tick={{ fill: "#6F7A74", fontSize: 11 }}
+					tick={{ fill: tickColor, fontSize: 11 }}
 					axisLine={false}
 					tickLine={false}
 				/>
 				<YAxis
 					domain={domain ?? ["auto", "auto"]}
-					tick={{ fill: "#6F7A74", fontSize: 11 }}
+					tick={{ fill: tickColor, fontSize: 11 }}
 					axisLine={false}
 					tickLine={false}
 					width={36}
@@ -77,17 +89,18 @@ export function TrendLine({
 				{referenceValue !== undefined && (
 					<ReferenceLine
 						y={referenceValue}
-						stroke="#27362E"
+						stroke={refColor}
 						strokeDasharray="4 4"
 					/>
 				)}
 				<Tooltip
 					contentStyle={{
-						backgroundColor: "#0D1512",
-						border: "1px solid #1B2620",
+						backgroundColor: tooltipBg,
+						border: `1px solid ${tooltipBorder}`,
 						borderRadius: 8,
-						color: "#F4F7F5",
+						color: tooltipText,
 						fontSize: 12,
+						...(isGlass ? { backdropFilter: "blur(20px)" } : {}),
 					}}
 					labelFormatter={shortDay}
 					formatter={(val: number) => [
@@ -101,7 +114,7 @@ export function TrendLine({
 					stroke={color}
 					strokeWidth={2}
 					dot={false}
-					activeDot={{ r: 4, fill: color, stroke: "#060A08", strokeWidth: 2 }}
+					activeDot={{ r: 4, fill: color, stroke: dotStroke, strokeWidth: 2 }}
 					connectNulls={false}
 				/>
 			</LineChart>

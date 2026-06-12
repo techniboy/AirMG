@@ -46,7 +46,7 @@ export function RecoveryGauge({ score, size = 200 }: RecoveryGaugeProps) {
 	const strokeWidth = size * 0.075;
 	const r = (size - strokeWidth) / 2 - 4;
 	const fraction = score !== null ? Math.min(Math.max(score / 100, 0), 1) : 0;
-	const color = score !== null ? recoveryHex(score) : "#1B2620";
+	const color = score !== null ? recoveryHex(score) : "var(--color-chart-track)";
 	const state = score !== null ? recoveryState(score) : "--";
 	const displayScore = score !== null ? Math.round(score).toString() : "--";
 
@@ -94,7 +94,7 @@ export function RecoveryGauge({ score, size = 200 }: RecoveryGaugeProps) {
 				<path
 					d={trackPath}
 					fill="none"
-					stroke="#1B2620"
+					stroke="var(--color-chart-track)"
 					strokeWidth={strokeWidth}
 					strokeLinecap="round"
 					opacity={0.7}
@@ -139,7 +139,7 @@ export function RecoveryGauge({ score, size = 200 }: RecoveryGaugeProps) {
 							cx={bead.x}
 							cy={bead.y}
 							r={strokeWidth * 0.31}
-							fill="white"
+							fill="var(--color-chart-bead)"
 							opacity={0.9}
 						/>
 					</>

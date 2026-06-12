@@ -52,7 +52,7 @@ export function StrainGauge({ strain, size = 200 }: StrainGaugeProps) {
 	const strokeWidth = size * 0.07;
 	const r = (size - strokeWidth) / 2 - 4;
 	const fraction = strain !== null ? Math.min(Math.max(strain / 21, 0), 1) : 0;
-	const color = strain !== null ? strainHex(strain) : "#1B2620";
+	const color = strain !== null ? strainHex(strain) : "var(--color-chart-track)";
 	const word = strain !== null ? strainWord(strain) : "--";
 	const displayStrain = strain !== null ? strain.toFixed(1) : "--";
 
@@ -94,7 +94,7 @@ export function StrainGauge({ strain, size = 200 }: StrainGaugeProps) {
 				<path
 					d={trackPath}
 					fill="none"
-					stroke="#1B2620"
+					stroke="var(--color-chart-track)"
 					strokeWidth={strokeWidth}
 					strokeLinecap="round"
 					opacity={0.7}
@@ -137,7 +137,7 @@ export function StrainGauge({ strain, size = 200 }: StrainGaugeProps) {
 							cx={bead.x}
 							cy={bead.y}
 							r={strokeWidth * 0.29}
-							fill="white"
+							fill="var(--color-chart-bead)"
 							opacity={0.9}
 						/>
 					</>

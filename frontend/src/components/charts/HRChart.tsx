@@ -1,3 +1,4 @@
+import { useAtomValue } from "jotai";
 import {
 	Area,
 	AreaChart,
@@ -7,6 +8,7 @@ import {
 	XAxis,
 	YAxis,
 } from "recharts";
+import { themeAtom } from "../../atoms/theme";
 
 interface HRPoint {
 	time: string;
@@ -19,6 +21,14 @@ interface HRChartProps {
 }
 
 export function HRChart({ data, color = "#FF4F73" }: HRChartProps) {
+	const theme = useAtomValue(themeAtom);
+	const isGlass = theme === "liquid-glass";
+	const gridColor = isGlass ? "rgba(0,0,0,0.08)" : "#1B2620";
+	const tickColor = isGlass ? "rgba(60,60,67,0.45)" : "#6F7A74";
+	const tooltipBg = isGlass ? "rgba(255,255,255,0.85)" : "#0D1512";
+	const tooltipBorder = isGlass ? "rgba(0,0,0,0.1)" : "#1B2620";
+	const tooltipText = isGlass ? "#1d1d1f" : "#F4F7F5";
+
 	if (!data || data.length < 2) {
 		return (
 			<div className="flex h-32 items-center justify-center rounded-xl bg-surface-inset">
@@ -39,30 +49,30 @@ export function HRChart({ data, color = "#FF4F73" }: HRChartProps) {
 					</linearGradient>
 				</defs>
 				<CartesianGrid
-					stroke="#1B2620"
+					stroke={gridColor}
 					strokeDasharray="3 3"
 					vertical={false}
 				/>
 				<XAxis
 					dataKey="time"
-					tick={{ fill: "#6F7A74", fontSize: 10 }}
+					tick={{ fill: tickColor, fontSize: 10 }}
 					axisLine={false}
 					tickLine={false}
 					interval="preserveStartEnd"
 				/>
 				<YAxis
 					domain={["auto", "auto"]}
-					tick={{ fill: "#6F7A74", fontSize: 10 }}
+					tick={{ fill: tickColor, fontSize: 10 }}
 					axisLine={false}
 					tickLine={false}
 					width={30}
 				/>
 				<Tooltip
 					contentStyle={{
-						backgroundColor: "#0D1512",
-						border: "1px solid #1B2620",
+						backgroundColor: tooltipBg,
+						border: `1px solid ${tooltipBorder}`,
 						borderRadius: 8,
-						color: "#F4F7F5",
+						color: tooltipText,
 						fontSize: 12,
 					}}
 					formatter={(val: number) => [`${val} bpm`, "HR"]}

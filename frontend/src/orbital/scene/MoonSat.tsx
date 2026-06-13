@@ -7,15 +7,14 @@ import {
   color,
   cos,
   float,
-  mix,
-  mx_fractal_noise_float,
   normalWorld,
   oneMinus,
-  positionLocal,
   sin,
   smoothstep,
+  texture,
   time,
   uniform,
+  uv,
   vec3,
   vec4,
 } from "three/tsl";
@@ -40,12 +39,15 @@ const makeMoonUniforms = () => ({
 type MoonUniforms = ReturnType<typeof makeMoonUniforms>;
 
 /**
- * Grey-blue cratered moon with a phase terminator. The "light" is a phase
- * angle, not real sun geometry: it swings from behind the moon (phase 0,
- * new) through the right (half) to the camera axis (phase 1, full), so the
- * lit fraction seen from the landing camera matches `moonPhase`.
+ * Real lunar albedo (NASA LROC color map) with a phase terminator. The "light"
+ * is a phase angle, not real sun geometry: it swings from behind the moon
+ * (phase 0, new) through the right (half) to the camera axis (phase 1, full),
+ * so the lit fraction seen from the landing camera matches `moonPhase`.
  */
-function buildMoonMaterial(u: MoonUniforms): THREE.MeshBasicNodeMaterial {
+function buildMoonMaterial(
+  u: MoonUniforms,
+  moonTex: THREE.Texture,
+): THREE.MeshBasicNodeMaterial {
   const material = new THREE.MeshBasicNodeMaterial();
 
   const phaseAngle = oneMinus(u.phase).mul(Math.PI);
@@ -53,21 +55,8 @@ function buildMoonMaterial(u: MoonUniforms): THREE.MeshBasicNodeMaterial {
   const ndl = normalWorld.normalize().dot(lightDir);
   const lit = smoothstep(-0.18, 0.12, ndl);
 
-  // maria + small dark pocks (object space — rotates with the moon)
-  const p = positionLocal.div(MOON_RADIUS);
-  const maria = mx_fractal_noise_float(p.mul(2.1).add(7.7), 4, 2.1, 0.55)
-    .mul(0.5)
-    .add(0.5);
-  const pocks = smoothstep(
-    0.56,
-    0.95,
-    mx_fractal_noise_float(p.mul(9.0).add(3.1), 3, 2.3, 0.6).mul(0.5).add(0.5),
-  );
-  const albedo = mix(
-    mix(color("#5d6878"), color("#a8b4c2"), maria),
-    color("#454e5c"),
-    pocks.mul(0.55),
-  );
+  // real maria/highlands; lift a touch since lunar albedo is low
+  const albedo = texture(moonTex, uv()).rgb.mul(1.35);
 
   // faint cold earthshine keeps the dark limb from vanishing entirely
   const rgb = albedo
@@ -124,23 +113,30 @@ export default function MoonSat({
   const [pointerHover, setPointerHover] = useState(false);
   const hot = hovered || pointerHover;
 
+  const moonTex = useMemo(() => {
+    const tex = new THREE.TextureLoader().load("/orbital/moon.jpg");
+    tex.colorSpace = THREE.SRGBColorSpace;
+    return tex;
+  }, []);
+
   const { moonUniforms, moonMaterial, satMaterials } = useMemo(() => {
     const u = makeMoonUniforms();
     return {
       moonUniforms: u,
-      moonMaterial: buildMoonMaterial(u),
+      moonMaterial: buildMoonMaterial(u, moonTex),
       satMaterials: buildSatMaterials(),
     };
-  }, []);
+  }, [moonTex]);
 
   useEffect(
     () => () => {
       moonMaterial.dispose();
+      moonTex.dispose();
       satMaterials.body.dispose();
       satMaterials.panel.dispose();
       satMaterials.beacon.dispose();
     },
-    [moonMaterial, satMaterials],
+    [moonMaterial, moonTex, satMaterials],
   );
 
   useFrame((_, rawDelta) => {

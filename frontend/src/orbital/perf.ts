@@ -33,7 +33,9 @@ export function PerfMonitor({ onLow }: { onLow: () => void }) {
     const m = s.current;
     if (m.dropped) return; // bottomed out — stop watching
     m.frames += 1;
-    m.time += delta;
+    // clamp outlier frames (GC pause, breakpoint, tab stall) so one bad
+    // frame can't trip the irreversible ratchet
+    m.time += Math.min(delta, 0.1);
     if (m.frames < WINDOW) return;
 
     const fps = m.frames / m.time;

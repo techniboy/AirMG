@@ -2,6 +2,7 @@ import { useFrame } from "@react-three/fiber";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three/webgpu";
 import { instancedBufferAttribute, smoothstep, uv, vec4 } from "three/tsl";
+import { RM } from "../perf";
 
 /**
  * Three concentric star shells. Distant shells are denser and dimmer,
@@ -107,7 +108,7 @@ export default function Starfield() {
 
   useFrame((_, delta) => {
     for (let i = 0; i < layers.length; i += 1) {
-      layers[i].rotation.y += LAYERS[i].spin * delta;
+      layers[i].rotation.y += LAYERS[i].spin * delta * RM;
     }
   });
 

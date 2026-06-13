@@ -19,6 +19,7 @@ import {
   vec3,
   vec4,
 } from "three/tsl";
+import { RM } from "../perf";
 import { DORMANT, type WorldState } from "../worldState";
 
 const MOON_RADIUS = 0.5;
@@ -153,13 +154,13 @@ export default function MoonSat({
       s.setScalar(s.x);
     }
 
-    if (moonOrbit.current) moonOrbit.current.rotation.y += MOON_ORBIT_SPEED * dt;
-    if (moonMesh.current) moonMesh.current.rotation.y += 0.012 * dt;
-    if (satOrbit.current) satOrbit.current.rotation.y += satSpeed.current * dt;
+    if (moonOrbit.current) moonOrbit.current.rotation.y += MOON_ORBIT_SPEED * dt * RM;
+    if (moonMesh.current) moonMesh.current.rotation.y += 0.012 * dt * RM;
+    if (satOrbit.current) satOrbit.current.rotation.y += satSpeed.current * dt * RM;
     if (satBody.current) {
       // slight tumble
-      satBody.current.rotation.x += 0.14 * dt;
-      satBody.current.rotation.y += 0.2 * dt;
+      satBody.current.rotation.x += 0.14 * dt * RM;
+      satBody.current.rotation.y += 0.2 * dt * RM;
     }
   });
 

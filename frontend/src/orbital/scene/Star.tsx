@@ -22,6 +22,7 @@ import {
   vec4,
 } from "three/tsl";
 import { CAMERA_TARGETS } from "../cameraRig";
+import { RM } from "../perf";
 import { DORMANT, type WorldState } from "../worldState";
 import { SUN_POSITION } from "./Planet";
 
@@ -123,7 +124,7 @@ function buildCoreMaterial(u: StarUniforms): THREE.MeshBasicNodeMaterial {
   const facing = clamp(n.dot(viewDir), 0, 1);
 
   const granules = mx_fractal_noise_float(
-    positionLocal.mul(1.6).add(time.mul(0.05)),
+    positionLocal.mul(1.6).add(time.mul(0.05 * RM)),
     4,
     2.2,
     0.55,
@@ -172,7 +173,7 @@ function buildShellMaterial(
   // constant along each screen-radial line, so the corona breaks into rays
   const spoke = n.sub(viewDir.mul(ndv)).normalize();
   const rays = mx_fractal_noise_float(
-    spoke.mul(spec.freq).add(vec3(spec.seed, time.mul(spec.scroll), spec.seed * 0.31)),
+    spoke.mul(spec.freq).add(vec3(spec.seed, time.mul(spec.scroll * RM), spec.seed * 0.31)),
     4,
     2.1,
     0.58,
@@ -181,7 +182,7 @@ function buildShellMaterial(
     .add(0.5);
   // fine isotropic boil so the rays shimmer instead of staying frozen
   const boil = mx_fractal_noise_float(
-    n.mul(spec.freq * 2.6).sub(time.mul(spec.scroll * 1.7)),
+    n.mul(spec.freq * 2.6).sub(time.mul(spec.scroll * 1.7 * RM)),
     3,
     2.2,
     0.55,

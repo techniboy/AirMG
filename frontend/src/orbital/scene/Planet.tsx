@@ -28,6 +28,7 @@ import {
   vec3,
   vec4,
 } from "three/tsl";
+import { RM } from "../perf";
 import { DORMANT, type WorldState } from "../worldState";
 
 /**
@@ -262,10 +263,10 @@ export default function Planet({
     // the aurora at 1.012×R, so a 1.04 scale would poke through both
     damp(uniforms.hover, "value", hot ? 1 : 0, 0.18, dt);
 
-    if (group.current) group.current.rotation.y += rotSpeed.current * dt;
+    if (group.current) group.current.rotation.y += rotSpeed.current * dt * RM;
     for (let i = 0; i < storms.length; i += 1) {
       storms[i].opacity.value = THREE.MathUtils.clamp(stormAnim.current - i, 0, 1);
-      storms[i].pivot.rotation.y += storms[i].drift * dt;
+      storms[i].pivot.rotation.y += storms[i].drift * dt * RM;
     }
   });
 

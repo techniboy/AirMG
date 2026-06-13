@@ -1,5 +1,5 @@
 import { Canvas } from "@react-three/fiber";
-import { useAtomValue } from "jotai";
+import { useAtomValue, useSetAtom } from "jotai";
 import type { ComponentType } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
@@ -29,6 +29,7 @@ import Atmosphere from "./scene/Atmosphere";
 import Aurora from "./scene/Aurora";
 import Effects from "./scene/Effects";
 import MoonSat from "./scene/MoonSat";
+import { PerfMonitor, qualityAtom } from "./perf";
 import Planet from "./scene/Planet";
 import RecoveryRings from "./scene/RecoveryRings";
 import SleepDescent from "./scene/SleepDescent";
@@ -62,6 +63,20 @@ export default function OrbitalWorld() {
   // HUD panel hover → scene highlight (same constraint: atom read out here)
   const hudHover = useAtomValue(hoveredObjectAtom);
   const [ready, setReady] = useState(false);
+  // render quality (auto-degrades via PerfMonitor) — read here, the Canvas
+  // reconciler can't reach the JotaiProvider, so it's passed down as a prop
+  const quality = useAtomValue(qualityAtom);
+  const setQuality = useSetAtom(qualityAtom);
+  const onLow = useCallback(() => setQuality("low"), [setQuality]);
+  // pause the render loop while the tab is hidden — GPU goes idle
+  const [frameloop, setFrameloop] = useState<"always" | "never">(
+    document.hidden ? "never" : "always",
+  );
+  useEffect(() => {
+    const onVis = () => setFrameloop(document.hidden ? "never" : "always");
+    document.addEventListener("visibilitychange", onVis);
+    return () => document.removeEventListener("visibilitychange", onVis);
+  }, []);
   const consolePage = CONSOLE_PAGES[location.pathname];
   const onRecovery = location.pathname === "/recovery";
   const onSleep = location.pathname === "/sleep";
@@ -134,6 +149,7 @@ export default function OrbitalWorld() {
       >
         <Canvas
           dpr={[1, 2]}
+          frameloop={frameloop}
           camera={{ fov: 45, position: [0, 1.2, 9], near: 0.1, far: 2000 }}
           gl={async (props) => {
             const renderer = new THREE.WebGPURenderer({
@@ -187,7 +203,8 @@ export default function OrbitalWorld() {
           <RecoveryRings metrics={ringMetrics} active={onRecovery} />
           <SleepDescent track={sleepTrack} active={onSleep} />
           <Starfield />
-          <Effects quality="high" />
+          <Effects quality={quality} />
+          <PerfMonitor onLow={onLow} />
         </Canvas>
       </div>
       <LandingHud world={world} visible={location.pathname === "/"} />

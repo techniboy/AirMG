@@ -18,6 +18,7 @@ import {
   vec3,
   vec4,
 } from "three/tsl";
+import { RM } from "../perf";
 import { DORMANT, type WorldState } from "../worldState";
 import { PLANET_RADIUS } from "./Planet";
 
@@ -133,7 +134,7 @@ function buildRibbonMaterial(
 
   // -- vertex: slow majestic sway, growing with height so the base stays pinned
   const sway = mx_fractal_noise_float(
-    vec3(s.mul(3.2).add(seed), time.mul(0.045).add(spec.phase), seed.mul(0.37)),
+    vec3(s.mul(3.2).add(seed), time.mul(0.045 * RM).add(spec.phase), seed.mul(0.37)),
     2,
     2.0,
     0.55,
@@ -143,7 +144,7 @@ function buildRibbonMaterial(
 
   // -- fragment: curtain striations (tall thin rays, two scales, drifting)
   const ray1 = mx_fractal_noise_float(
-    vec3(s.mul(24).add(seed), t.mul(1.3), time.mul(0.03).add(spec.phase)),
+    vec3(s.mul(24).add(seed), t.mul(1.3), time.mul(0.03 * RM).add(spec.phase)),
     3,
     2.1,
     0.6,
@@ -151,7 +152,7 @@ function buildRibbonMaterial(
     .mul(0.5)
     .add(0.5);
   const ray2 = mx_noise_float(
-    vec3(s.mul(52).sub(time.mul(0.02)), t.mul(0.55), seed.mul(1.93)),
+    vec3(s.mul(52).sub(time.mul(0.02 * RM)), t.mul(0.55), seed.mul(1.93)),
   )
     .mul(0.5)
     .add(0.5);
@@ -222,8 +223,8 @@ export default function Aurora({ world }: { world: WorldState }) {
     damp(uniforms.violetShift, "value", world.auroraVioletShift, 2.2, dt);
 
     // the oval slips against the surface rotation — magnetosphere, not crust
-    if (group.current) group.current.rotation.y -= 0.012 * dt;
-    for (const c of curtains) c.pivot.rotation.y += c.drift * dt;
+    if (group.current) group.current.rotation.y -= 0.012 * dt * RM;
+    for (const c of curtains) c.pivot.rotation.y += c.drift * dt * RM;
   });
 
   return (

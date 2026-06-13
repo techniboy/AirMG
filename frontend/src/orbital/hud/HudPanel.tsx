@@ -1,5 +1,6 @@
 import type { HTMLAttributes } from "react";
 import { useEffect, useRef, useState } from "react";
+import { prefersReducedMotion } from "../perf";
 
 /** Glass panel primitive — hairline border, inner highlight, layered depth. */
 export function HudPanel({
@@ -34,6 +35,11 @@ export function CountUp({
 
   useEffect(() => {
     if (value == null) return; // "--" is derived at render time
+    if (prefersReducedMotion()) {
+      shownRef.current = value;
+      setDisplay(value);
+      return;
+    }
     const from = shownRef.current;
     const start = performance.now();
     let raf = 0;

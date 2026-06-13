@@ -28,48 +28,54 @@ you as a world → a metric domain → one chart    →  one data point
 
 The descent replaces the flat console-panel route change. Console pages become street-level / orbiting vantages over a 3D diorama. The dive itself is a Halt-and-Catch-Fire title-sequence moment.
 
-## 3. The closed vocabulary (one material, many forms)
+## 3. The city is the visual language (a kit of parts, not a building catalog)
 
-The discipline that makes "visualize *everything*" achievable without sprawl: a **single emissive "luminous-facade" material** (grid of addressable cells, HCF grade, bloom, subtle scanline, flicker) applied to a **finite set of geometries**. Every visualization is one of these forms — no ad-hoc shapes.
+The whole city is the vocabulary — not just buildings and windows. **Structures, facades, streets, traffic, bridges, rail, transit lines, aerial/plan views, signage, beacons, harbor, power grid, parks** are all viz primitives. The job is to map each visualization to the city element whose **real-world behavior matches the data's behavior** — and *not* to overfit everything into towers + windows.
 
-| Form | Name | Geometry | Reads as |
-|------|------|----------|----------|
-| **A** | Facade heatmap | flat windowed grid on a tower face | calendar / dense date data |
-| **B** | Skyline bars | row of extruded towers | trend / bar chart over time |
-| **B′** | **Sleep Canyon** *(hero)* | flythrough perspective canyon | the hypnogram (see §5) |
-| **C** | EQ tower | columns of stacked cells | intraday trace / zone minutes |
-| **D** | Light-stream traffic | animated light-trails on streets | continuous flow / cadence |
-| **E** | Cross-section / Sleep Core | cutaway tower, floors = bands | stacked stages, orbited |
-| **F** | Neon billboard | Shibuya signage panel + CountUp | headline single number |
-| **G** | Data spire | one sculptural building, setbacks = curve | one bold trend |
-| **H** | Sky-bridges | glowing connectors between towers | correlations (r, lag, sign) |
-| **I** | Twin towers | paired towers, height delta | behavior effects (with vs without) |
-| **J** | Ghost zoning | dashed baseline envelope behind any form | baselines (mean ± spread) — **universal overlay** |
-| **K** | Status beacons | rooftop signal lights | readiness flags (good/watch/bad) |
-| — | Monument | single weathered structure | health age |
-| — | Balance gauge | billboard ratio | ACWR |
+The discipline that keeps "visualize *everything*" coherent is **not** a frozen list of forms. It's a shared rendering system + a selection principle:
 
-## 4. Data → form mapping (grounded in `frontend/src/lib/types.ts` + the `/api` surface)
+- **Shared system** → one family of emissive "luminous" materials (addressable cells, HCF grade, bloom, subtle scanline, flicker), one palette, one post chain, one descent. Any new element inherits these, so coherence holds even as the element vocabulary grows.
+- **Selection principle** → match the data's *shape/topology* to a city element's *nature*. The element vocabulary is **open**; add elements when a data type genuinely fits one better.
 
-| Data type (real) | Source | Form |
+**Selection heuristic (data behavior → city element):**
+
+| Data behaves like… | …render as the city element that behaves like that |
+|---|---|
+| Magnitude / accumulation | structure **height / mass** (towers, spires) |
+| Dense grid / calendar / cells | a **facade** of windows |
+| Continuous flow / throughput / cadence | **street traffic**, expressway light-trails |
+| A sequence you move through over time | a **journey / route** through the city (the Sleep Canyon is one instance) |
+| Relationship / connection / coupling | **bridges, rail, skybridges** between districts |
+| Density / distribution over an area | an **aerial / plan view**, block brightness |
+| Category / domain | a **district / zone** with its own character (harbor, power grid, park…) |
+| Headline number / status | **signage / billboards**, rooftop **beacons** |
+| Comparison (A vs B) | **paired / twin** structures |
+| Deviation from normal | a **ghost zoning envelope** behind any element (universal overlay) |
+| Cycle / rhythm | the **day-night / tides / transit loops** of the city |
+
+## 4. Worked examples (illustrative, NOT a closed mapping)
+
+Grounded in `frontend/src/lib/types.ts` + the `/api` surface. These are first-pass fits to validate the heuristic — expect them to evolve, and expect new elements to appear as we go.
+
+| Data type (real) | Source | First-pass city element |
 |---|---|---|
-| Recovery %, day strain (headline) | `/api/today` | **F** Billboard |
-| Recovery year (365-day) | `/api/trends`, `YearHeatStrip` | **A** Facade |
-| Per-metric multi-day trends (HRV, RHR, resp, SpO₂, steps, cal…) | `/api/sparklines`, `/api/trends` | **B** Skyline / **G** Spire |
-| Hypnogram (stage segments over a night) | `/api/sleep/`, `StageSegment[]` | **B′** Sleep Canyon |
-| Stage minutes (deep/rem/light/wake) | `DailyMetrics.*_minutes` | **E** stacked floors |
-| Intraday HR trace | `/api/hr-trend`, `HRTrendData` | **C** EQ tower |
-| Step cadence / continuous flow | `/api/sparklines` | **D** Light-streams |
-| HR zone minutes | `/api/workouts/summary`, `hr_zones` | **C** EQ stacked |
-| Workouts + sport breakdown | `/api/workouts`, `SportBreakdown` | **B** Skyline (tower/sport) + beacons |
-| Correlations | `/api/insights`, `CorrelationResult` | **H** Sky-bridges |
-| Behavior effects | `/api/insights/behaviours`, `BehaviorEffect` | **I** Twin towers |
-| Baselines | `/api/baselines`, `BaselineInfo` | **J** Ghost zoning *(overlay on all)* |
-| Readiness flags | `/api/readiness`, `ReadinessSignal` | **K** Beacons |
-| Health age | `/api/health-age` | Monument |
-| ACWR ratio | `ReadinessResult.acwr` | Balance gauge |
+| Recovery %, day strain (headline) | `/api/today` | Billboard / signage |
+| Recovery year (365-day) | `/api/trends`, `YearHeatStrip` | Facade heatmap *(Spec 2 first slice)* |
+| Per-metric multi-day trends | `/api/sparklines`, `/api/trends` | Skyline / a single data spire |
+| Hypnogram (stage segments) | `/api/sleep/`, `StageSegment[]` | **Sleep Canyon** journey (see §5) |
+| Stage minutes | `DailyMetrics.*_minutes` | Stacked cross-section |
+| Intraday HR trace | `/api/hr-trend` | EQ tower / a light-trail run |
+| Step cadence / flow | `/api/sparklines` | Street traffic |
+| HR zone minutes | `/api/workouts/summary` | EQ stacked |
+| Workouts + sport breakdown | `/api/workouts`, `SportBreakdown` | Skyline (one structure / sport) + beacons |
+| Correlations | `/api/insights`, `CorrelationResult` | Skybridges / rail between districts |
+| Behavior effects | `/api/insights/behaviours` | Twin structures |
+| Baselines | `/api/baselines` | Ghost zoning *(overlay on all)* |
+| Readiness flags | `/api/readiness` | Rooftop beacons |
+| Health age | `/api/health-age` | Monument / district age |
+| ACWR ratio | `ReadinessResult.acwr` | Balance / harbor-load motif |
 
-**Not everything is a building.** Coach / Insights / Journal *text* (`/api/coach`, recommendations, journal entries) stays text — given neon-marquee styling, never forced into geometry. Honest viz includes knowing when not to abstract.
+**Not everything is a structure, and not everything is a viz.** Coach / Insights / Journal *text* (`/api/coach`, recommendations, journal entries) stays text — neon-marquee styling, never forced into geometry. Honest viz includes knowing when not to abstract.
 
 ## 5. The hypnogram — the Sleep Canyon (hero diorama)
 
@@ -93,7 +99,7 @@ Alternates considered and parked: **Sleep Core** (orbited cutaway tower, ribbon 
 
 ## 7. Taste & integrity guardrails
 
-- **One material, many forms** → coherence + one build, not eleven.
+- **Shared material family, open element kit** → coherence comes from the rendering system + aesthetic + descent, not from freezing the catalog. New city elements are welcome; they just inherit the shared look.
 - **Honest viz** → geometry proportional to real values; hover/tap always exposes the exact number; no chartjunk.
 - **Accessibility** → every diorama keeps the orbital theme's a11y mirrors (visually-hidden DOM readouts, reduced-motion paths, keyboard nav) — see the shipped HUD pattern.
 - **Perf** → respect the existing perf-degrade ratchet, visibility pause, and DPR clamps. The city must degrade gracefully on low-end GPUs (the descent can simplify geometry/skip scanline first).
@@ -103,6 +109,6 @@ Alternates considered and parked: **Sleep Core** (orbited cutaway tower, ribbon 
 1. **Spec 1 — Living Earth** *(designed, ready: `2026-06-13-orbital-living-earth-design.md`)*. Aurora → recovery color; planet → real Earth (tier A); time-of-day lighting. Independent of the city; ships first as a coherent win.
 2. **Spec 2 — City foundations + first slice.** The descent transition (orbit → city) + the one luminous-facade material + the HCF palette tokens + the **J** ghost-baseline overlay + **Recovery year → Facade (A)** end-to-end. Proves the whole system on the simplest geometry.
 3. **Spec 3 — Sleep Canyon (B′).** The hero showcase, once the material/descent system is proven.
-4. **Spec 4+ — Roll out remaining forms** page by page: Skyline/Spire (trends), EQ (HR/zones), Light-streams (cadence), Billboard (headlines), Sky-bridges (correlations), Twin towers (behaviors), Beacons (readiness), Monument (health age).
+4. **Spec 4+ — Roll out the rest of the city** page by page, choosing the fitting element per data type (per §3 heuristic): trends → skyline/spire, HR/zones → EQ, cadence → street traffic, headlines → signage, correlations → bridges/rail, behaviors → twin structures, readiness → beacons, health age → monument, plus any new elements the data calls for.
 
 Order within 4+ to be decided per value/effort when we get there.

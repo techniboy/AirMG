@@ -37,6 +37,7 @@ import Star from "./scene/Star";
 import Starfield from "./scene/Starfield";
 import StrainFlareLayer from "./scene/StrainFlareLayer";
 import { asSleepSession, decimateStages, orbitalSleepAtom } from "./sleepData";
+import { useSolarClock } from "./solarClock";
 import { orbitalHrTrendAtom, workoutFlare, workoutsForDay } from "./strainData";
 import { asMetrics, computeRingMetrics, worldStateAtom } from "./worldState";
 import "./orbital.css";
@@ -60,6 +61,7 @@ export default function OrbitalWorld() {
   const navigate = useNavigate();
   // read here (main React root) — the Canvas reconciler doesn't see JotaiProvider
   const world = useAtomValue(worldStateAtom);
+  const solar = useSolarClock();
   // HUD panel hover → scene highlight (same constraint: atom read out here)
   const hudHover = useAtomValue(hoveredObjectAtom);
   const [ready, setReady] = useState(false);
@@ -195,7 +197,7 @@ export default function OrbitalWorld() {
             />
           )}
           <group>
-            <Planet world={world} onSelect={goRecovery} hovered={hudHover === "planet"} />
+            <Planet world={world} sunDir={solar.sunDir} warmth={solar.warmth} onSelect={goRecovery} hovered={hudHover === "planet"} />
             <Atmosphere world={world} />
             <Aurora world={world} />
           </group>

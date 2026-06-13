@@ -1,6 +1,6 @@
 import { Html } from "@react-three/drei";
 import { useFrame } from "@react-three/fiber";
-import { damp } from "maath/easing";
+import { damp, damp3 } from "maath/easing";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three/webgpu";
 import {
@@ -201,10 +201,14 @@ function buildStorm(slot: (typeof STORM_SLOTS)[number], seed: number): StormCell
 
 export default function Planet({
   world,
+  sunDir,
+  warmth,
   onSelect,
   hovered = false,
 }: {
   world: WorldState;
+  sunDir: [number, number, number];
+  warmth: number;
   onSelect?: () => void;
   /** external highlight (HUD panel hover) — treated like pointer hover */
   hovered?: boolean;
@@ -225,6 +229,8 @@ export default function Planet({
     day.anisotropy = 4;
     return { day, night };
   }, []);
+
+  const sunTarget = useMemo(() => new THREE.Vector3(), []);
 
   const { material, uniforms, storms } = useMemo(() => {
     const u = makeUniforms();
@@ -259,7 +265,12 @@ export default function Planet({
     // the aurora at 1.012×R, so a 1.04 scale would poke through both
     damp(uniforms.hover, "value", hot ? 1 : 0, 0.18, dt);
 
-    if (group.current) group.current.rotation.y += rotSpeed.current * dt * RM;
+    sunTarget.set(sunDir[0], sunDir[1], sunDir[2]);
+    damp3(uniforms.sunDir.value, sunTarget, 3, dt);
+    damp(uniforms.warmth, "value", warmth, 3, dt);
+
+    const DRIFT = 0.12; // RHR rotation scaled to ~1 turn / 30+ min so the terminator reads
+    if (group.current) group.current.rotation.y += rotSpeed.current * DRIFT * dt * RM;
     for (let i = 0; i < storms.length; i += 1) {
       storms[i].opacity.value = THREE.MathUtils.clamp(stormAnim.current - i, 0, 1);
       storms[i].pivot.rotation.y += storms[i].drift * dt * RM;

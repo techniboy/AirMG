@@ -3,6 +3,7 @@ import { damp } from "maath/easing";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three/webgpu";
 import {
+  clamp,
   color,
   float,
   mix,
@@ -108,14 +109,34 @@ function buildRibbonGeometry(spec: RibbonSpec): THREE.BufferGeometry {
 
 const makeUniforms = () => ({
   intensity: uniform(DORMANT.auroraIntensity),
-  violetShift: uniform(DORMANT.auroraVioletShift),
+  recovery01: uniform(DORMANT.recovery01),
 });
 type AuroraUniforms = ReturnType<typeof makeUniforms>;
+
+// 5-stop recovery palette (matches src/index.css --color-recovery-*)
+const RECOVERY_STOPS = [
+  color("#FF4F73"), // depleted
+  color("#F5A623"), // low
+  color("#E8C24B"), // moderate
+  color("#18C98B"), // primed
+  color("#2FE6A8"), // peak
+];
+
+/** Piecewise-linear lerp across the 5 stops, keyed on a 0..1 node. */
+function recoveryRamp(t01: AuroraUniforms["recovery01"]) {
+  const seg = t01.mul(4);
+  const f = (lo: number) => clamp(seg.sub(lo), 0, 1);
+  return mix(
+    mix(mix(mix(RECOVERY_STOPS[0], RECOVERY_STOPS[1], f(0)), RECOVERY_STOPS[2], f(1)), RECOVERY_STOPS[3], f(2)),
+    RECOVERY_STOPS[4],
+    f(3),
+  );
+}
 
 /**
  * Curtain shading: slow lateral sway in the vertex stage; in the fragment
  * stage a bright base fading upward, cut by layered scrolling striations
- * (the vertical rays), tinted teal->violet by HRV state.
+ * (the vertical rays), tinted by recovery state (red depleted → mint peak).
  */
 function buildRibbonMaterial(
   spec: RibbonSpec,
@@ -170,10 +191,9 @@ function buildRibbonMaterial(
     .add(baseGlow.mul(striae.mul(0.5).add(0.35)))
     .mul(arcFade);
 
-  // teal aurora when HRV runs high, bruised violet when suppressed;
-  // tips always drift toward the cooler/pinker end like real curtains
-  const baseColor = mix(color("#2bf5c0"), color("#8a4dff"), u.violetShift);
-  const tipColor = mix(color("#3f8cff"), color("#ff5ad1"), u.violetShift);
+  // hue follows recovery (red depleted -> mint peak); tip rides a touch brighter
+  const baseColor = recoveryRamp(u.recovery01);
+  const tipColor = baseColor.mul(1.18).add(vec3(0.02, 0.05, 0.07));
   const rgb = mix(baseColor, tipColor, smoothstep(0.3, 1.0, t).mul(0.65)).mul(1.8);
 
   material.colorNode = vec4(rgb, 1);
@@ -220,7 +240,7 @@ export default function Aurora({ world }: { world: WorldState }) {
   useFrame((_, rawDelta) => {
     const dt = Math.min(rawDelta, 0.1);
     damp(uniforms.intensity, "value", world.auroraIntensity, 2.2, dt);
-    damp(uniforms.violetShift, "value", world.auroraVioletShift, 2.2, dt);
+    damp(uniforms.recovery01, "value", world.recovery01, 2.2, dt);
 
     // the oval slips against the surface rotation — magnetosphere, not crust
     if (group.current) group.current.rotation.y -= 0.012 * dt * RM;

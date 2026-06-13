@@ -29,7 +29,7 @@ export interface WorldState {
 	surfaceSaturation: number; // 0 ashen .. 1 lush
 	stormCount: number; // integer 0..6
 	auroraIntensity: number; // 0..1
-	auroraVioletShift: number; // 0 teal .. 1 violet
+	recovery01: number; // 0 depleted .. 1 peak — drives aurora hue
 	rotationSpeed: number; // rad/s, subtle
 	coronaActivity: number; // 0..1
 	cityCalm: number; // 0 flicker .. 1 steady
@@ -55,7 +55,7 @@ export const DORMANT: WorldState = {
 	surfaceSaturation: 0.05,
 	stormCount: 0,
 	auroraIntensity: 0,
-	auroraVioletShift: 0,
+	recovery01: 0,
 	rotationSpeed: 0.01,
 	coronaActivity: 0.05,
 	cityCalm: 0.2,
@@ -73,9 +73,9 @@ export function computeWorldState(i: WorldInputs): WorldState {
 		atmosphereHue: rec,
 		surfaceSaturation: 0.1 + 0.9 * rec,
 		stormCount: Math.round(6 * clamp01((40 - nz(i.recovery, 50)) / 40)),
-		// gentle slope so a suppressed HRV still leaves a faint violet whisper
+		// gentle slope so a suppressed HRV still leaves a faint glow
 		auroraIntensity: clamp01(0.5 + hrvZ / 6),
-		auroraVioletShift: clamp01(0.5 - hrvZ * 0.5),
+		recovery01: rec,
 		rotationSpeed: 0.01 + 0.02 * clamp01(nz(i.rhrDelta, 0) / 8 + 0.5),
 		coronaActivity: clamp01(nz(i.strainToday, 0) / 21),
 		cityCalm: clamp01(nz(i.sleepPerf, 50) / 100),

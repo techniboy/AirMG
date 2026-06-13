@@ -31,14 +31,14 @@ describe("computeWorldState", () => {
 		expect(good.surfaceSaturation).toBeGreaterThan(bad.surfaceSaturation);
 		expect(bad.stormCount).toBeGreaterThan(good.stormCount);
 	});
-	it("hrv z drives aurora, clamped 0..1", () => {
+	it("hrv z drives aurora intensity, clamped 0..1", () => {
 		expect(computeWorldState({ ...base, hrvZ: 3 }).auroraIntensity).toBe(1);
 		expect(computeWorldState({ ...base, hrvZ: -3 }).auroraIntensity).toBe(0);
-		expect(
-			computeWorldState({ ...base, hrvZ: -1 }).auroraVioletShift,
-		).toBeGreaterThan(
-			computeWorldState({ ...base, hrvZ: 1 }).auroraVioletShift,
-		);
+	});
+	it("recovery01 tracks recovery/100; null → neutral 0.5", () => {
+		expect(computeWorldState({ ...base, recovery: 95 }).recovery01).toBeCloseTo(0.95);
+		expect(computeWorldState({ ...base, recovery: 10 }).recovery01).toBeCloseTo(0.1);
+		expect(computeWorldState({ ...base, recovery: null }).recovery01).toBeCloseTo(0.5);
 	});
 	it("strain drives corona 0..1 over 0..21", () => {
 		expect(computeWorldState({ ...base, strainToday: 21 }).coronaActivity).toBe(

@@ -1,5 +1,5 @@
 import { Html } from "@react-three/drei";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, type ThreeEvent } from "@react-three/fiber";
 import { damp } from "maath/easing";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as THREE from "three/webgpu";
@@ -21,12 +21,13 @@ import {
   vec3,
   vec4,
 } from "three/tsl";
+import { CAMERA_TARGETS } from "../cameraRig";
 import { DORMANT, type WorldState } from "../worldState";
 import { SUN_POSITION } from "./Planet";
 
 export const STAR_RADIUS = 2.6;
 
-/** One solar flare spike on the equatorial ring (fed by Task 13). */
+/** One solar flare spike on the equatorial ring (fed by the strain diorama). */
 export interface Flare {
   /** radians around the ring */
   angle: number;
@@ -38,6 +39,37 @@ export interface Flare {
 
 const MAX_FLARES = 32;
 const FLARE_BASE_RADIUS = STAR_RADIUS * 0.99;
+const FLARE_LEN = (height: number) => 0.45 + 1.1 * height;
+/** PlaneGeometry height — flare world length = FLARE_PLANE_LEN × len */
+const FLARE_PLANE_LEN = 2.4;
+
+/**
+ * The whole flare ring tilts ~28° about the /strain camera's tangent axis
+ * (near side dips, far side rises past the slightly-elevated camera).
+ * Camera-facing spikes would otherwise be edge-on slivers lost in the core
+ * glare, and far-side spikes fully occluded by the photosphere.
+ */
+const FLARE_TILT = (() => {
+  const cam = CAMERA_TARGETS["/strain"].pos;
+  const c = new THREE.Vector3(
+    cam[0] - SUN_POSITION.x,
+    0,
+    cam[2] - SUN_POSITION.z,
+  ).normalize();
+  const axis = new THREE.Vector3(0, 1, 0).cross(c).normalize();
+  return new THREE.Quaternion().setFromAxisAngle(axis, THREE.MathUtils.degToRad(28));
+})();
+
+/**
+ * World-space anchor (relative to the star group) `t` of the way up a
+ * flare spike — the strain hover panel hangs off this. Shares the posing
+ * math below so panel and spike can't drift apart.
+ */
+export function flareAnchor(f: Flare, t = 0.8): THREE.Vector3 {
+  const r = FLARE_BASE_RADIUS + FLARE_PLANE_LEN * FLARE_LEN(f.height) * t;
+  return new THREE.Vector3(Math.cos(f.angle) * r, 0, Math.sin(f.angle) * r)
+    .applyQuaternion(FLARE_TILT);
+}
 
 interface ShellSpec {
   /** radius as a multiple of STAR_RADIUS */
@@ -174,11 +206,14 @@ function buildShellMaterial(
  * Task 13 feeds real workouts.
  */
 function buildFlares() {
-  const geometry = new THREE.PlaneGeometry(0.55, 2.4);
-  geometry.translate(0, 1.2, 0); // pivot at the base (on the photosphere)
+  const geometry = new THREE.PlaneGeometry(0.55, FLARE_PLANE_LEN);
+  // pivot at the base (on the photosphere)
+  geometry.translate(0, FLARE_PLANE_LEN / 2, 0);
 
   const hueArray = new Float32Array(MAX_FLARES);
   const hueAttr = new THREE.InstancedBufferAttribute(hueArray, 1);
+  // 0→1 fade as the strain diorama activates (damped in useFrame)
+  const reveal = uniform(0);
 
   const material = new THREE.MeshBasicNodeMaterial({
     transparent: true,
@@ -207,13 +242,13 @@ function buildFlares() {
     mix(color("#ffb35c"), color("#ff5ca8"), hue).mul(2.4),
     1,
   );
-  material.opacityNode = body;
+  material.opacityNode = body.mul(reveal);
 
   const mesh = new THREE.InstancedMesh(geometry, material, MAX_FLARES);
   mesh.count = 0;
   mesh.frustumCulled = false;
   mesh.renderOrder = 4;
-  return { mesh, hueAttr, geometry, material };
+  return { mesh, hueAttr, geometry, material, reveal };
 }
 
 const UP = new THREE.Vector3(0, 1, 0);
@@ -221,11 +256,17 @@ const UP = new THREE.Vector3(0, 1, 0);
 export default function Star({
   world,
   flares = [],
+  flaresActive = false,
+  onFlareHover,
   onSelect,
   hovered = false,
 }: {
   world: WorldState;
   flares?: Flare[];
+  /** /strain route match — spikes fade in when true, hidden elsewhere */
+  flaresActive?: boolean;
+  /** hovered spike instance index (workout order), null on leave */
+  onFlareHover?: (index: number | null) => void;
   onSelect?: () => void;
   /** external highlight (HUD panel hover) — treated like pointer hover */
   hovered?: boolean;
@@ -270,7 +311,7 @@ export default function Star({
       const f = flares[i];
       radial.set(Math.cos(f.angle), 0, Math.sin(f.angle));
       tangent.crossVectors(UP, radial); // unit: UP ⟂ radial
-      const len = 0.45 + 1.1 * f.height;
+      const len = FLARE_LEN(f.height);
       const wide = 0.6 + 0.5 * f.height;
       // vertical fin: local x → world up, local y → radial (spike direction)
       m.makeBasis(
@@ -295,6 +336,10 @@ export default function Star({
     const dt = Math.min(rawDelta, 0.1);
     damp(activity, "current", world.coronaActivity, 1.8, dt);
     damp(uniforms.hover, "value", hot ? 1 : 0, 0.18, dt);
+    // flare ring fades with the route; fully faded → skip render + raycast
+    damp(flareKit.reveal, "value", flaresActive ? 1 : 0, 0.3, dt);
+    flareKit.mesh.visible =
+      flareKit.mesh.count > 0 && flareKit.reveal.value > 0.004;
     if (coreMesh.current) {
       const s = coreMesh.current.scale;
       damp(s, "x", hot ? 1.04 : 1, 0.18, dt);
@@ -334,10 +379,13 @@ export default function Star({
       >
         <sphereGeometry args={[STAR_RADIUS, 48, 48]} />
         {/* invisible, generous hit target — the sun is small on screen from
-            the landing camera (raycaster ignores `visible`) */}
-        <mesh visible={false}>
-          <sphereGeometry args={[STAR_RADIUS * 1.6, 16, 16]} />
-        </mesh>
+            the landing camera (raycaster ignores `visible`). Dropped while
+            the flare ring is live: it would swallow flare hovers. */}
+        {!flaresActive && (
+          <mesh visible={false}>
+            <sphereGeometry args={[STAR_RADIUS * 1.6, 16, 16]} />
+          </mesh>
+        )}
       </mesh>
       {hot && (
         <Html
@@ -361,7 +409,23 @@ export default function Star({
           <sphereGeometry args={[STAR_RADIUS * SHELLS[i].radius, 48, 48]} />
         </mesh>
       ))}
-      <primitive object={flareKit.mesh} />
+      <group quaternion={FLARE_TILT}>
+        <primitive
+          object={flareKit.mesh}
+          // handlers only exist while the diorama is live — no raycast noise
+          onPointerMove={
+            flaresActive && onFlareHover
+              ? (e: ThreeEvent<PointerEvent>) => {
+                  e.stopPropagation();
+                  onFlareHover(e.instanceId ?? null);
+                }
+              : undefined
+          }
+          onPointerOut={
+            flaresActive && onFlareHover ? () => onFlareHover(null) : undefined
+          }
+        />
+      </group>
     </group>
   );
 }

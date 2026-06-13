@@ -473,6 +473,180 @@
   color: #ecfff7;
 }
 
+/* ---- strain diorama layer (/strain) ---- */
+
+.orbital-hud-strain {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+  font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  color: #d6f5e8;
+  transition:
+    opacity 0.3s ease,
+    transform 0.3s ease;
+}
+
+.orbital-hud-strain.is-hidden {
+  opacity: 0;
+  transform: translateX(-14px);
+}
+
+.hud-strain-detail {
+  width: 280px;
+  margin-left: 28px;
+  padding: 18px 20px 15px;
+  pointer-events: auto;
+}
+
+/* the star burns amber — its HUD accents follow */
+.hud-band--strain {
+  color: #ffb35c;
+  text-shadow: 0 0 14px rgba(255, 179, 92, 0.45);
+}
+
+.hud-workout-list {
+  margin: 14px 0 0;
+  padding: 12px 0 0;
+  border-top: 1px solid rgba(255, 179, 92, 0.12);
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  list-style: none;
+}
+
+.hud-workout-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    "type chip"
+    "time chip";
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 2px;
+}
+
+.hud-workout-type {
+  grid-area: type;
+  font-size: 11.5px;
+  font-weight: 550;
+  letter-spacing: 0.04em;
+  color: #ecfff7;
+}
+
+.hud-workout-time {
+  grid-area: time;
+  font-size: 10.5px;
+  color: rgba(170, 211, 195, 0.55);
+}
+
+.hud-workout-chip {
+  grid-area: chip;
+  padding: 3px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 179, 92, 0.28);
+  background: rgba(255, 179, 92, 0.08);
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  color: #ffcf96;
+  text-shadow: 0 0 10px rgba(255, 179, 92, 0.35);
+}
+
+/* holo panel hanging off a hovered solar flare */
+.orbital-flare-panel {
+  pointer-events: none;
+  width: 212px;
+  padding: 13px 12px 11px;
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(26, 16, 8, 0.62) 0%,
+    rgba(14, 8, 5, 0.5) 100%
+  );
+  border: 1px solid rgba(255, 179, 92, 0.3);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 226, 188, 0.12),
+    0 4px 24px rgba(0, 0, 0, 0.45),
+    0 0 28px rgba(255, 140, 60, 0.1);
+  backdrop-filter: blur(12px) saturate(1.2);
+  -webkit-backdrop-filter: blur(12px) saturate(1.2);
+  font-family: "Geist Variable", ui-sans-serif, system-ui, sans-serif;
+  color: #ffe9cf;
+}
+
+.flare-panel-title {
+  font-size: 11px;
+  font-weight: 650;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #ffb35c;
+  text-shadow: 0 0 12px rgba(255, 179, 92, 0.45);
+}
+
+.flare-panel-time {
+  margin-top: 3px;
+  font-size: 10.5px;
+  color: rgba(255, 214, 170, 0.6);
+}
+
+.flare-panel-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px 10px;
+  margin-top: 9px;
+  padding-top: 9px;
+  border-top: 1px solid rgba(255, 179, 92, 0.14);
+}
+
+.flare-panel-stats span {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.flare-panel-stats i {
+  font-style: normal;
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 196, 140, 0.55);
+}
+
+.flare-panel-stats b {
+  font-size: 12px;
+  font-weight: 550;
+  color: #fff3e0;
+}
+
+.flare-panel-trace {
+  display: block;
+  margin-top: 9px;
+  border-radius: 6px;
+  background: rgba(255, 179, 92, 0.05);
+}
+
+.flare-panel-trace polyline {
+  fill: none;
+  stroke: #ffb35c;
+  stroke-width: 1.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 4px rgba(255, 179, 92, 0.6));
+}
+
+.flare-panel-notrace {
+  margin-top: 9px;
+  font-size: 9.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(255, 196, 140, 0.45);
+}
+
 /* tiny altitude-band labels riding the ghost arcs in the scene */
 .orbital-chip--band {
   padding: 3px 9px;

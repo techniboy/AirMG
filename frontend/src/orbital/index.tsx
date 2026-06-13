@@ -4,7 +4,12 @@ import type { ComponentType } from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
 import * as THREE from "three/webgpu";
-import { baselinesAtom, todayMetricsAtom } from "../atoms/api";
+import {
+  baselinesAtom,
+  controlCenterDayAtom,
+  todayMetricsAtom,
+  workoutsAtom,
+} from "../atoms/api";
 import Coach from "../pages/Coach";
 import HealthAge from "../pages/HealthAge";
 import Insights from "../pages/Insights";
@@ -19,6 +24,7 @@ import { hoveredObjectAtom } from "./hud/hoverAtom";
 import LandingHud from "./hud/LandingHud";
 import RecoveryHud from "./hud/RecoveryHud";
 import SleepHud from "./hud/SleepHud";
+import StrainHud from "./hud/StrainHud";
 import Atmosphere from "./scene/Atmosphere";
 import Aurora from "./scene/Aurora";
 import Effects from "./scene/Effects";
@@ -28,7 +34,9 @@ import RecoveryRings from "./scene/RecoveryRings";
 import SleepDescent from "./scene/SleepDescent";
 import Star from "./scene/Star";
 import Starfield from "./scene/Starfield";
+import StrainFlareLayer from "./scene/StrainFlareLayer";
 import { asSleepSession, decimateStages, orbitalSleepAtom } from "./sleepData";
+import { orbitalHrTrendAtom, workoutFlare, workoutsForDay } from "./strainData";
 import { asMetrics, computeRingMetrics, worldStateAtom } from "./worldState";
 import "./orbital.css";
 
@@ -57,6 +65,7 @@ export default function OrbitalWorld() {
   const consolePage = CONSOLE_PAGES[location.pathname];
   const onRecovery = location.pathname === "/recovery";
   const onSleep = location.pathname === "/sleep";
+  const onStrain = location.pathname === "/strain";
 
   // recovery diorama data — read here (atoms invisible to the Canvas root),
   // passed down as props like `world`
@@ -77,6 +86,22 @@ export default function OrbitalWorld() {
     () => (sleepSession?.stages ? decimateStages(sleepSession.stages) : null),
     [sleepSession],
   );
+
+  // strain diorama data — the control-center day's workouts become solar
+  // flares on a 24h ring; flares list is passed always (Star damps the fade)
+  // but only "active" on /strain
+  const day = useAtomValue(controlCenterDayAtom);
+  const workoutsQuery = useAtomValue(workoutsAtom);
+  const hrTrendQuery = useAtomValue(orbitalHrTrendAtom);
+  const dayWorkouts = useMemo(
+    () => workoutsForDay(workoutsQuery.data?.workouts, day),
+    [workoutsQuery.data, day],
+  );
+  const flares = useMemo(() => dayWorkouts.map(workoutFlare), [dayWorkouts]);
+  const [flareHover, setFlareHover] = useState<number | null>(null);
+  // leaving /strain mid-hover never fires pointerout — unstick the panel
+  // (state adjusted during render, per react.dev "you might not need an effect")
+  if (!onStrain && flareHover != null) setFlareHover(null);
 
   // navigation handlers live in the DOM root (router context is not
   // available inside the Canvas — it is a separate React root)
@@ -136,8 +161,23 @@ export default function OrbitalWorld() {
           <color attach="background" args={["#04060d"]} />
           <ambientLight intensity={0.12} color="#a8c2ff" />
           <CameraRig pathname={location.pathname} />
-          {/* key light lives inside Star, at SUN_POSITION; Task 13 feeds flares */}
-          <Star world={world} onSelect={goStrain} hovered={hudHover === "star"} />
+          {/* key light lives inside Star, at SUN_POSITION */}
+          <Star
+            world={world}
+            onSelect={goStrain}
+            hovered={hudHover === "star"}
+            flares={flares}
+            flaresActive={onStrain}
+            onFlareHover={onStrain ? setFlareHover : undefined}
+          />
+          {onStrain && (
+            <StrainFlareLayer
+              workouts={dayWorkouts}
+              flares={flares}
+              hoverIndex={flareHover}
+              hrPoints={hrTrendQuery.data?.points}
+            />
+          )}
           <group>
             <Planet world={world} onSelect={goRecovery} hovered={hudHover === "planet"} />
             <Atmosphere world={world} />
@@ -157,6 +197,11 @@ export default function OrbitalWorld() {
         visible={onRecovery}
       />
       <SleepHud session={sleepSession} visible={onSleep} />
+      <StrainHud
+        strain={today?.strain ?? null}
+        workouts={dayWorkouts}
+        visible={onStrain}
+      />
       {consolePage && (
         // keyed by pathname — route changes remount and replay the entrance
         <ConsolePanel key={location.pathname} title={consolePage.title}>

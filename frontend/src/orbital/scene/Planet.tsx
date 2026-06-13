@@ -21,6 +21,7 @@ import {
   reflect,
   sin,
   smoothstep,
+  texture,
   time,
   uniform,
   uv,
@@ -57,6 +58,8 @@ const makeUniforms = () => ({
   cityCalm: uniform(DORMANT.cityCalm),
   desaturate: uniform(DORMANT.desaturate),
   hover: uniform(0),
+  sunDir: uniform(SUN_DIR.clone()),
+  warmth: uniform(1),
 });
 type PlanetUniforms = ReturnType<typeof makeUniforms>;
 type FloatUniform = PlanetUniforms["saturation"];
@@ -64,41 +67,31 @@ type FloatUniform = PlanetUniforms["saturation"];
 const sunDirNode = () => vec3(SUN_DIR.x, SUN_DIR.y, SUN_DIR.z);
 
 /**
- * Procedural surface: domain-warped fbm continents over a deep teal ocean,
- * sun-lit with a soft terminator, ocean-only specular glint, polar caps,
- * and amber city clusters that only read on the night side.
+ * Texture-based Earth surface: real day albedo with an in-shader sea/land
+ * mask, recovery grading (vivid -> desaturated), sun-terminator lighting,
+ * ocean-only specular glint, time-of-day warmth tint, and night-side city
+ * lights sampled from the real night texture.
  */
-function buildSurfaceMaterial(u: PlanetUniforms): THREE.MeshBasicNodeMaterial {
+function buildSurfaceMaterial(
+  u: PlanetUniforms,
+  textures: { day: THREE.Texture; night: THREE.Texture },
+): THREE.MeshBasicNodeMaterial {
   const material = new THREE.MeshBasicNodeMaterial();
-  const sunDir = sunDirNode();
+  const sunDir = u.sunDir;
 
-  // -- terrain field (object space so it rotates with the planet) --
+  // keep p for flicker
   const p = positionLocal.mul(0.85);
-  const warp = vec3(
-    mx_noise_float(p.mul(1.3).add(vec3(13.7, 0, 0))),
-    mx_noise_float(p.mul(1.3).add(vec3(0, 7.31, 0))),
-    mx_noise_float(p.mul(1.3).add(vec3(0, 0, 23.1))),
-  ).mul(0.38);
-  const h = mx_fractal_noise_float(p.add(warp), 5, 2.07, 0.54);
-  const landMask = smoothstep(0.045, 0.17, h);
-  const detail = mx_fractal_noise_float(p.mul(3.6).add(11.0), 4, 2.2, 0.55)
-    .mul(0.5)
-    .add(0.5);
 
-  // -- palette --
-  const depth = smoothstep(-0.38, 0.045, h);
-  const oceanLush = mix(color("#04222e"), color("#0a4f63"), depth);
-  const oceanAshen = mix(color("#1d262e"), color("#3a464e"), depth);
-  const ocean = mix(oceanAshen, oceanLush, u.saturation.mul(0.8).add(0.2));
+  // -- real Earth albedo --
+  const dayTex = texture(textures.day, uv()).rgb;
+  // ocean reads bluer than land — cheap sea mask, no extra asset
+  const sea = smoothstep(0.0, 0.08, dayTex.b.sub(dayTex.r.max(dayTex.g)));
+  const land = oneMinus(sea);
 
-  const lush = mix(color("#135c41"), color("#3f9a60"), detail);
-  const ashen = mix(color("#43464b"), color("#82868a"), detail);
-  // power-curve so mid recovery reads clearly between lush and ashen
-  const land = mix(ashen, lush, u.saturation.pow(1.5));
-
-  const pole = positionLocal.normalize().y.abs();
-  const ice = smoothstep(0.84, 0.92, pole.add(detail.mul(0.05)));
-  const surface = mix(mix(ocean, land, landMask), color("#bcd2e0"), ice);
+  // recovery grade: vivid albedo when recovered -> desaturated + dimmed when depleted
+  const lum = luminance(dayTex);
+  const graded = mix(vec3(lum).mul(0.55), dayTex, u.saturation.pow(1.2).mul(0.85).add(0.15));
+  const surface = graded;
 
   // -- lighting vs the (future) star direction --
   const n = normalWorld.normalize();
@@ -111,30 +104,21 @@ function buildSurfaceMaterial(u: PlanetUniforms): THREE.MeshBasicNodeMaterial {
   const specDir = reflect(sunDir.negate(), n);
   const glint = clamp(specDir.dot(viewDir), 0, 1)
     .pow(64)
-    .mul(oneMinus(landMask))
-    .mul(oneMinus(ice))
+    .mul(sea)
     .mul(day)
     .mul(fresnel.mul(2.2).add(0.3));
 
+  const dayWarm = mix(color("#ff9a5c"), color("#ffffff"), u.warmth);
   const lit = surface
-    .mul(day.mul(1.5).add(0.018))
+    .mul(dayWarm)
+    .mul(day.mul(u.warmth.mul(0.9).add(0.6)).add(0.018))
     .add(surface.mul(color("#33446e")).mul(oneMinus(day)).mul(0.32))
     .add(color("#ff9a5c").mul(duskBand).mul(0.022))
     .add(color("#e2f4ff").mul(glint).mul(0.85));
 
-  // -- night-side city lights --
-  const clusters = smoothstep(
-    0.02,
-    0.5,
-    mx_fractal_noise_float(p.mul(2.4).add(31.7), 3, 2.0, 0.55),
-  );
-  const dots = smoothstep(
-    0.52,
-    0.95,
-    mx_fractal_noise_float(p.mul(21.0).add(5.2), 3, 2.3, 0.6),
-  );
+  // -- night-side city lights, from the real night texture (gated to land) --
+  const cityMask = texture(textures.night, uv()).rgb.r.mul(land);
   const night = smoothstep(0.14, -0.2, ndl);
-  const cityMask = dots.mul(clusters).mul(landMask).mul(oneMinus(ice));
 
   // steady brightness scales with cityCalm; low-frequency flicker fills in when restless
   const flicker = mx_noise_float(p.mul(7).add(time.mul(0.45)))
@@ -232,24 +216,36 @@ export default function Planet({
   const [pointerHover, setPointerHover] = useState(false);
   const hot = hovered || pointerHover;
 
+  const textures = useMemo(() => {
+    const loader = new THREE.TextureLoader();
+    const day = loader.load("/orbital/earth-day.jpg");
+    const night = loader.load("/orbital/earth-night.jpg");
+    day.colorSpace = THREE.SRGBColorSpace;
+    night.colorSpace = THREE.SRGBColorSpace;
+    day.anisotropy = 4;
+    return { day, night };
+  }, []);
+
   const { material, uniforms, storms } = useMemo(() => {
     const u = makeUniforms();
     return {
-      material: buildSurfaceMaterial(u),
+      material: buildSurfaceMaterial(u, textures),
       uniforms: u,
       storms: STORM_SLOTS.map((slot, i) => buildStorm(slot, i + 1)),
     };
-  }, []);
+  }, [textures]);
 
   useEffect(
     () => () => {
       material.dispose();
+      textures.day.dispose();
+      textures.night.dispose();
       for (const s of storms) {
         s.material.dispose();
         s.geometry.dispose();
       }
     },
-    [material, storms],
+    [material, storms, textures],
   );
 
   useFrame((_, rawDelta) => {

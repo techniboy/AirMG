@@ -48,7 +48,8 @@ CREATE TABLE IF NOT EXISTS baselines (
     n_valid INTEGER NOT NULL,
     nights_since_update INTEGER NOT NULL DEFAULT 0,
     status TEXT NOT NULL DEFAULT 'calibrating',
-    updated_at INTEGER
+    updated_at INTEGER,
+    last_day TEXT  -- latest calendar day folded in; fold is forward-only to stay idempotent
 );
 
 CREATE TABLE IF NOT EXISTS journal_entries (

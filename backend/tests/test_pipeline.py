@@ -42,6 +42,24 @@ def test_compute_daily_metrics_basic():
     conn.close()
 
 
+def test_baseline_fold_is_idempotent_per_day():
+    """Re-running compute for the same day must not re-fold the baseline."""
+    conn = _setup_db()
+    base_ts = 1718000000
+    day = date.fromtimestamp(base_ts).isoformat()
+    hrv = [{"type": "hrv", "ts": base_ts + i * 300, "value": 52.0} for i in range(10)]
+    upsert_samples(conn, hrv)
+    upsert_sleep_session(
+        conn, start_ts=base_ts - 28800, end_ts=base_ts - 3600,
+        efficiency=0.9, resting_hr=56, avg_hrv=52.0,
+    )
+    compute_daily_metrics(conn, day)
+    first = get_all_baselines(conn)
+    compute_daily_metrics(conn, day)  # re-sync same day
+    assert get_all_baselines(conn) == first
+    conn.close()
+
+
 def test_compute_builds_baselines():
     conn = _setup_db()
     base_ts = 1718000000

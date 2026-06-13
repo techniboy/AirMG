@@ -103,10 +103,14 @@ def _fetch_and_persist(
 def _recompute_metrics(conn: sqlite3.Connection, start_dt: datetime, end_dt: datetime) -> None:
     from airmg.analytics.pipeline import compute_daily_metrics
 
-    days = (end_dt - start_dt).days + 1
-    for d in range(days):
-        day_str = (start_dt.date() + timedelta(days=d)).isoformat()
-        compute_daily_metrics(conn, day_str)
+    # Iterate calendar dates inclusive — a timedelta .days floors and drops the
+    # final partial day, so an overnight sync (last night → this morning) would
+    # skip today and leave today's metrics stale.
+    day = start_dt.date()
+    last = end_dt.date()
+    while day <= last:
+        compute_daily_metrics(conn, day.isoformat())
+        day += timedelta(days=1)
 
 
 @router.post("/start")

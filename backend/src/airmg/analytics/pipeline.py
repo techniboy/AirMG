@@ -31,7 +31,7 @@ def _baseline_from_db(conn: sqlite3.Connection, metric: str) -> BaselineState | 
     )
 
 
-def _save_baseline(conn: sqlite3.Connection, metric: str, state: BaselineState) -> None:
+def _save_baseline(conn: sqlite3.Connection, metric: str, state: BaselineState, day: str) -> None:
     upsert_baseline(
         conn,
         metric,
@@ -40,7 +40,24 @@ def _save_baseline(conn: sqlite3.Connection, metric: str, state: BaselineState) 
         state.n_valid,
         state.nights_since_update,
         state.status.value,
+        last_day=day,
     )
+
+
+def _fold_baseline(
+    conn: sqlite3.Connection, metric: str, value: float | None, cfg, day: str
+) -> None:
+    """Fold a night's value into the EWMA baseline, forward-only.
+
+    A day is folded at most once: recompute/re-sync of an already-folded day is
+    a no-op, so baselines don't drift from repeated runs over the same range.
+    """
+    row = get_baseline(conn, metric)
+    last_day = row["last_day"] if row else None
+    if last_day is not None and day <= last_day:
+        return
+    state = _baseline_from_db(conn, metric)
+    _save_baseline(conn, metric, Baselines.update(state, value, cfg), day)
 
 
 def recompute_strain_history(conn: sqlite3.Connection) -> int:
@@ -196,12 +213,11 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
             sleep_perf=sleep_perf,
         )
 
-    # Fold today's values into the baselines for tomorrow
-    _save_baseline(conn, "hrv", Baselines.update(hrv_baseline, nightly_hrv, Baselines.HRV_CFG))
-    _save_baseline(conn, "resting_hr", Baselines.update(rhr_baseline, rhr_val, Baselines.RHR_CFG))
-    _save_baseline(
-        conn, "resp_rate", Baselines.update(resp_baseline, resp_rate, Baselines.RESP_CFG)
-    )
+    # Fold today's values into the baselines for tomorrow (forward-only — a
+    # day already folded is skipped, so re-syncs don't double-count).
+    _fold_baseline(conn, "hrv", nightly_hrv, Baselines.HRV_CFG, day)
+    _fold_baseline(conn, "resting_hr", rhr_val, Baselines.RHR_CFG, day)
+    _fold_baseline(conn, "resp_rate", resp_rate, Baselines.RESP_CFG, day)
 
     # Strain — use profile age / manual HR max when set
     strain_val = None

@@ -104,17 +104,19 @@ def upsert_baseline(
     n_valid: int,
     nights_since_update: int = 0,
     status: str = "calibrating",
+    last_day: str | None = None,
 ) -> None:
     conn.execute(
         "INSERT INTO baselines"
-        " (metric, mean, spread, n_valid, nights_since_update, status, updated_at)"
-        " VALUES (?, ?, ?, ?, ?, ?, ?)"
+        " (metric, mean, spread, n_valid, nights_since_update, status, updated_at, last_day)"
+        " VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         " ON CONFLICT(metric) DO UPDATE SET"
         " mean=excluded.mean, spread=excluded.spread,"
         " n_valid=excluded.n_valid,"
         " nights_since_update=excluded.nights_since_update,"
-        " status=excluded.status, updated_at=excluded.updated_at",
-        (metric, mean, spread, n_valid, nights_since_update, status, int(time.time())),
+        " status=excluded.status, updated_at=excluded.updated_at,"
+        " last_day=excluded.last_day",
+        (metric, mean, spread, n_valid, nights_since_update, status, int(time.time()), last_day),
     )
     conn.commit()
 

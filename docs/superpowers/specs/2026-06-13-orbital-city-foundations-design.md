@@ -15,7 +15,7 @@ Replace the flat recharts recovery-year heatmap (`YearHeatStrip` on `/trends`) w
 3. **The HCF palette tokens + neon-grade helper.**
 4. **The ghost-baseline overlay (J)** — the universal "deviation from normal" mechanic.
 
-Non-goal: migrating the rest of `/trends` (per-metric trends, range selector). Those stay in the existing console panel and get their own city elements in Spec 4+. This spec only adds the recovery-year facade as the hero of the `/trends` descent.
+Non-goal: migrating the rest of `/trends` (per-metric trends, range selector). For this slice, `/trends` becomes the facade descent (the flat recharts console panel is dropped there, since a frosted glass panel would occlude the interactive hero — vision §2: the descent *replaces* the flat console-panel route). The remaining trend charts return as their own city elements in Spec 4+. This spec only adds the recovery-year facade.
 
 ## 2. Decisions locked in brainstorm
 
@@ -75,7 +75,7 @@ Mirrors `SleepDescent.tsx` structure (props, fade, hover, dispose, reduced-motio
 ### 3.6 `index.tsx` — wiring
 - Read `yearRecoveryAtom` (already imported pattern via `useAtomValue`), memoize `asYearFacade(data)` (like the existing `sleepTrack`/`ringMetrics` memos).
 - Mount `<RecoveryFacade cells={...} summary={...} active={location.pathname === "/trends"} quality={quality} />` inside the Canvas, in the planet group's vicinity.
-- The existing `ConsolePanel` for `/trends` still renders (other charts); the facade is the descended hero behind/around it. (If the console glass obscures the facade, the panel can shrink/dock for `/trends` — minor CSS, decide during build.)
+- Remove `/trends` from `CONSOLE_PAGES` so the frosted `ConsolePanel` no longer mounts there (it would occlude the facade and block hover). The facade is the `/trends` view. Delete the now-redundant `YearHeatStrip` card from `Trends.tsx`. The recharts Trends page returns as city elements in Spec 4+.
 - a11y: add an SR-only control/mirror for the facade in `.orbital-sr-nav`, and a visually-hidden summary readout (year mean, today's recovery vs baseline) so the data is available without the canvas.
 
 ## 4. Data flow

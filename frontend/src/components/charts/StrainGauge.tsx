@@ -1,4 +1,7 @@
+import { useAtomValue } from "jotai";
+import { themeAtom } from "../../atoms/theme";
 import { strainColor } from "../../lib/colors";
+import { Dial } from "../../radio/viz/Dial";
 
 interface StrainGaugeProps {
 	strain: number | null;
@@ -47,6 +50,7 @@ function strainWord(strain: number): string {
 }
 
 export function StrainGauge({ strain, size = 200 }: StrainGaugeProps) {
+	const theme = useAtomValue(themeAtom);
 	const cx = size / 2;
 	const cy = size / 2;
 	const strokeWidth = size * 0.07;
@@ -55,6 +59,36 @@ export function StrainGauge({ strain, size = 200 }: StrainGaugeProps) {
 	const color = strain !== null ? strainHex(strain) : "var(--color-chart-track)";
 	const word = strain !== null ? strainWord(strain) : "--";
 	const displayStrain = strain !== null ? strain.toFixed(1) : "--";
+
+	if (theme === "radio") {
+		return (
+			<Dial
+				frac={fraction}
+				colAt={(f) =>
+					f < 0.33
+						? "#E8B04B"
+						: f < 0.66
+							? "#E8743B"
+							: f < 0.85
+								? "#E0476B"
+								: "#C13AC1"
+				}
+				tip="#E0476B"
+				lcd="#ff7aa0"
+				label={displayStrain}
+				word={
+					strain === null
+						? "--"
+						: fraction > 0.66
+							? "HIGH"
+							: fraction > 0.33
+								? "MOD"
+								: "LOW"
+				}
+				size={size * 0.6}
+			/>
+		);
+	}
 
 	const trackPath = describeArc(cx, cy, r, START_DEG, SPAN_DEG, 1);
 	const fillPath =

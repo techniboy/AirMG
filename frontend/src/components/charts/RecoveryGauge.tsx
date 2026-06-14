@@ -1,4 +1,7 @@
+import { useAtomValue } from "jotai";
+import { themeAtom } from "../../atoms/theme";
 import { recoveryColor, recoveryState } from "../../lib/colors";
+import { Dial } from "../../radio/viz/Dial";
 
 interface RecoveryGaugeProps {
 	score: number | null;
@@ -41,6 +44,7 @@ function recoveryHex(score: number): string {
 }
 
 export function RecoveryGauge({ score, size = 200 }: RecoveryGaugeProps) {
+	const theme = useAtomValue(themeAtom);
 	const cx = size / 2;
 	const cy = size / 2;
 	const strokeWidth = size * 0.075;
@@ -49,6 +53,30 @@ export function RecoveryGauge({ score, size = 200 }: RecoveryGaugeProps) {
 	const color = score !== null ? recoveryHex(score) : "var(--color-chart-track)";
 	const state = score !== null ? recoveryState(score) : "--";
 	const displayScore = score !== null ? Math.round(score).toString() : "--";
+
+	if (theme === "radio") {
+		return (
+			<Dial
+				frac={fraction}
+				colAt={(f) =>
+					f < 0.25
+						? "#FF4F73"
+						: f < 0.5
+							? "#F5A623"
+							: f < 0.7
+								? "#E8C24B"
+								: f < 0.88
+									? "#18C98B"
+									: "#2FE6A8"
+				}
+				tip="#2FE6A8"
+				lcd="#39ffae"
+				label={displayScore}
+				word={score !== null ? state.toUpperCase() : "--"}
+				size={size * 0.6}
+			/>
+		);
+	}
 
 	// Track arc (full span)
 	const trackPath = describeArc(cx, cy, r, START_DEG, SPAN_DEG, 1);

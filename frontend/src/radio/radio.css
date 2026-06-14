@@ -1,0 +1,73 @@
+.radio {
+	--mag: #ff2d78; --cy: #16d8e8; --ind: #8a4dff; --amb: #ffb347;
+	--txt: #cdd1e0; --mut: #6f6a82;
+	/* phase vars (set inline by RadioShell from PhaseTokens): */
+	--g1: #1a1130; --g2: #0a0818; --g3: #04030a;
+	--bloomA: #8a4dff2e; --bloomB: #ff2d7822; --acc: var(--cy); --glow: 1;
+	font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
+	color: var(--txt);
+}
+.radio-app {
+	position: relative; height: 100vh; display: flex; overflow: hidden;
+	background: radial-gradient(125% 85% at var(--bx,50%) 6%, var(--g1) 0%, var(--g2) 44%, var(--g3) 100%);
+	transition: background 1.4s; animation: radio-drift 26s ease-in-out infinite alternate;
+}
+@keyframes radio-drift { 0%{--bx:40%} 100%{--bx:60%} }
+@keyframes radio-tw { 0%,100%{opacity:var(--o)} 50%{opacity:calc(var(--o)*.25)} }
+@keyframes radio-flick { 0%,93%,100%{opacity:1} 94%{opacity:.45} 95%{opacity:1} 97%{opacity:.7} 98%{opacity:1} }
+@keyframes radio-flk { 0%,92%,100%{opacity:1} 93%{opacity:.25} 94%{opacity:1} 96%{opacity:.5} 97%{opacity:1} }
+@keyframes radio-breathe { 0%,100%{opacity:.8} 50%{opacity:1} }
+@keyframes radio-float { 0%{transform:translateY(20px);opacity:0} 10%{opacity:.55} 100%{transform:translateY(-260px);opacity:0} }
+@keyframes radio-drop { to{transform:translateY(130vh)} }
+@keyframes radio-au1 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(18%,8%) scale(1.25)} }
+@keyframes radio-au2 { 0%{transform:translate(0,0) scale(1.1)} 100%{transform:translate(-16%,4%) scale(.85)} }
+@keyframes radio-shoot { 0%,100%{opacity:0;left:-5%;top:8%} 2%{opacity:1} 9%{opacity:0;left:60%;top:30%} }
+
+/* backdrop layers */
+.radio-stars{position:absolute;inset:0 0 30% 0;z-index:0;pointer-events:none;transition:opacity 1s}
+.radio-app.cp .radio-stars{opacity:0}
+.radio-stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;box-shadow:0 0 3px #fff;animation:radio-tw 4s ease-in-out infinite}
+.radio-aurora{position:absolute;left:-20%;right:-20%;top:-10%;height:75%;z-index:0;pointer-events:none;filter:blur(36px);opacity:.5;mix-blend-mode:screen}
+.radio-aurora b{position:absolute;border-radius:50%;width:50%;height:80%}
+.radio-aurora .a1{left:6%;top:0;background:radial-gradient(closest-side,var(--acc),transparent);animation:radio-au1 18s ease-in-out infinite alternate}
+.radio-aurora .a2{right:4%;top:8%;background:radial-gradient(closest-side,var(--mag),transparent);animation:radio-au2 22s ease-in-out infinite alternate}
+.radio-shoot{position:absolute;top:12%;left:-5%;width:90px;height:1.5px;z-index:0;background:linear-gradient(90deg,transparent,#fff);box-shadow:0 0 8px #fff;opacity:0;transform:rotate(14deg);animation:radio-shoot 13s ease-in infinite}
+.radio-bloom{position:absolute;left:0;right:0;bottom:-40px;height:280px;z-index:0;pointer-events:none;transition:background 1.4s;background:radial-gradient(75% 100% at 50% 100%,var(--bloomA),transparent 72%),radial-gradient(55% 100% at 28% 100%,var(--bloomB),transparent 70%);animation:radio-breathe 9s ease-in-out infinite}
+.radio-dust{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
+.radio-dust i{position:absolute;width:2px;height:2px;border-radius:50%;background:#bdfff0;box-shadow:0 0 5px var(--acc);opacity:.5;animation:radio-float linear infinite}
+.radio-rain{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;opacity:0;transition:.8s}
+.radio-app.rain .radio-rain{opacity:1}
+.radio-rain i{position:absolute;top:-14%;width:1px;height:60px;background:linear-gradient(transparent,#b9d4ff66);animation:radio-drop linear infinite}
+
+/* sidebar signboards */
+.radio-rail{width:96px;flex:0 0 96px;display:flex;flex-direction:column;align-items:center;gap:9px;padding:14px 0;z-index:5;border-right:1px solid #ffffff08;overflow-y:auto}
+.radio-logo{width:32px;height:32px;border:1.5px solid var(--mag);border-radius:7px;margin-bottom:8px;display:flex;align-items:center;justify-content:center;color:var(--mag);font-size:17px;text-shadow:0 0 8px var(--mag);box-shadow:0 0 10px #ff2d7677}
+.radio-sign{width:74px;border-radius:7px;padding:8px 4px 6px;display:flex;flex-direction:column;align-items:center;gap:3px;border:1px solid #241f3a;background:#0c0a18cc;color:#4f4a63;transition:.18s;text-decoration:none}
+.radio-sign .kn{font-size:16px;line-height:1}
+.radio-sign .en{font-size:7.5px;letter-spacing:.14em;text-transform:uppercase}
+.radio-sign svg{width:15px;height:15px}
+.radio-sign:hover{color:#a99fc4;border-color:#3a3358}
+.radio-sign.on{color:#fff;border-color:var(--acc);background:linear-gradient(#101b2acc,#0a1320cc);box-shadow:0 0 0 1px var(--acc),0 0 14px color-mix(in srgb,var(--acc) 40%,transparent),inset 0 0 12px color-mix(in srgb,var(--acc) 18%,transparent)}
+.radio-sign.on .kn{text-shadow:0 0 8px var(--acc),0 0 16px var(--acc)}
+
+/* main + billboard */
+.radio-main{flex:1;padding:18px 26px;position:relative;z-index:4;overflow-y:auto}
+.radio-bb{margin:6px 0 18px;display:flex;align-items:center;gap:16px}
+.radio-tube{font-size:48px;line-height:.9;font-weight:800;letter-spacing:.04em;color:#fff;-webkit-text-stroke:1px #bfeff5;text-shadow:0 0 6px var(--acc),0 0 14px var(--acc),0 0 30px color-mix(in srgb,var(--acc) 67%,transparent),0 0 60px color-mix(in srgb,var(--acc) 40%,transparent)}
+.radio-tube .x{animation:radio-flk 6s infinite}
+.radio-mount{border-left:2px solid #2a2545;padding-left:14px}
+.radio-mount .kana{font-size:22px;color:var(--mag);text-shadow:0 0 10px var(--mag);line-height:1}
+.radio-mount .small{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-top:6px}
+
+/* CRT overlays */
+.radio-scan{position:absolute;inset:0;pointer-events:none;z-index:8;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.05) 3px 4px);mix-blend-mode:multiply}
+.radio-grain{position:absolute;inset:0;pointer-events:none;z-index:9;opacity:.06;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.radio-vig{position:absolute;inset:0;pointer-events:none;z-index:8;background:radial-gradient(125% 95% at 50% 35%,transparent 58%,rgba(0,0,0,.55))}
+
+/* reduced motion: freeze ambient animation */
+@media (prefers-reduced-motion: reduce) {
+	.radio-app, .radio-bloom, .radio-aurora b, .radio-shoot, .radio-stars i, .radio-dust i, .radio-rain i, .radio-tube .x { animation: none !important; }
+}
+
+/* themed-card surface for content pages */
+.radio .radio-card{border:1px solid #1c1a2c;border-radius:11px;padding:13px;background:#0a0815c2;backdrop-filter:blur(2px)}

@@ -9,6 +9,7 @@ import {
 	YAxis,
 } from "recharts";
 import { themeAtom } from "../../atoms/theme";
+import { EQ } from "../../radio/viz/EQ";
 
 interface HRPoint {
 	time: string;
@@ -22,6 +23,23 @@ interface HRChartProps {
 
 export function HRChart({ data, color = "#FF4F73" }: HRChartProps) {
 	const theme = useAtomValue(themeAtom);
+
+	if (theme === "radio") {
+		const src = (data ?? [])
+			.map((d) => d.hr)
+			.filter((v): v is number => v != null && !Number.isNaN(v));
+		const cols = 18;
+		const downsampled = src.length
+			? Array.from({ length: cols }, (_, i) => {
+					const a = Math.floor((i * src.length) / cols);
+					const b = Math.max(a + 1, Math.floor(((i + 1) * src.length) / cols));
+					const slice = src.slice(a, b);
+					return slice.reduce((s, x) => s + x, 0) / slice.length;
+				})
+			: [];
+		return <EQ data={downsampled} />;
+	}
+
 	const isGlass = theme === "liquid-glass";
 	const gridColor = isGlass ? "rgba(0,0,0,0.08)" : "#1B2620";
 	const tickColor = isGlass ? "rgba(60,60,67,0.45)" : "#6F7A74";

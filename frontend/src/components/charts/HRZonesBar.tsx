@@ -1,4 +1,7 @@
+import { useAtomValue } from "jotai";
 import { useState } from "react";
+import { themeAtom } from "../../atoms/theme";
+import { ZoneStack } from "../../radio/viz/ZoneStack";
 
 const ZONE_COLORS: Record<number, string> = {
 	1: "#A3D9F5",
@@ -21,8 +24,19 @@ interface HRZonesBarProps {
 }
 
 export function HRZonesBar({ zones }: HRZonesBarProps) {
+	const theme = useAtomValue(themeAtom);
 	const [hover, setHover] = useState<number | null>(null);
 	const total = Object.values(zones).reduce((s, v) => s + v, 0);
+
+	if (theme === "radio") {
+		const z1 = zones[1] ?? 0;
+		const z2 = zones[2] ?? 0;
+		const z3 = zones[3] ?? 0;
+		const z4 = zones[4] ?? 0;
+		const z5 = zones[5] ?? 0;
+		return <ZoneStack minutes={{ 1: z1, 2: z2, 3: z3, 4: z4, 5: z5 }} />;
+	}
+
 	if (total === 0) return null;
 
 	const zoneEntries = [1, 2, 3, 4, 5]

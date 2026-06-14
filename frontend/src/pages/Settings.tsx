@@ -59,6 +59,7 @@ export default function Settings() {
 		{ value: "dark", label: "Dark", desc: "NOOP-inspired dark theme" },
 		{ value: "liquid-glass", label: "Liquid Glass", desc: "Apple iOS 26 translucent glass" },
 		{ value: "orbital", label: "Orbital", desc: "Living 3D world (WebGPU)" },
+		{ value: "radio", label: "Radio City", desc: "HACF neon city nightlife" },
 	];
 
 	return (

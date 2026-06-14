@@ -1,3 +1,7 @@
+import { useAtomValue } from "jotai";
+import { themeAtom } from "../../atoms/theme";
+import { Spire } from "../../radio/viz/Skyline";
+
 interface SparklineProps {
 	values: (number | null)[];
 	color: string;
@@ -11,7 +15,13 @@ export function Sparkline({
 	width = 80,
 	height = 24,
 }: SparklineProps) {
+	const theme = useAtomValue(themeAtom);
 	const valid = values.filter((v): v is number => v !== null);
+
+	if (theme === "radio") {
+		return <Spire data={valid} />;
+	}
+
 	if (valid.length < 2) return null;
 
 	const min = Math.min(...valid);

@@ -10,6 +10,7 @@ import {
 	YAxis,
 } from "recharts";
 import { themeAtom } from "../../atoms/theme";
+import { Skyline } from "../../radio/viz/Skyline";
 
 interface TrendPoint {
 	day: string;
@@ -48,6 +49,10 @@ export function TrendLine({
 	const dotStroke = isGlass ? "#fff" : "#060A08";
 
 	const filtered = data.filter((d) => d.value !== null);
+
+	if (theme === "radio") {
+		return <Skyline data={filtered.map((d) => d.value as number)} />;
+	}
 
 	if (filtered.length < 2) {
 		return (

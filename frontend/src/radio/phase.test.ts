@@ -24,4 +24,18 @@ describe("phaseForFraction", () => {
 			expect(typeof t.cp).toBe("boolean");
 		}
 	});
+	it("uses >= lower / < upper boundaries", () => {
+		expect(phaseForFraction(5 / 24)).toBe("sunrise");
+		expect(phaseForFraction(8 / 24)).toBe("day");
+		expect(phaseForFraction(17 / 24)).toBe("dusk");
+		expect(phaseForFraction(20 / 24)).toBe("night");
+	});
+	it("every token bundle has non-empty hex colors", () => {
+		for (const p of ["sunrise", "day", "dusk", "night"] as const) {
+			const t = PHASE_TOKENS[p];
+			for (const k of ["g1", "g2", "g3", "bloomA", "bloomB", "acc"] as const) {
+				expect(t[k]).toMatch(/^#[0-9a-fA-F]{3,8}$/);
+			}
+		}
+	});
 });

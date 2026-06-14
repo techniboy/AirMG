@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { solarDayFraction, useSolarClock } from "../orbital/solarClock";
+import { solarDayFraction, useSolarClock, readTimeFixture } from "../orbital/solarClock";
 
 export type RadioPhase = "sunrise" | "day" | "dusk" | "night";
 
@@ -42,9 +42,11 @@ export interface RadioPhaseState {
 
 /** Live phase, ticks each minute via solarClock; frozen under ?timeFixture=. */
 export function useRadioPhase(): RadioPhaseState {
-	const { warmth } = useSolarClock(); // subscribe so we re-render on the minute tick
-	void warmth;
-	const phase = useMemo(() => phaseForFraction(solarDayFraction(new Date())), [warmth]);
+	const { warmth } = useSolarClock();
+	const phase = useMemo(() => {
+		const f = readTimeFixture() ?? solarDayFraction(new Date());
+		return phaseForFraction(f);
+	}, [warmth]);
 	return { phase, tokens: PHASE_TOKENS[phase] };
 }
 

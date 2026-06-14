@@ -5,6 +5,7 @@ import { themeAtom } from "../../atoms/theme";
 import { Sidebar } from "./Sidebar";
 
 const OrbitalWorld = lazy(() => import("../../orbital"));
+const RadioShell = lazy(() => import("../../radio/RadioShell").then((m) => ({ default: m.RadioShell })));
 
 function GlassBackground() {
 	return (
@@ -28,6 +29,14 @@ export function Shell() {
 					<OrbitalWorld />
 				</Suspense>
 			</div>
+		);
+	}
+
+	if (theme === "radio") {
+		return (
+			<Suspense fallback={<div className="h-screen w-screen bg-black" />}>
+				<RadioShell />
+			</Suspense>
 		);
 	}
 

@@ -11,17 +11,29 @@
 </p>
 
 <p align="center">
+  <a href="#live-demo">Live demo</a> ·
   <a href="#what-it-is">What it is</a> ·
-  <a href="#screenshots">Screenshots</a> ·
+  <a href="#themes--screenshots">Screenshots</a> ·
   <a href="#quickstart">Quickstart</a> ·
   <a href="#architecture">Architecture</a> ·
-  <a href="#themes">Themes</a> ·
   <a href="#credits">Credits</a>
 </p>
 
 <p align="center">
   <img src="docs/gallery/r-home.png" alt="AirMG — Radio City home" width="900">
 </p>
+
+## Live demo
+
+**▶ Try it: `https://<your-user>.github.io/<repo>/`** — the full app, all four themes, running
+entirely in your browser on generated sample data (no backend, no account).
+
+It's a static build with `VITE_DEMO=1`: the API client is swapped for a client-side mock
+(`frontend/src/api/demo.ts`) that produces realistic recovery/strain/sleep curves, so every chart
+is populated. Deployed by [`.github/workflows/deploy-demo.yml`](.github/workflows/deploy-demo.yml).
+
+**One-time setup:** repo **Settings → Pages → Source = "GitHub Actions"**, then push to `main`.
+(Run it locally with `VITE_DEMO=1 VITE_BASE=/ npm run build && npm run preview`.)
 
 ---
 

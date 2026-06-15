@@ -1,4 +1,5 @@
-import { BrowserRouter, Route, Routes } from "react-router";
+import { BrowserRouter, HashRouter, Route, Routes } from "react-router";
+import { DemoBanner } from "./components/layout/DemoBanner";
 import { Shell } from "./components/layout/Shell";
 import Coach from "./pages/Coach";
 import HealthAge from "./pages/HealthAge";
@@ -13,9 +14,14 @@ import Today from "./pages/Today";
 import Trends from "./pages/Trends";
 import Workouts from "./pages/Workouts";
 
+// Static hosting (GitHub Pages) can't serve deep links → HashRouter in the demo.
+const DEMO = import.meta.env.VITE_DEMO === "1";
+const Router = DEMO ? HashRouter : BrowserRouter;
+
 export default function App() {
 	return (
-		<BrowserRouter>
+		<Router>
+			{DEMO && <DemoBanner />}
 			<Routes>
 				<Route path="onboarding" element={<Onboarding />} />
 				<Route element={<Shell />}>
@@ -32,6 +38,6 @@ export default function App() {
 					<Route path="settings" element={<Settings />} />
 				</Route>
 			</Routes>
-		</BrowserRouter>
+		</Router>
 	);
 }

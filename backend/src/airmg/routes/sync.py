@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import sqlite3
-import time
 from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, Query
@@ -66,13 +65,21 @@ def _deduplicate_step_intervals(intervals: list[dict]) -> list[dict]:
     return [iv for iv in intervals if (iv.get("end_ts", iv["ts"]) - iv["ts"]) <= 60]
 
 
+def _max_ts(records: list[dict]) -> int | None:
+    """Newest physical timestamp in a batch (sessions use end_ts)."""
+    best = 0
+    for m in records:
+        best = max(best, int(m.get("end_ts") or m.get("ts") or m.get("start_ts") or 0))
+    return best or None
+
+
 def _fetch_and_persist(
     conn: sqlite3.Connection,
     key: str,
     cfg: dict,
     start_dt: datetime,
     end_dt: datetime,
-) -> int:
+) -> tuple[int, int | None]:
     start_iso = start_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     end_iso = end_dt.strftime("%Y-%m-%dT%H:%M:%SZ")
     raw = fetch_data_points(
@@ -102,7 +109,7 @@ def _fetch_and_persist(
         )
     else:
         upsert_samples(conn, mapped)
-    return len(mapped)
+    return len(mapped), _max_ts(mapped)
 
 
 def _recompute_metrics(conn: sqlite3.Connection, start_dt: datetime, end_dt: datetime) -> None:
@@ -121,7 +128,6 @@ def _recompute_metrics(conn: sqlite3.Connection, start_dt: datetime, end_dt: dat
 @router.post("/start")
 def start_sync(conn: sqlite3.Connection = Depends(get_db)):
     results = {}
-    now = int(time.time())
     earliest_start = datetime.utcnow()
     for key, cfg in DATA_TYPES.items():
         state = get_sync_state(conn, key)
@@ -133,8 +139,12 @@ def start_sync(conn: sqlite3.Connection = Depends(get_db)):
         if start_dt < earliest_start:
             earliest_start = start_dt
         try:
-            count = _fetch_and_persist(conn, key, cfg, start_dt, end_dt)
-            set_sync_state(conn, key, now)
+            count, max_ts = _fetch_and_persist(conn, key, cfg, start_dt, end_dt)
+            # Advance the watermark to the newest data actually returned — never to
+            # wall-clock now. An empty fetch leaves it put, so data Google backfills
+            # into the gap is still picked up next sync.
+            if max_ts:
+                set_sync_state(conn, key, max_ts)
             results[key] = count
         except Exception as exc:
             results[key] = {"error": str(exc)}
@@ -154,7 +164,30 @@ def sync_range(
     results = {}
     for key, cfg in DATA_TYPES.items():
         try:
-            count = _fetch_and_persist(conn, key, cfg, start_dt, end_dt)
+            count, _ = _fetch_and_persist(conn, key, cfg, start_dt, end_dt)
+            results[key] = count
+        except Exception as exc:
+            results[key] = {"error": str(exc)}
+            continue
+    _recompute_metrics(conn, start_dt, end_dt)
+    return {"synced": results}
+
+
+@router.post("/full")
+def full_resync(
+    days: int = Query(365, ge=1, le=1825, description="how far back to pull"),
+    conn: sqlite3.Connection = Depends(get_db),
+):
+    """Pull the whole history window from scratch (ignores the watermark).
+    Upserts are idempotent, so this is safe to re-run; it just refills any gaps."""
+    start_dt = datetime.utcnow() - timedelta(days=days)
+    end_dt = datetime.utcnow()
+    results = {}
+    for key, cfg in DATA_TYPES.items():
+        try:
+            count, max_ts = _fetch_and_persist(conn, key, cfg, start_dt, end_dt)
+            if max_ts:
+                set_sync_state(conn, key, max_ts)
             results[key] = count
         except Exception as exc:
             results[key] = {"error": str(exc)}

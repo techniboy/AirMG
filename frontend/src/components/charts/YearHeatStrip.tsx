@@ -1,4 +1,7 @@
+import { useAtomValue } from "jotai";
 import { useState } from "react";
+import { themeAtom } from "../../atoms/theme";
+import { Facade } from "../../radio/viz/Facade";
 
 interface HeatDay {
 	day: string;
@@ -29,6 +32,7 @@ export function YearHeatStrip({
 	data,
 	colorScale = defaultRecoveryColor,
 }: YearHeatStripProps) {
+	const theme = useAtomValue(themeAtom);
 	const [tooltip, setTooltip] = useState<{
 		x: number;
 		y: number;
@@ -74,6 +78,18 @@ export function YearHeatStrip({
 	}
 
 	const maxCol = Math.max(...cells.map((c) => c.col));
+
+	if (theme === "radio") {
+		// Flatten the week×day grid into row-major order (7 rows of days-of-week,
+		// (maxCol+1) week columns). Cells outside the year window stay null (no-data).
+		const cols = maxCol + 1;
+		const flatValues: (number | null)[] = new Array(7 * cols).fill(null);
+		for (const c of cells) {
+			flatValues[c.row * cols + c.col] = c.value;
+		}
+		return <Facade values={flatValues} cols={cols} />;
+	}
+
 	const width = LEFT_PAD + (maxCol + 1) * STEP;
 	const height = TOP_PAD + 7 * STEP;
 

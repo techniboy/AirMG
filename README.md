@@ -153,6 +153,10 @@ This is a personal project and a portfolio piece, not a commercial product. It i
 device** — every metric is an approximation and is not clinically validated. See
 [`ATTRIBUTION.md`](ATTRIBUTION.md).
 
+> **Built with AI.** AirMG was designed and written end-to-end through AI prompting — the
+> backend analytics, the React frontend, all four themes, the docs, and these screenshots. It's
+> as much a demonstration of what one person can ship by directing AI as it is a health dashboard.
+
 ## Credits
 
 AirMG exists because of **[NOOP](https://github.com/NoopApp/noop)** (`NoopApp/noop`) — the

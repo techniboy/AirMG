@@ -13,4 +13,5 @@ dist/
 noop/
 *.png
 !docs/screenshots/*.png
+!docs/gallery/*.png
 .superpowers/

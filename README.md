@@ -55,19 +55,35 @@ No account. No cloud. No subscription. The data is yours; AirMG just does the ma
 - **Genuinely full stack** — typed Python analytics backend, React 19 + TypeScript frontend,
   real-time 3D (three.js / React Three Fiber), and a tested data pipeline.
 
-## Screenshots
+## Themes & screenshots
 
-| Radio City — Today | Radio City — Recovery |
-|---|---|
-| ![](docs/screenshots/radio-shell-today.png) | ![](docs/screenshots/radio-recovery-fixed.png) |
+One data model, four interchangeable skins — switch live from the sidebar. Below: **Home · Strain · Trends** in each.
 
-| Orbital data-city — Landing | Orbital — Recovery |
-|---|---|
-| ![](docs/screenshots/orbital-final-landing.png) | ![](docs/screenshots/orbital-final-recovery.png) |
+### Radio City — neon HACF night city *(default)*
 
-| Trends | Workouts — HR zone stack |
-|---|---|
-| ![](docs/screenshots/radio-trends-strain.png) | ![](docs/screenshots/radio-workouts-zonestack.png) |
+| Home | Strain | Trends |
+|---|---|---|
+| ![Radio City home](docs/gallery/radio-home.png) | ![Radio City strain](docs/gallery/radio-strain.png) | ![Radio City trends](docs/gallery/radio-trends.png) |
+
+### Dark — focused, NOOP-inspired dashboard
+
+| Home | Strain | Trends |
+|---|---|---|
+| ![Dark home](docs/gallery/dark-home.png) | ![Dark strain](docs/gallery/dark-strain.png) | ![Dark trends](docs/gallery/dark-trends.png) |
+
+### Liquid Glass — frosted, translucent
+
+| Home | Strain | Trends |
+|---|---|---|
+| ![Liquid Glass home](docs/gallery/glass-home.png) | ![Liquid Glass strain](docs/gallery/glass-strain.png) | ![Liquid Glass trends](docs/gallery/glass-trends.png) |
+
+### Orbital — 3D WebGPU data-city
+
+| Home | Strain | Trends |
+|---|---|---|
+| ![Orbital home](docs/gallery/orbital-home.png) | ![Orbital strain](docs/gallery/orbital-strain.png) | ![Orbital trends](docs/gallery/orbital-trends.png) |
+
+<sub>Screenshots use representative sample data.</sub>
 
 ## Quickstart
 

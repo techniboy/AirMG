@@ -1,13 +1,9 @@
+import { fmt, RECOVERY_RAMP as GOOD } from "../metricColors";
 import { useTipBind } from "../tooltip";
 import { useRadioPhase } from "../phase";
 
 const ZONE = ["#16d8e8", "#5BD3A0", "#E8C24B", "#E8743B", "#ff2d78"];
-// low → high (red → green); for "more is better" metrics like recovery / sleep.
-const GOOD = ["#FF4F73", "#F5A623", "#E8C24B", "#18C98B", "#2FE6A8"];
-
-function fmt(v: number) {
-	return Number.isInteger(v) ? String(v) : v.toFixed(1);
-}
+// GOOD = recovery ramp (low→high, red→green) for "more is better" metrics.
 
 export function EQ({
 	data,

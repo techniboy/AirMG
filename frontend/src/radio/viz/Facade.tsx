@@ -1,7 +1,6 @@
+import { RECOVERY_RAMP as REC } from "../metricColors";
 import { useRadioPhase } from "../phase";
 import { useTipBind } from "../tooltip";
-
-const REC = ["#FF4F73", "#F5A623", "#E8C24B", "#18C98B", "#2FE6A8"];
 
 /** values: array of cells, each 0..100 recovery (or null for no-data). */
 export function Facade({

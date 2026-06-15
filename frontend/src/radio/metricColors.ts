@@ -19,6 +19,15 @@ export const METRIC_COLORS = {
 
 export type MetricKey = keyof typeof METRIC_COLORS;
 
+// Recovery band ramp (low->high, red->teal). Indexed by Math.floor(frac*5).
+// Shared by the recovery-coloured viz (EQ ladder, Skyline, Facade).
+export const RECOVERY_RAMP = ["#FF4F73", "#F5A623", "#E8C24B", "#18C98B", "#2FE6A8"] as const;
+
+/** Compact number format: integers bare, else one decimal. */
+export function fmt(v: number): string {
+	return Number.isInteger(v) ? String(v) : v.toFixed(1);
+}
+
 const FALLBACK = "#16d8e8";
 
 /** Map a human label (as passed to StatTile/MetricCard) to a metric key.

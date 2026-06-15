@@ -1,12 +1,7 @@
 import { useMemo } from "react";
+import { fmt, RECOVERY_RAMP as REC } from "../metricColors";
 import { useRadioPhase } from "../phase";
 import { useTipBind } from "../tooltip";
-
-const REC = ["#FF4F73", "#F5A623", "#E8C24B", "#18C98B", "#2FE6A8"];
-
-function fmt(v: number) {
-	return Number.isInteger(v) ? String(v) : v.toFixed(1);
-}
 
 export function Skyline({
 	data,

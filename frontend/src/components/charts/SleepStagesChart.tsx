@@ -1,6 +1,9 @@
+import { useAtomValue } from "jotai";
 import { sleepStageColor } from "../../lib/colors";
 import { formatMinutes } from "../../lib/format";
 import type { StageSegment } from "../../lib/types";
+import { themeAtom } from "../../atoms/theme";
+import { Hypnogram } from "../../radio/viz/Hypnogram";
 
 interface SleepStagesChartProps {
 	stages: StageSegment[] | null;
@@ -129,6 +132,20 @@ export function SleepStagesChart({
 	lightMinutes,
 	wakeMinutes,
 }: SleepStagesChartProps) {
+	const theme = useAtomValue(themeAtom);
+	if (theme === "radio" && stages && stages.length > 0) {
+		const normalizedSegments = [...stages]
+			.sort((a, b) => a.start - b.start)
+			.map((seg) => ({
+				stage: seg.stage,
+				minutes: (seg.end - seg.start) / 60,
+			}))
+			.filter((s) => s.minutes > 0);
+		if (normalizedSegments.length > 0) {
+			return <Hypnogram segments={normalizedSegments} />;
+		}
+	}
+
 	// Compute per-stage totals either from segments or from provided minute values
 	let deep = deepMinutes ?? 0;
 	let rem = remMinutes ?? 0;

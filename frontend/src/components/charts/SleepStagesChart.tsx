@@ -1,4 +1,5 @@
 import { useAtomValue } from "jotai";
+import { useRef, useState } from "react";
 import { sleepStageColor } from "../../lib/colors";
 import { formatMinutes } from "../../lib/format";
 import type { StageSegment } from "../../lib/types";
@@ -47,6 +48,8 @@ function fmtClock(ts: number): string {
 }
 
 function Hypnogram({ stages }: { stages: StageSegment[] }) {
+	const wrapRef = useRef<HTMLDivElement>(null);
+	const [hover, setHover] = useState<{ text: string; x: number; y: number } | null>(null);
 	const segs = [...stages].sort((a, b) => a.start - b.start);
 	const t0 = segs[0].start;
 	const t1 = segs[segs.length - 1].end;
@@ -54,7 +57,18 @@ function Hypnogram({ stages }: { stages: StageSegment[] }) {
 	const x = (ts: number) => PLOT_X + ((ts - t0) / (t1 - t0)) * PLOT_W;
 	const mid = (t0 + t1) / 2;
 
+	function showTip(e: React.MouseEvent, seg: StageSegment) {
+		const r = wrapRef.current?.getBoundingClientRect();
+		if (!r) return;
+		setHover({
+			text: `${STAGE_LABELS[seg.stage]} · ${fmtClock(seg.start)}–${fmtClock(seg.end)} · ${Math.round((seg.end - seg.start) / 60)} min`,
+			x: e.clientX - r.left,
+			y: e.clientY - r.top,
+		});
+	}
+
 	return (
+		<div ref={wrapRef} className="relative">
 		<svg
 			viewBox="0 0 640 178"
 			className="w-full text-text-tertiary"
@@ -89,6 +103,9 @@ function Hypnogram({ stages }: { stages: StageSegment[] }) {
 							height={BAR_H}
 							rx={BAR_H / 2}
 							fill={sleepStageColor(seg.stage)}
+							style={{ cursor: "crosshair" }}
+							onMouseMove={(e) => showTip(e, seg)}
+							onMouseLeave={() => setHover(null)}
 						/>
 						{next && next.stage !== seg.stage && (
 							<rect
@@ -121,6 +138,15 @@ function Hypnogram({ stages }: { stages: StageSegment[] }) {
 				{fmtClock(t1)}
 			</text>
 		</svg>
+		{hover && (
+			<div
+				className="pointer-events-none absolute z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md border border-hairline bg-surface-overlay px-2 py-1 text-xs text-text-primary shadow-lg"
+				style={{ left: hover.x, top: hover.y - 8 }}
+			>
+				{hover.text}
+			</div>
+		)}
+		</div>
 	);
 }
 
@@ -134,15 +160,21 @@ export function SleepStagesChart({
 }: SleepStagesChartProps) {
 	const theme = useAtomValue(themeAtom);
 	if (theme === "radio" && stages && stages.length > 0) {
-		const normalizedSegments = [...stages]
-			.sort((a, b) => a.start - b.start)
+		const sorted = [...stages].sort((a, b) => a.start - b.start);
+		const normalizedSegments = sorted
 			.map((seg) => ({
 				stage: seg.stage,
 				minutes: (seg.end - seg.start) / 60,
 			}))
 			.filter((s) => s.minutes > 0);
 		if (normalizedSegments.length > 0) {
-			return <RadioHypnogram segments={normalizedSegments} />;
+			return (
+				<RadioHypnogram
+					segments={normalizedSegments}
+					startTs={sorted[0].start}
+					endTs={sorted[sorted.length - 1].end}
+				/>
+			);
 		}
 	}
 

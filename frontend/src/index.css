@@ -354,19 +354,13 @@
 .lg-bg-orb {
   position: absolute; border-radius: 50%;
   filter: blur(80px);
-  animation: lg-drift 20s ease-in-out infinite alternate;
+  /* static — the old lg-drift scale() re-rasterized the 80px blur every frame */
 }
 .lg-bg-orb.o1 { width: 500px; height: 500px; top: -10%; right: -5%; background: radial-gradient(circle, rgba(0,122,255,0.35), rgba(88,86,214,0.2)); }
-.lg-bg-orb.o2 { width: 600px; height: 600px; bottom: -15%; left: -10%; background: radial-gradient(circle, rgba(255,45,85,0.25), rgba(255,149,0,0.2)); animation-delay: -7s; }
-.lg-bg-orb.o3 { width: 450px; height: 450px; top: 30%; left: 40%; background: radial-gradient(circle, rgba(52,199,89,0.2), rgba(0,199,190,0.15)); animation-delay: -14s; }
-.lg-bg-orb.o4 { width: 350px; height: 350px; top: 10%; left: 15%; background: radial-gradient(circle, rgba(175,82,222,0.2), rgba(90,200,250,0.15)); animation-delay: -3s; }
+.lg-bg-orb.o2 { width: 600px; height: 600px; bottom: -15%; left: -10%; background: radial-gradient(circle, rgba(255,45,85,0.25), rgba(255,149,0,0.2)); }
+.lg-bg-orb.o3 { width: 450px; height: 450px; top: 30%; left: 40%; background: radial-gradient(circle, rgba(52,199,89,0.2), rgba(0,199,190,0.15)); }
+.lg-bg-orb.o4 { width: 350px; height: 350px; top: 10%; left: 15%; background: radial-gradient(circle, rgba(175,82,222,0.2), rgba(90,200,250,0.15)); }
 
-@keyframes lg-drift {
-  0% { transform: translate(0,0) scale(1); }
-  33% { transform: translate(30px,-20px) scale(1.05); }
-  66% { transform: translate(-20px,30px) scale(0.95); }
-  100% { transform: translate(10px,10px) scale(1.02); }
-}
 
 /* Glass sidebar in Liquid Glass theme */
 .liquid-glass .lg-sidebar {

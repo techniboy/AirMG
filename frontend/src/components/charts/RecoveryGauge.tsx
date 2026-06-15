@@ -164,15 +164,13 @@ export function RecoveryGauge({ score, size = 200 }: RecoveryGaugeProps) {
 				)}
 			</svg>
 
-			{/* Center label — positioned over the SVG. translateY nudges it down so
-			    the number clears the gauge center / value box above. */}
+			{/* Center label — positioned over the SVG */}
 			<div
 				className="flex flex-col items-center"
 				style={{
 					marginTop: -(size * 0.72),
 					height: size * 0.72 - strokeWidth,
 					justifyContent: "center",
-					transform: `translateY(${size * 0.08}px)`,
 				}}
 			>
 				<span

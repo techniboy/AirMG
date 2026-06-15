@@ -1,3 +1,4 @@
+import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { useAtomValue } from "jotai";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,31 @@ export default function Settings() {
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
 	const [saveError, setSaveError] = useState<string | null>(null);
+
+	const queryClient = useQueryClient();
+	const [resyncing, setResyncing] = useState(false);
+	const [resyncMsg, setResyncMsg] = useState<string | null>(null);
+
+	async function handleFullResync() {
+		setResyncing(true);
+		setResyncMsg(null);
+		try {
+			const res = await api<{ synced: Record<string, number | { error: string }> }>(
+				"/sync/full?days=365",
+				{ method: "POST" },
+			);
+			const total = Object.values(res.synced).reduce<number>(
+				(n, v) => n + (typeof v === "number" ? v : 0),
+				0,
+			);
+			setResyncMsg(`Pulled ${total} record${total === 1 ? "" : "s"} across the last year.`);
+			queryClient.invalidateQueries();
+		} catch (err) {
+			setResyncMsg(err instanceof Error ? err.message : "Full re-sync failed");
+		} finally {
+			setResyncing(false);
+		}
+	}
 
 	function setField<K extends keyof ProfileSettings>(
 		key: K,
@@ -55,6 +81,26 @@ export default function Settings() {
 	return (
 		<div className="mx-auto max-w-lg space-y-6">
 			<h1 className="text-2xl font-bold">Settings</h1>
+
+			<Card className="border-hairline bg-surface-raised p-5 space-y-4">
+				<div className="text-xs uppercase tracking-widest text-text-tertiary">Data</div>
+				<p className="text-sm text-text-secondary">
+					Re-pull your full Google Health history (last year) from scratch and recompute
+					every day. Use this after a gap, or to backfill. Safe to re-run — it only fills
+					what's missing. May take a while.
+				</p>
+				<div className="flex items-center gap-3">
+					<Button
+						type="button"
+						onClick={handleFullResync}
+						disabled={resyncing}
+						className="bg-accent text-surface-base hover:bg-accent-hover"
+					>
+						{resyncing ? "Re-syncing…" : "Full re-sync"}
+					</Button>
+					{resyncMsg && <span className="text-sm text-text-secondary">{resyncMsg}</span>}
+				</div>
+			</Card>
 
 			<form onSubmit={handleSave} className="space-y-4">
 				<Card className="border-hairline bg-surface-raised p-5 space-y-4">

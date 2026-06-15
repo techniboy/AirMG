@@ -83,6 +83,17 @@ One data model, four interchangeable skins — switch live from the sidebar. Bel
 |---|---|---|
 | ![Orbital home](docs/gallery/o-home.png) | ![Orbital strain](docs/gallery/o-strain.png) | ![Orbital trends](docs/gallery/o-trends.png) |
 
+In Orbital the scene *is* the readout — the celestial bodies move with your metrics:
+
+- **Aurora** — its **colour** is your recovery state (red depleted → amber → mint peak), and its
+  **intensity** tracks your HRV against your baseline. Bright vivid curtains = recovered + high HRV.
+- **Moon phase** — waxes toward full as your sleep approaches your need; a thin crescent means you
+  slept short, a full moon means you hit your target.
+- **Star** — its **corona and solar flares** stoke with the day's strain (brighter, more turbulent
+  the harder you trained), and each individual flare is one of your workouts.
+- The planet itself: more surface **storms** when recovery is low, calmer **city lights** when sleep
+  performance is high.
+
 <sub>Screenshots use representative sample data.</sub>
 
 ## Quickstart

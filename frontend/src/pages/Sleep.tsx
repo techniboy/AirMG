@@ -108,7 +108,14 @@ export default function Sleep() {
 			{sleepTrendPoints.length >= 2 && (
 				<Card className="border-hairline bg-surface-raised p-4 space-y-2">
 					<div className="text-sm font-medium text-text-secondary">Sleep Duration · 30 days</div>
-					<TrendLine data={sleepTrendPoints} color="#A879FF" radioForm="eq-good" />
+					<TrendLine
+						data={sleepTrendPoints}
+						color="#A879FF"
+						radioForm="eq-good"
+						unit="min"
+						xTitle="Day"
+						yTitle="min"
+					/>
 				</Card>
 			)}
 		</div>

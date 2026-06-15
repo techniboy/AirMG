@@ -3,7 +3,6 @@ import type { CSSProperties } from "react";
 import { useEffect, useState } from "react";
 import "./radio.css";
 import { useRadioPhase } from "./phase";
-import { RadioBackdrop } from "./RadioBackdrop";
 import { RadioSidebar } from "./RadioSidebar";
 import { RadioBillboard } from "./RadioBillboard";
 import { RadioTooltip } from "./RadioTooltip";
@@ -34,7 +33,7 @@ export function RadioShell() {
 				className={`radio-app${tokens.cp ? " cp" : ""}${hidden ? " paused" : ""}`}
 				style={style}
 			>
-				<RadioBackdrop />
+				<div className="radio-shoot" />
 				<div className="radio-rain">{/* rain disabled v1 (no weather source) */}</div>
 				<RadioSidebar />
 				<main className="radio-main">

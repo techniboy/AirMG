@@ -9,6 +9,19 @@
 	--bloomA: #8a4dff2e; --bloomB: #ff2d7822; --acc: var(--cy); --glow: 1;
 	font-family: ui-monospace, "SFMono-Regular", Menlo, monospace;
 	color: var(--txt);
+	/* Repaint the green default surface/card tokens in the theme's purple-night
+	   tones so bento/metric cards match (default tokens are green-tinted). */
+	--color-surface-base: #07050f;
+	--color-surface-raised: #171232;
+	--color-surface-overlay: #1f1840;
+	--color-surface-inset: #0d0a1e;
+	--color-hairline: #342b58;
+	--color-hairline-strong: #463a70;
+	--color-bg-secondary: #171232;
+	--color-bg-tertiary: #1f1840;
+	--color-card: #171232;
+	--color-card-foreground: #d6d0ee;
+	--color-border: #342b58;
 }
 .radio-app {
 	position: relative; height: 100vh; display: flex; overflow: hidden;
@@ -23,7 +36,6 @@
 		radial-gradient(125% 85% at 50% 6%, var(--g1) 0%, var(--g2) 44%, var(--g3) 100%);
 	transition: background 1.4s;
 }
-@keyframes radio-tw { 0%,100%{opacity:var(--o)} 50%{opacity:calc(var(--o)*.25)} }
 @keyframes radio-flick { 0%,93%,100%{opacity:1} 94%{opacity:.45} 95%{opacity:1} 97%{opacity:.7} 98%{opacity:1} }
 @keyframes radio-flk { 0%,92%,100%{opacity:1} 93%{opacity:.25} 94%{opacity:1} 96%{opacity:.5} 97%{opacity:1} }
 @keyframes radio-drop { to{transform:translateY(130vh)} }
@@ -40,9 +52,6 @@
 }
 
 /* backdrop layers */
-.radio-stars{position:absolute;inset:0 0 30% 0;z-index:0;pointer-events:none;transition:opacity 1s}
-.radio-app.cp .radio-stars{opacity:0}
-.radio-stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;box-shadow:0 0 3px #fff;animation:radio-tw 4s ease-in-out infinite}
 .radio-shoot{position:absolute;top:12%;left:-5%;width:90px;height:1.5px;z-index:0;background:linear-gradient(90deg,transparent,#fff);box-shadow:0 0 8px #fff;opacity:0;transform:rotate(14deg);animation:radio-shoot 13s ease-in infinite}
 .radio-rain{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;opacity:0;transition:.8s}
 .radio-app.rain .radio-rain{opacity:1}
@@ -67,6 +76,18 @@
 .radio-mount{border-left:2px solid #2a2545;padding-left:14px}
 .radio-mount .kana{font-size:22px;color:var(--mag);text-shadow:0 0 10px var(--mag);line-height:1}
 .radio-mount .small{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-top:6px}
+.radio-topctl{margin-left:auto;display:flex;align-items:center;gap:8px}
+.radio-iconbtn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid #342b58;border-radius:8px;background:#171232;color:var(--txt);cursor:pointer;transition:.15s}
+.radio-iconbtn:hover{border-color:var(--acc);color:#fff;box-shadow:0 0 10px color-mix(in srgb,var(--acc) 30%,transparent)}
+.radio-iconbtn:disabled{opacity:.6;cursor:default}
+.radio-iconbtn .spin{animation:radio-spin .9s linear infinite}
+@keyframes radio-spin{to{transform:rotate(360deg)}}
+.radio-menu{position:absolute;top:calc(100% + 6px);right:0;z-index:60;min-width:176px;padding:5px;background:#120f28;border:1px solid #342b58;border-radius:10px;box-shadow:0 12px 32px #0009;display:flex;flex-direction:column;gap:2px}
+.radio-menu-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 9px;border:none;border-radius:7px;background:transparent;color:var(--txt);font:600 11px ui-monospace,Menlo,monospace;letter-spacing:.03em;cursor:pointer;text-align:left}
+.radio-menu-item:hover{background:#1f1840}
+.radio-menu-item.on{color:var(--acc)}
+.radio-menu-item .lbl{display:flex;flex-direction:column;gap:2px}
+.radio-menu-item .warn{display:flex;align-items:center;gap:3px;font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:#ffb347}
 
 /* CRT overlays */
 .radio-scan{position:absolute;inset:0;pointer-events:none;z-index:8;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.05) 3px 4px)}
@@ -75,7 +96,7 @@
 
 /* reduced motion: freeze ambient animation */
 @media (prefers-reduced-motion: reduce) {
-	.radio-shoot, .radio-stars i, .radio-rain i, .radio-tube .x { animation: none !important; }
+	.radio-shoot, .radio-rain i, .radio-tube .x { animation: none !important; }
 }
 
 /* tab hidden: pause every ambient animation so the GPU compositor idles */

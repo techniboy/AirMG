@@ -1,6 +1,7 @@
 import { useAtomValue } from "jotai";
 import {
 	CartesianGrid,
+	Label,
 	Line,
 	LineChart,
 	ReferenceLine,
@@ -29,6 +30,9 @@ interface TrendLineProps {
 	 *  "eq-ladder" = zone-stack bars (bands red→green by row, fill to value),
 	 *  "spire" = compact silhouette. */
 	radioForm?: "skyline" | "eq" | "eq-good" | "eq-ladder" | "spire";
+	/** axis titles, e.g. xTitle="Hour", yTitle="bpm" */
+	xTitle?: string;
+	yTitle?: string;
 }
 
 function shortDay(day: string): string {
@@ -44,6 +48,8 @@ export function TrendLine({
 	domain,
 	referenceValue,
 	radioForm = "skyline",
+	xTitle,
+	yTitle,
 }: TrendLineProps) {
 	const theme = useAtomValue(themeAtom);
 	const isGlass = theme === "liquid-glass";
@@ -60,9 +66,44 @@ export function TrendLine({
 	if (theme === "radio") {
 		const vals = filtered.map((d) => d.value as number);
 		const labels = filtered.map((d) => shortDay(d.day));
-		if (radioForm === "eq") return <EQ data={vals} labels={labels} unit={unit} color={color} />;
-		if (radioForm === "eq-good") return <EQ data={vals} labels={labels} unit={unit} colorMode="value" />;
-		if (radioForm === "eq-ladder") return <EQ data={vals} labels={labels} unit={unit} colorMode="ladder" height={150} rows={18} />;
+		if (radioForm === "eq")
+			return (
+				<EQ
+					data={vals}
+					labels={labels}
+					unit={unit}
+					color={color}
+					xTitle={xTitle}
+					yTitle={yTitle}
+					showLabels={Boolean(xTitle || yTitle)}
+				/>
+			);
+		if (radioForm === "eq-good")
+			return (
+				<EQ
+					data={vals}
+					labels={labels}
+					unit={unit}
+					colorMode="value"
+					xTitle={xTitle}
+					yTitle={yTitle}
+					showLabels={Boolean(xTitle || yTitle)}
+				/>
+			);
+		if (radioForm === "eq-ladder")
+			return (
+				<EQ
+					data={vals}
+					labels={labels}
+					unit={unit}
+					colorMode="ladder"
+					height={150}
+					rows={18}
+					xTitle={xTitle}
+					yTitle={yTitle}
+					showLabels={Boolean(xTitle || yTitle)}
+				/>
+			);
 		if (radioForm === "spire") return <Spire data={vals} labels={labels} unit={unit} height={56} color={color} />;
 		return <Skyline data={vals} labels={labels} unit={unit} />;
 	}
@@ -95,15 +136,23 @@ export function TrendLine({
 					tick={{ fill: tickColor, fontSize: 11 }}
 					axisLine={false}
 					tickLine={false}
-				/>
+				>
+					{xTitle && (
+						<Label value={xTitle} position="insideBottom" offset={-2} fill={tickColor} fontSize={10} />
+					)}
+				</XAxis>
 				<YAxis
 					domain={domain ?? ["auto", "auto"]}
 					tick={{ fill: tickColor, fontSize: 11 }}
 					axisLine={false}
 					tickLine={false}
-					width={36}
+					width={yTitle ? 48 : 36}
 					tickFormatter={(v: number) => (unit ? `${v}${unit}` : `${v}`)}
-				/>
+				>
+					{yTitle && (
+						<Label value={yTitle} angle={-90} position="insideLeft" fill={tickColor} fontSize={10} style={{ textAnchor: "middle" }} />
+					)}
+				</YAxis>
 				{referenceValue !== undefined && (
 					<ReferenceLine
 						y={referenceValue}
@@ -120,8 +169,8 @@ export function TrendLine({
 						fontSize: 12,
 						...(isGlass ? { backdropFilter: "blur(20px)" } : {}),
 					}}
-					labelFormatter={(val: any) => shortDay(String(val))}
-					formatter={(val: any) => [
+					labelFormatter={(val: unknown) => shortDay(String(val))}
+					formatter={(val: unknown) => [
 						`${val !== null && val !== undefined ? Number(val).toFixed(1) : "--"}${unit ? " " + unit : ""}`,
 						"",
 					]}

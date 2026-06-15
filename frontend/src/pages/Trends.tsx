@@ -192,6 +192,8 @@ export default function Trends() {
 					unit={metricMeta.unit}
 					domain={metricMeta.domain}
 					radioForm={RADIO_FORM[selectedMetric]}
+					xTitle="Day"
+					yTitle={metricMeta.unit || metricMeta.label}
 				/>
 
 				{/* Footer stats */}

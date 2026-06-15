@@ -1,11 +1,9 @@
 import { useState } from "react";
-import { useQueryClient } from "@tanstack/react-query";
-import { useAtomValue, useAtom } from "jotai";
+import { useAtomValue } from "jotai";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { api } from "../api/client";
 import { settingsAtom, type ProfileSettings } from "../atoms/api";
-import { themeAtom, type Theme } from "../atoms/theme";
 
 const DEFAULT_SETTINGS: ProfileSettings = {
 	age: null,
@@ -25,34 +23,6 @@ export default function Settings() {
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
 	const [saveError, setSaveError] = useState<string | null>(null);
-
-	const queryClient = useQueryClient();
-	const [syncing, setSyncing] = useState(false);
-	const [syncMsg, setSyncMsg] = useState<string | null>(null);
-	const [syncError, setSyncError] = useState<string | null>(null);
-
-	async function handleSync() {
-		setSyncing(true);
-		setSyncMsg(null);
-		setSyncError(null);
-		try {
-			const res = await api<{ synced: Record<string, number | { error: string }> }>(
-				"/sync/start",
-				{ method: "POST" },
-			);
-			const total = Object.values(res.synced).reduce<number>(
-				(n, v) => n + (typeof v === "number" ? v : 0),
-				0,
-			);
-			setSyncMsg(`Synced ${total} new record${total === 1 ? "" : "s"}.`);
-			// Refresh every dashboard query with the freshly synced data.
-			queryClient.invalidateQueries();
-		} catch (err) {
-			setSyncError(err instanceof Error ? err.message : "Sync failed");
-		} finally {
-			setSyncing(false);
-		}
-	}
 
 	function setField<K extends keyof ProfileSettings>(
 		key: K,
@@ -79,70 +49,12 @@ export default function Settings() {
 		}
 	}
 
-	const [theme, setTheme] = useAtom(themeAtom);
-
 	if (isPending) return <div className="text-text-secondary">Loading…</div>;
 	if (error) return <div className="text-sm text-status-critical">{String(error)}</div>;
-
-	const THEMES: { value: Theme; label: string; desc: string }[] = [
-		{ value: "dark", label: "Dark", desc: "NOOP-inspired dark theme" },
-		{ value: "liquid-glass", label: "Liquid Glass", desc: "Apple iOS 26 translucent glass" },
-		{ value: "orbital", label: "Orbital", desc: "Living 3D world (WebGPU)" },
-		{ value: "radio", label: "Radio City", desc: "HACF neon city nightlife" },
-	];
 
 	return (
 		<div className="mx-auto max-w-lg space-y-6">
 			<h1 className="text-2xl font-bold">Settings</h1>
-
-			<Card className="border-hairline bg-surface-raised p-5 space-y-4">
-				<div className="text-xs uppercase tracking-widest text-text-tertiary">
-					Appearance
-				</div>
-				<div className="flex gap-2">
-					{THEMES.map((t) => (
-						<button
-							key={t.value}
-							type="button"
-							onClick={() => setTheme(t.value)}
-							className={`flex-1 rounded-lg border px-3 py-3 text-left transition-colors ${
-								theme === t.value
-									? "border-accent bg-accent-muted text-accent"
-									: "border-hairline text-text-secondary hover:text-text-primary"
-							}`}
-						>
-							<div className="text-sm font-medium">{t.label}</div>
-							<div className="text-[11px] mt-0.5 opacity-60">{t.desc}</div>
-						</button>
-					))}
-				</div>
-			</Card>
-
-			<Card className="border-hairline bg-surface-raised p-5 space-y-4">
-				<div className="text-xs uppercase tracking-widest text-text-tertiary">
-					Data
-				</div>
-				<p className="text-sm text-text-secondary">
-					Pull the latest heart rate, HRV, sleep, SpO₂, workouts and steps from
-					Google Health, then recompute your metrics.
-				</p>
-				<div className="flex items-center gap-3">
-					<Button
-						type="button"
-						onClick={handleSync}
-						disabled={syncing}
-						className="bg-accent text-surface-base hover:bg-accent-hover"
-					>
-						{syncing ? "Syncing…" : "Sync now"}
-					</Button>
-					{syncMsg && (
-						<span className="text-sm text-status-positive">{syncMsg}</span>
-					)}
-					{syncError && (
-						<span className="text-sm text-status-critical">{syncError}</span>
-					)}
-				</div>
-			</Card>
 
 			<form onSubmit={handleSave} className="space-y-4">
 				<Card className="border-hairline bg-surface-raised p-5 space-y-4">

@@ -83,7 +83,15 @@ export default function Recovery() {
 							<div className="text-sm font-medium text-text-secondary">
 								Recovery Trend
 							</div>
-							<TrendLine data={trendPoints} color="#18C98B" domain={[0, 100]} radioForm="eq-ladder" />
+							<TrendLine
+								data={trendPoints}
+								color="#18C98B"
+								domain={[0, 100]}
+								radioForm="eq-ladder"
+								unit="%"
+								xTitle="Day"
+								yTitle="%"
+							/>
 						</Card>
 					)}
 				</>

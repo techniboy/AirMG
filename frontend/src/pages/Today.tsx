@@ -85,7 +85,7 @@ export default function Today() {
   const rec = today?.recovery ?? null;
   const selectedDate = new Date(`${selectedDay}T00:00:00`);
 
-  // Build HR trend points — use time string as "day" key for TrendLine
+  // Full-resolution intraday HR: one bar per backend point (5-min buckets).
   const hrPoints =
     hrTrend?.points?.map((p) => ({
       day: new Date(p.ts * 1000).toLocaleTimeString([], {
@@ -149,7 +149,14 @@ export default function Today() {
               </span>
             )}
           </div>
-          <TrendLine data={hrPoints} color="#FF4F73" radioForm="eq" />
+          <TrendLine
+            data={hrPoints}
+            color="#FF4F73"
+            radioForm="eq"
+            unit="bpm"
+            xTitle="Time"
+            yTitle="bpm"
+          />
           {hrTrend && (
             <div className="flex gap-6 border-t border-hairline pt-2 text-xs text-text-tertiary">
               <span>

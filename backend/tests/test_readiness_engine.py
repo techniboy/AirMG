@@ -5,9 +5,9 @@ import tempfile
 from datetime import date, timedelta
 from pathlib import Path
 
+from airmg.analytics.readiness import evaluate
 from airmg.store.db import get_connection, init_db
-from airmg.store.writes import upsert_baseline, upsert_daily_metrics, set_profile
-from airmg.analytics.readiness import ReadinessEngine
+from airmg.store.writes import set_profile, upsert_baseline, upsert_daily_metrics
 
 
 def _db():
@@ -22,18 +22,23 @@ def _seed_days(conn, n: int, hrv=55.0, rhr=58.0, strain=10.0, sleep_minutes=420)
     today = date.today()
     for i in range(n):
         day = (today - timedelta(days=n - i)).isoformat()
-        upsert_daily_metrics(conn, {
-            "day": day,
-            "hrv_rmssd": hrv,
-            "resting_hr": rhr,
-            "strain": strain,
-            "sleep_minutes": sleep_minutes,
-        })
+        upsert_daily_metrics(
+            conn,
+            {
+                "day": day,
+                "hrv_rmssd": hrv,
+                "resting_hr": rhr,
+                "strain": strain,
+                "sleep_minutes": sleep_minutes,
+            },
+        )
 
 
 def _seed_baselines(conn, hrv_mean=55.0, hrv_spread=8.0, rhr_mean=58.0, rhr_spread=3.0):
     upsert_baseline(conn, "hrv", mean=hrv_mean, spread=hrv_spread, n_valid=14, status="trusted")
-    upsert_baseline(conn, "resting_hr", mean=rhr_mean, spread=rhr_spread, n_valid=14, status="trusted")
+    upsert_baseline(
+        conn, "resting_hr", mean=rhr_mean, spread=rhr_spread, n_valid=14, status="trusted"
+    )
 
 
 def _seed_profile(conn, sleep_need_hours=7.0):
@@ -51,7 +56,7 @@ def test_insufficient_with_few_days():
     _seed_baselines(conn)
     _seed_profile(conn)
 
-    result = ReadinessEngine.evaluate(conn)
+    result = evaluate(conn)
     assert result.level == "insufficient"
     conn.close()
 
@@ -63,7 +68,7 @@ def test_primed_when_all_good():
     _seed_baselines(conn, hrv_mean=55.0, hrv_spread=8.0, rhr_mean=60.0, rhr_spread=3.0)
     _seed_profile(conn, sleep_need_hours=7.0)
 
-    result = ReadinessEngine.evaluate(conn)
+    result = evaluate(conn)
     assert result.level == "primed"
     conn.close()
 
@@ -75,7 +80,7 @@ def test_rundown_when_bad_signal():
     _seed_baselines(conn, hrv_mean=55.0, hrv_spread=8.0, rhr_mean=60.0, rhr_spread=3.0)
     _seed_profile(conn, sleep_need_hours=8.0)
 
-    result = ReadinessEngine.evaluate(conn)
+    result = evaluate(conn)
     assert result.level == "rundown"
     conn.close()
 
@@ -86,7 +91,7 @@ def test_result_has_headline_and_summary():
     _seed_baselines(conn)
     _seed_profile(conn)
 
-    result = ReadinessEngine.evaluate(conn)
+    result = evaluate(conn)
     assert result.headline and len(result.headline) > 0
     assert result.summary and len(result.summary) > 0
     conn.close()
@@ -98,27 +103,33 @@ def test_acwr_calculation():
     # Days 28..8 ago: low strain (5)
     for i in range(21, 0, -1):
         day = (today - timedelta(days=i)).isoformat()
-        upsert_daily_metrics(conn, {
-            "day": day,
-            "hrv_rmssd": 55.0,
-            "resting_hr": 58.0,
-            "strain": 5.0,
-            "sleep_minutes": 420,
-        })
+        upsert_daily_metrics(
+            conn,
+            {
+                "day": day,
+                "hrv_rmssd": 55.0,
+                "resting_hr": 58.0,
+                "strain": 5.0,
+                "sleep_minutes": 420,
+            },
+        )
     # Last 7 days: high strain (20)
     for i in range(7, 0, -1):
         day = (today - timedelta(days=i)).isoformat()
-        upsert_daily_metrics(conn, {
-            "day": day,
-            "hrv_rmssd": 55.0,
-            "resting_hr": 58.0,
-            "strain": 20.0,
-            "sleep_minutes": 420,
-        })
+        upsert_daily_metrics(
+            conn,
+            {
+                "day": day,
+                "hrv_rmssd": 55.0,
+                "resting_hr": 58.0,
+                "strain": 20.0,
+                "sleep_minutes": 420,
+            },
+        )
     _seed_baselines(conn)
     _seed_profile(conn)
 
-    result = ReadinessEngine.evaluate(conn)
+    result = evaluate(conn)
 
     # ACWR = sum(last 7d strain) / (sum(last 28d strain) / 4)
     # last 7d strain = 7 * 20 = 140

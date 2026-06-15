@@ -2,12 +2,11 @@ from __future__ import annotations
 
 import sqlite3
 import time
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
-from airmg.config import DB_PATH
-from airmg.store.db import get_connection
+from airmg.store.db import get_db
 from airmg.store.reads import get_sync_state
 from airmg.store.writes import (
     set_sync_state,
@@ -94,7 +93,13 @@ def _fetch_and_persist(
             upsert_workout(conn, **w)
     elif key == "steps":
         deduped = _deduplicate_step_intervals(mapped)
-        upsert_samples(conn, [{"type": "steps", "ts": s["ts"], "value": s["value"], "source": "google-health"} for s in deduped])
+        upsert_samples(
+            conn,
+            [
+                {"type": "steps", "ts": s["ts"], "value": s["value"], "source": "google-health"}
+                for s in deduped
+            ],
+        )
     else:
         upsert_samples(conn, mapped)
     return len(mapped)
@@ -114,8 +119,7 @@ def _recompute_metrics(conn: sqlite3.Connection, start_dt: datetime, end_dt: dat
 
 
 @router.post("/start")
-def start_sync():
-    conn = get_connection(DB_PATH)
+def start_sync(conn: sqlite3.Connection = Depends(get_db)):
     results = {}
     now = int(time.time())
     earliest_start = datetime.utcnow()
@@ -136,7 +140,6 @@ def start_sync():
             results[key] = {"error": str(exc)}
             continue
     _recompute_metrics(conn, earliest_start, datetime.utcnow())
-    conn.close()
     return {"synced": results}
 
 
@@ -144,10 +147,10 @@ def start_sync():
 def sync_range(
     start: str = Query(description="yyyy-MM-dd"),
     end: str = Query(description="yyyy-MM-dd"),
+    conn: sqlite3.Connection = Depends(get_db),
 ):
     start_dt = datetime.fromisoformat(start)
     end_dt = datetime.fromisoformat(end) + timedelta(days=1)
-    conn = get_connection(DB_PATH)
     results = {}
     for key, cfg in DATA_TYPES.items():
         try:
@@ -157,13 +160,11 @@ def sync_range(
             results[key] = {"error": str(exc)}
             continue
     _recompute_metrics(conn, start_dt, end_dt)
-    conn.close()
     return {"synced": results}
 
 
 @router.get("/status")
-def sync_status():
-    conn = get_connection(DB_PATH)
+def sync_status(conn: sqlite3.Connection = Depends(get_db)):
     states = {}
     for key in DATA_TYPES:
         s = get_sync_state(conn, key)
@@ -172,5 +173,4 @@ def sync_status():
             if s and s["last_synced_ts"]
             else None,
         }
-    conn.close()
     return {"sync_states": states}

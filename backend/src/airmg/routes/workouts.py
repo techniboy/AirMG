@@ -1,31 +1,34 @@
 from __future__ import annotations
 
+import sqlite3
 from collections import defaultdict
 from datetime import date, datetime, timedelta
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 
 from airmg.analytics.zones import build_zones, time_in_zones
-from airmg.config import DB_PATH
-from airmg.store.db import get_connection
+from airmg.store.db import get_db
 from airmg.store.reads import get_profile, get_samples_range
 
 router = APIRouter(prefix="/api/workouts", tags=["workouts"])
 
 
 @router.get("")
-def list_workouts(limit: int = Query(500, le=1000), offset: int = Query(0, ge=0)):
-    conn = get_connection(DB_PATH)
+def list_workouts(
+    limit: int = Query(500, le=1000),
+    offset: int = Query(0, ge=0),
+    conn: sqlite3.Connection = Depends(get_db),
+):
     rows = conn.execute(
         "SELECT * FROM workouts ORDER BY start_ts DESC LIMIT ? OFFSET ?", (limit, offset)
     ).fetchall()
-    conn.close()
     return {"workouts": [dict(r) for r in rows]}
 
 
 @router.get("/summary")
-def workouts_summary(days: int = Query(30, ge=1, le=9999)):
-    conn = get_connection(DB_PATH)
+def workouts_summary(
+    days: int = Query(30, ge=1, le=9999), conn: sqlite3.Connection = Depends(get_db)
+):
     if days >= 9999:
         cutoff_ts = 0
     else:
@@ -39,18 +42,26 @@ def workouts_summary(days: int = Query(30, ge=1, le=9999)):
     workouts = [dict(r) for r in rows]
 
     if not workouts:
-        conn.close()
         return {
-            "count": 0, "total_minutes": 0, "total_calories": 0,
-            "sport_breakdown": [], "hr_zones": {},
+            "count": 0,
+            "total_minutes": 0,
+            "total_calories": 0,
+            "sport_breakdown": [],
+            "hr_zones": {},
         }
 
     total_min = 0
     total_cal = 0.0
-    sport_data: dict[str, dict] = defaultdict(lambda: {
-        "count": 0, "minutes": 0, "strain_sum": 0.0, "strain_n": 0,
-        "hr_sum": 0, "hr_n": 0,
-    })
+    sport_data: dict[str, dict] = defaultdict(
+        lambda: {
+            "count": 0,
+            "minutes": 0,
+            "strain_sum": 0.0,
+            "strain_n": 0,
+            "hr_sum": 0,
+            "hr_n": 0,
+        }
+    )
 
     age_str = get_profile(conn, "age")
     hr_max_str = get_profile(conn, "hr_max")
@@ -83,17 +94,17 @@ def workouts_summary(days: int = Query(30, ge=1, le=9999)):
             for z, count in wz.items():
                 total_zones[z] += count
 
-    conn.close()
-
     breakdown = []
     for sport, sd in sorted(sport_data.items(), key=lambda x: x[1]["count"], reverse=True):
-        breakdown.append({
-            "type": sport,
-            "count": sd["count"],
-            "minutes": sd["minutes"],
-            "avg_strain": round(sd["strain_sum"] / sd["strain_n"], 1) if sd["strain_n"] else 0,
-            "avg_hr": round(sd["hr_sum"] / sd["hr_n"]) if sd["hr_n"] else 0,
-        })
+        breakdown.append(
+            {
+                "type": sport,
+                "count": sd["count"],
+                "minutes": sd["minutes"],
+                "avg_strain": round(sd["strain_sum"] / sd["strain_n"], 1) if sd["strain_n"] else 0,
+                "avg_hr": round(sd["hr_sum"] / sd["hr_n"]) if sd["hr_n"] else 0,
+            }
+        )
 
     return {
         "count": len(workouts),
@@ -105,10 +116,8 @@ def workouts_summary(days: int = Query(30, ge=1, le=9999)):
 
 
 @router.get("/{workout_id}")
-def workout_detail(workout_id: int):
-    conn = get_connection(DB_PATH)
+def workout_detail(workout_id: int, conn: sqlite3.Connection = Depends(get_db)):
     row = conn.execute("SELECT * FROM workouts WHERE id = ?", (workout_id,)).fetchone()
-    conn.close()
     if row is None:
         return {"status": "not_found"}
     return dict(row)

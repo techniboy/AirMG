@@ -43,9 +43,8 @@ def map_hrv(data_points: list[dict]) -> list[dict]:
         ts = _parse_date_obj(hrv.get("date")) or _parse_ts(
             hrv.get("sampleTime", {}).get("physicalTime")
         )
-        rmssd = (
-            hrv.get("averageHeartRateVariabilityMilliseconds")
-            or hrv.get("deepSleepRootMeanSquareOfSuccessiveDifferencesMilliseconds")
+        rmssd = hrv.get("averageHeartRateVariabilityMilliseconds") or hrv.get(
+            "deepSleepRootMeanSquareOfSuccessiveDifferencesMilliseconds"
         )
         if rmssd is not None:
             samples.append({"type": "hrv", "ts": ts, "value": float(rmssd)})
@@ -65,22 +64,26 @@ def map_sleep_sessions(data_points: list[dict]) -> list[dict]:
             continue
         stages = []
         for s in sleep.get("stages", []):
-            stages.append({
-                "start": _parse_ts(s.get("startTime")),
-                "end": _parse_ts(s.get("endTime")),
-                "stage": _map_sleep_stage(s.get("type", "")),
-            })
+            stages.append(
+                {
+                    "start": _parse_ts(s.get("startTime")),
+                    "end": _parse_ts(s.get("endTime")),
+                    "stage": _map_sleep_stage(s.get("type", "")),
+                }
+            )
         summary = sleep.get("summary", {})
         mins_asleep = int(summary.get("minutesAsleep", 0))
         mins_awake = int(summary.get("minutesAwake", 0))
         total = mins_asleep + mins_awake
         efficiency = mins_asleep / total if total > 0 else None
-        sessions.append({
-            "start_ts": start,
-            "end_ts": end,
-            "efficiency": efficiency,
-            "stages_json": json.dumps(stages) if stages else None,
-        })
+        sessions.append(
+            {
+                "start_ts": start,
+                "end_ts": end,
+                "efficiency": efficiency,
+                "stages_json": json.dumps(stages) if stages else None,
+            }
+        )
     return sessions
 
 
@@ -94,17 +97,19 @@ def map_workouts(data_points: list[dict]) -> list[dict]:
         start = _parse_ts(interval.get("startTime"))
         end = _parse_ts(interval.get("endTime"))
         metrics = ex.get("metricsSummary", {})
-        workouts.append({
-            "start_ts": start,
-            "end_ts": end,
-            "workout_type": ex.get("exerciseType"),
-            "calories": metrics.get("caloriesKcal"),
-            "avg_hr": (
-                int(metrics["averageHeartRateBeatsPerMinute"])
-                if metrics.get("averageHeartRateBeatsPerMinute")
-                else None
-            ),
-        })
+        workouts.append(
+            {
+                "start_ts": start,
+                "end_ts": end,
+                "workout_type": ex.get("exerciseType"),
+                "calories": metrics.get("caloriesKcal"),
+                "avg_hr": (
+                    int(metrics["averageHeartRateBeatsPerMinute"])
+                    if metrics.get("averageHeartRateBeatsPerMinute")
+                    else None
+                ),
+            }
+        )
     return workouts
 
 
@@ -114,10 +119,7 @@ def map_spo2(data_points: list[dict]) -> list[dict]:
         ox = dp.get("oxygenSaturation") or dp.get("dailyOxygenSaturation")
         if not ox:
             continue
-        ts = _parse_ts(
-            ox.get("sampleTime", {}).get("physicalTime")
-            or ox.get("date")
-        )
+        ts = _parse_ts(ox.get("sampleTime", {}).get("physicalTime") or ox.get("date"))
         pct = ox.get("oxygenSaturationPercent") or ox.get("percentage")
         if pct is not None:
             samples.append({"type": "spo2", "ts": ts, "value": float(pct)})
@@ -130,9 +132,9 @@ def map_resp_rate(data_points: list[dict]) -> list[dict]:
         rr = dp.get("respiratoryRate") or dp.get("dailyRespiratoryRate")
         if not rr:
             continue
-        ts = _parse_ts(
-            rr.get("sampleTime", {}).get("physicalTime")
-        ) or _parse_date_obj(rr.get("date"))
+        ts = _parse_ts(rr.get("sampleTime", {}).get("physicalTime")) or _parse_date_obj(
+            rr.get("date")
+        )
         rpm = rr.get("breathsPerMinute") or rr.get("respiratoryRateBreathsPerMinute")
         if rpm is not None:
             samples.append({"type": "resp_rate", "ts": ts, "value": float(rpm)})

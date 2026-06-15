@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from airmg.analytics.strain import StrainScorer
+from airmg.analytics import strain as strain_calc
 
 ZONE_BANDS = [
     (1, 0.50, 0.60),
@@ -40,10 +40,10 @@ def build_zones(age: int | None = None, manual_max_hr: float | None = None) -> H
         max_hr = manual_max_hr
         source = "manual"
     elif age is not None:
-        max_hr = StrainScorer.tanaka_hrmax(float(age))
+        max_hr = strain_calc.tanaka_hrmax(float(age))
         source = "tanaka"
     else:
-        max_hr = StrainScorer.tanaka_hrmax(30.0)
+        max_hr = strain_calc.tanaka_hrmax(30.0)
         source = "tanaka"
 
     zones = []

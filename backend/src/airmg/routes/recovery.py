@@ -1,27 +1,24 @@
 from __future__ import annotations
 
+import sqlite3
 from datetime import date, timedelta
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 
-from airmg.config import DB_PATH
-from airmg.store.db import get_connection
-from airmg.store.reads import get_all_baselines, get_daily_metrics_range, normalize_daily_metrics
+from airmg.store.db import get_db
+from airmg.store.reads import get_all_baselines, get_daily_metrics, get_daily_metrics_range
 
 router = APIRouter(prefix="/api/recovery", tags=["recovery"])
 
 
 @router.get("/{day}")
-def recovery_detail(day: str):
-    conn = get_connection(DB_PATH)
-    daily = conn.execute("SELECT * FROM daily_metrics WHERE day = ?", (day,)).fetchone()
+def recovery_detail(day: str, conn: sqlite3.Connection = Depends(get_db)):
+    daily = get_daily_metrics(conn, day)
     baselines = get_all_baselines(conn)
     trend_start = (date.fromisoformat(day) - timedelta(days=13)).isoformat()
     trend = get_daily_metrics_range(conn, trend_start, day)
-    conn.close()
     if daily is None:
         return {"status": "no_data"}
-    daily = normalize_daily_metrics(dict(daily))
     return {
         "day": day,
         "recovery": daily["recovery"],

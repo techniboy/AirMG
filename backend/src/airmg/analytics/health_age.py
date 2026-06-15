@@ -29,7 +29,9 @@ def _avg(vals: list[float]) -> float | None:
     return sum(vals) / len(vals) if vals else None
 
 
-def _zone_minutes_per_week(conn: sqlite3.Connection, age: int, hr_max: float | None) -> tuple[float, float] | None:
+def _zone_minutes_per_week(
+    conn: sqlite3.Connection, age: int, hr_max: float | None
+) -> tuple[float, float] | None:
     end_dt = datetime.now()
     start_ts = int((end_dt - timedelta(days=ZONE_WINDOW_DAYS)).timestamp())
     rows = conn.execute(
@@ -100,7 +102,9 @@ def compute_health_age(conn: sqlite3.Connection) -> dict:
 
     today = date.today()
     start_day = (today - timedelta(days=WINDOW_DAYS)).isoformat()
-    start_ts = int(datetime.combine(today - timedelta(days=WINDOW_DAYS), datetime.min.time()).timestamp())
+    start_ts = int(
+        datetime.combine(today - timedelta(days=WINDOW_DAYS), datetime.min.time()).timestamp()
+    )
     rows = get_daily_metrics_range(conn, start_day, today.isoformat())
     if len(rows) < 14:
         return {"status": "insufficient_data", "message": "Need at least 14 days of data."}
@@ -115,19 +119,27 @@ def compute_health_age(conn: sqlite3.Connection) -> dict:
     metrics: list[dict] = []
 
     def add(key: str, label: str, value, target: str, delta: float | None, unit: str = ""):
-        metrics.append({
-            "key": key,
-            "label": label,
-            "value": round(value, 1) if isinstance(value, float) else value,
-            "unit": unit,
-            "target": target,
-            "delta_years": round(delta, 2) if delta is not None else None,
-        })
+        metrics.append(
+            {
+                "key": key,
+                "label": label,
+                "value": round(value, 1) if isinstance(value, float) else value,
+                "unit": unit,
+                "target": target,
+                "delta_years": round(delta, 2) if delta is not None else None,
+            }
+        )
 
     # Each delta: years added (+) or subtracted (-) vs guideline-optimal
     if avg_rhr is not None:
-        add("rhr", "Resting Heart Rate", avg_rhr, "≤60 bpm",
-            _clamp((avg_rhr - 60.0) / 10.0, -2.0, 5.0), "bpm")
+        add(
+            "rhr",
+            "Resting Heart Rate",
+            avg_rhr,
+            "≤60 bpm",
+            _clamp((avg_rhr - 60.0) / 10.0, -2.0, 5.0),
+            "bpm",
+        )
     else:
         add("rhr", "Resting Heart Rate", None, "≤60 bpm", None, "bpm")
 
@@ -144,7 +156,15 @@ def compute_health_age(conn: sqlite3.Connection) -> dict:
         add("sleep", "Sleep Duration", None, "7-9 h", None, "h")
 
     if sd_bedtime is not None:
-        d = -0.5 if sd_bedtime < 45 else 0.0 if sd_bedtime < 90 else 0.5 if sd_bedtime < 120 else 1.0
+        d = (
+            -0.5
+            if sd_bedtime < 45
+            else 0.0
+            if sd_bedtime < 90
+            else 0.5
+            if sd_bedtime < 120
+            else 1.0
+        )
         add("consistency", "Sleep Consistency", sd_bedtime, "bedtime ±45 min", d, "min sd")
     else:
         add("consistency", "Sleep Consistency", None, "bedtime ±45 min", None, "min sd")
@@ -171,7 +191,9 @@ def compute_health_age(conn: sqlite3.Connection) -> dict:
     d = -1.0 if strength_wk >= 2 else -0.5 if strength_wk >= 1 else 0.5
     add("strength", "Strength Sessions", strength_wk, "≥2 /wk", d, "/wk")
 
-    total = _clamp(sum(m["delta_years"] for m in metrics if m["delta_years"] is not None), -10.0, 15.0)
+    total = _clamp(
+        sum(m["delta_years"] for m in metrics if m["delta_years"] is not None), -10.0, 15.0
+    )
     health_age = max(18.0, age + total)
 
     return {

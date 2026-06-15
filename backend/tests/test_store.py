@@ -70,10 +70,14 @@ def test_upsert_and_read_baseline():
 
 def test_upsert_and_read_journal():
     conn = _db()
-    upsert_journal_entry(conn, "2026-06-10", "Did you drink any alcohol?", "yes", 1718000000)
+    upsert_journal_entry(
+        conn, "2026-06-10", "alcohol", "Did you drink any alcohol?", True, 1718000000
+    )
     entries = get_journal_entries(conn, "2026-06-10")
     assert len(entries) == 1
-    assert entries[0]["answer"] == "yes"
+    assert entries[0]["answer"] is True
+    assert entries[0]["question_id"] == "alcohol"
+    assert entries[0]["question"] == "Did you drink any alcohol?"
     conn.close()
 
 

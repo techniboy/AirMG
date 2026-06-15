@@ -115,10 +115,7 @@ def compute_sleep_score(
     auto = _autonomic_score(hrv, rhr, hrv_baseline, hrv_spread, rhr_baseline, rhr_spread)
 
     total = (
-        dur * W_DURATION
-        + eff * W_EFFICIENCY
-        + arch * W_ARCHITECTURE
-        + auto * W_AUTONOMIC
+        dur * W_DURATION + eff * W_EFFICIENCY + arch * W_ARCHITECTURE + auto * W_AUTONOMIC
     ) * 100
 
     return SleepScore(

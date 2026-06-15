@@ -1,23 +1,22 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+import sqlite3
 
-from airmg.coach.engine import CoachEngine
-from airmg.config import DB_PATH
-from airmg.store.db import get_connection
+from fastapi import APIRouter, Depends
+
+from airmg.coach.engine import recommendations as coach_recommendations
+from airmg.store.db import get_db
 from airmg.store.reads import get_today_metrics
 
 router = APIRouter(prefix="/api/coach", tags=["coach"])
 
 
 @router.get("")
-def coach():
-    conn = get_connection(DB_PATH)
+def coach(conn: sqlite3.Connection = Depends(get_db)):
     today = get_today_metrics(conn)
-    conn.close()
     if today is None:
         return {"recommendations": []}
-    recs = CoachEngine.recommendations(
+    recs = coach_recommendations(
         recovery=today.get("recovery"),
         strain=today.get("strain"),
         sleep_perf=today.get("sleep_performance"),

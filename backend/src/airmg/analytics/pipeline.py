@@ -4,10 +4,10 @@ import json
 import sqlite3
 from datetime import datetime
 
+from airmg.analytics import recovery as recovery_calc
+from airmg.analytics import strain as strain_calc
 from airmg.analytics.baselines import Baselines, BaselineState, BaselineStatus
-from airmg.analytics.recovery import RecoveryScorer
 from airmg.analytics.sleep_score import compute_sleep_score
-from airmg.analytics.strain import StrainScorer
 from airmg.store.reads import get_baseline, get_profile, get_samples_range
 from airmg.store.writes import upsert_baseline, upsert_daily_metrics, upsert_steps
 
@@ -66,7 +66,7 @@ def recompute_strain_history(conn: sqlite3.Connection) -> int:
     Strain-only on purpose: a full compute_daily_metrics replay would re-fold
     historical values into the EWMA baselines.
     """
-    age = int(get_profile(conn, "age") or StrainScorer.DEFAULT_AGE)
+    age = int(get_profile(conn, "age") or strain_calc.DEFAULT_AGE)
     hr_max_str = get_profile(conn, "hr_max")
     max_hr = float(hr_max_str) if hr_max_str else None
 
@@ -77,11 +77,9 @@ def recompute_strain_history(conn: sqlite3.Connection) -> int:
         hr_data = get_samples_range(conn, "hr", start_ts, end_ts)
         if not hr_data:
             continue
-        rhr = float(row["resting_hr"]) if row["resting_hr"] else StrainScorer.DEFAULT_RESTING_HR
-        strain_val = StrainScorer.strain(hr_data, resting_hr=rhr, age=age, max_hr=max_hr)
-        conn.execute(
-            "UPDATE daily_metrics SET strain = ? WHERE day = ?", (strain_val, row["day"])
-        )
+        rhr = float(row["resting_hr"]) if row["resting_hr"] else strain_calc.DEFAULT_RESTING_HR
+        strain_val = strain_calc.strain(hr_data, resting_hr=rhr, age=age, max_hr=max_hr)
+        conn.execute("UPDATE daily_metrics SET strain = ? WHERE day = ?", (strain_val, row["day"]))
         updated += 1
     conn.commit()
     return updated
@@ -117,9 +115,7 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
     if sleep_row:
         resting_hr = sleep_row["resting_hr"]
         if not resting_hr:
-            sleep_hr = get_samples_range(
-                conn, "hr", sleep_row["start_ts"], sleep_row["end_ts"]
-            )
+            sleep_hr = get_samples_range(conn, "hr", sleep_row["start_ts"], sleep_row["end_ts"])
             if sleep_hr:
                 values = sorted(s["value"] for s in sleep_hr)
                 p5_idx = max(0, len(values) * 5 // 100)
@@ -152,11 +148,15 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
                 pass
 
     # SpO2 — wrist sensors produce noisy low readings; discard below 85% and use median
-    spo2_vals = sorted(s["value"] for s in get_samples_range(conn, "spo2", start_ts, end_ts) if s["value"] >= 85)
+    spo2_vals = sorted(
+        s["value"] for s in get_samples_range(conn, "spo2", start_ts, end_ts) if s["value"] >= 85
+    )
     spo2 = None
     if spo2_vals:
         mid = len(spo2_vals) // 2
-        spo2 = round(spo2_vals[mid] if len(spo2_vals) % 2 else (spo2_vals[mid - 1] + spo2_vals[mid]) / 2, 1)
+        spo2 = round(
+            spo2_vals[mid] if len(spo2_vals) % 2 else (spo2_vals[mid - 1] + spo2_vals[mid]) / 2, 1
+        )
 
     # Resp rate
     resp_data = get_samples_range(conn, "resp_rate", start_ts, end_ts)
@@ -203,7 +203,7 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
     # Recovery
     recovery = None
     if nightly_hrv is not None and resting_hr is not None and hrv_baseline is not None:
-        recovery = RecoveryScorer.recovery(
+        recovery = recovery_calc.recovery(
             hrv=nightly_hrv,
             rhr=float(resting_hr),
             resp=resp_rate,
@@ -222,11 +222,11 @@ def compute_daily_metrics(conn: sqlite3.Connection, day: str) -> None:
     # Strain — use profile age / manual HR max when set
     strain_val = None
     if hr_data:
-        rhr_for_strain = float(resting_hr) if resting_hr else StrainScorer.DEFAULT_RESTING_HR
-        age = int(get_profile(conn, "age") or StrainScorer.DEFAULT_AGE)
+        rhr_for_strain = float(resting_hr) if resting_hr else strain_calc.DEFAULT_RESTING_HR
+        age = int(get_profile(conn, "age") or strain_calc.DEFAULT_AGE)
         hr_max_str = get_profile(conn, "hr_max")
         max_hr = float(hr_max_str) if hr_max_str else None
-        strain_val = StrainScorer.strain(hr_data, resting_hr=rhr_for_strain, age=age, max_hr=max_hr)
+        strain_val = strain_calc.strain(hr_data, resting_hr=rhr_for_strain, age=age, max_hr=max_hr)
 
     # Steps — aggregate from deduplicated interval samples
     step_samples = get_samples_range(conn, "steps", start_ts, end_ts)

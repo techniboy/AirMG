@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import csv
 import io
+import sqlite3
 
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 
-from airmg.config import DB_PATH
-from airmg.store.db import get_connection
+from airmg.store.db import get_db
 from airmg.store.reads import get_daily_metrics_range
 
 router = APIRouter(prefix="/api", tags=["export"])
@@ -17,10 +17,9 @@ router = APIRouter(prefix="/api", tags=["export"])
 def export_csv(
     start: str = Query(..., description="yyyy-MM-dd"),
     end: str = Query(..., description="yyyy-MM-dd"),
+    conn: sqlite3.Connection = Depends(get_db),
 ):
-    conn = get_connection(DB_PATH)
     days = get_daily_metrics_range(conn, start, end)
-    conn.close()
     if not days:
         return StreamingResponse(io.StringIO(""), media_type="text/csv")
     output = io.StringIO()

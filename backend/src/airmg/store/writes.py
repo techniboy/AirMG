@@ -130,8 +130,10 @@ def upsert_journal_entry(
     created_at: int | None = None,
 ) -> None:
     conn.execute(
-        """INSERT INTO journal_entries (day, question_key, answer, question, created_at) VALUES (?, ?, ?, ?, ?)
-           ON CONFLICT(day, question_key) DO UPDATE SET answer=excluded.answer, question=excluded.question""",
+        """INSERT INTO journal_entries (day, question_key, answer, question, created_at)
+           VALUES (?, ?, ?, ?, ?)
+           ON CONFLICT(day, question_key) DO UPDATE SET
+             answer=excluded.answer, question=excluded.question""",
         (day, question_id, int(answer), question, created_at or int(time.time())),
     )
     conn.commit()

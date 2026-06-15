@@ -1,4 +1,3 @@
-# backend/src/airmg/main.py
 from contextlib import asynccontextmanager
 
 import uvicorn
@@ -9,11 +8,12 @@ from fastapi.responses import JSONResponse
 from airmg.auth.tokens import is_authenticated
 from airmg.config import BACKEND_PORT, DB_PATH, FRONTEND_ORIGIN, ensure_dirs
 from airmg.routes.auth import router as auth_router
+from airmg.routes.baselines_route import router as baselines_router
 from airmg.routes.coach import router as coach_router
 from airmg.routes.dashboard import router as dashboard_router
 from airmg.routes.explorer import router as explorer_router
-from airmg.routes.health_age import router as health_age_router
 from airmg.routes.export import router as export_router
+from airmg.routes.health_age import router as health_age_router
 from airmg.routes.insights import router as insights_router
 from airmg.routes.journal import router as journal_router
 from airmg.routes.readiness import router as readiness_router
@@ -24,7 +24,6 @@ from airmg.routes.strain import router as strain_router
 from airmg.routes.sync import router as sync_router
 from airmg.routes.trends import router as trends_router
 from airmg.routes.workouts import router as workouts_router
-from airmg.routes.baselines_route import router as baselines_router
 from airmg.store.db import init_db
 
 
@@ -54,6 +53,7 @@ async def auth_guard(request: Request, call_next):
     if path.startswith(("/api/", "/sync/")) and not is_authenticated():
         return JSONResponse({"detail": "Not authenticated"}, status_code=401)
     return await call_next(request)
+
 
 app.include_router(auth_router)
 app.include_router(sync_router)

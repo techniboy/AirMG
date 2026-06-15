@@ -1,20 +1,33 @@
 from __future__ import annotations
 
-from fastapi import APIRouter
+import sqlite3
+
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel
 
-from airmg.config import DB_PATH
-from airmg.store.db import get_connection
+from airmg.store.db import get_db
 from airmg.store.reads import get_profile
 from airmg.store.writes import set_profile
 
 router = APIRouter(prefix="/api/settings", tags=["settings"])
 
 PROFILE_KEYS = [
-    "age", "sex", "weight_kg", "height_cm", "unit_system", "temperature_unit",
-    "hr_max", "sleep_need_hours",
+    "age",
+    "sex",
+    "weight_kg",
+    "height_cm",
+    "unit_system",
+    "temperature_unit",
+    "hr_max",
+    "sleep_need_hours",
 ]
-NUMERIC_KEYS = {"age": int, "weight_kg": float, "height_cm": float, "hr_max": float, "sleep_need_hours": float}
+NUMERIC_KEYS = {
+    "age": int,
+    "weight_kg": float,
+    "height_cm": float,
+    "hr_max": float,
+    "sleep_need_hours": float,
+}
 
 
 class ProfileSettings(BaseModel):
@@ -40,16 +53,13 @@ def _read_settings(conn) -> dict:
 
 
 @router.get("")
-def get_settings():
-    conn = get_connection(DB_PATH)
+def get_settings(conn: sqlite3.Connection = Depends(get_db)):
     settings = _read_settings(conn)
-    conn.close()
     return settings
 
 
 @router.put("")
-def update_settings(update: ProfileSettings):
-    conn = get_connection(DB_PATH)
+def update_settings(update: ProfileSettings, conn: sqlite3.Connection = Depends(get_db)):
     before = (get_profile(conn, "age"), get_profile(conn, "hr_max"))
     for key, value in update.model_dump(exclude_none=True).items():
         set_profile(conn, key, str(value))
@@ -59,5 +69,4 @@ def update_settings(update: ProfileSettings):
 
         recomputed = recompute_strain_history(conn)
     settings = _read_settings(conn)
-    conn.close()
     return {"status": "ok", "recomputed_days": recomputed, **settings}

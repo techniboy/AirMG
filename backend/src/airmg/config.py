@@ -1,4 +1,3 @@
-# backend/src/airmg/config.py
 from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[3]

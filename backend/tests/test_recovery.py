@@ -1,5 +1,5 @@
+from airmg.analytics import recovery as recovery_calc
 from airmg.analytics.baselines import BaselineState, BaselineStatus
-from airmg.analytics.recovery import RecoveryScorer
 
 
 def _make_baseline(mean: float, spread: float, n_valid: int = 14) -> BaselineState:
@@ -13,7 +13,7 @@ def _make_baseline(mean: float, spread: float, n_valid: int = 14) -> BaselineSta
 
 
 def test_z_score():
-    z = RecoveryScorer.z_score(60.0, mean=50.0, spread=8.0)
+    z = recovery_calc.z_score(60.0, mean=50.0, spread=8.0)
     expected = (60.0 - 50.0) / (1.253 * 8.0)
     assert abs(z - expected) < 0.001
 
@@ -21,7 +21,7 @@ def test_z_score():
 def test_recovery_at_baseline_near_58():
     hrv_b = _make_baseline(50.0, 8.0)
     rhr_b = _make_baseline(60.0, 3.0)
-    score = RecoveryScorer.recovery(
+    score = recovery_calc.recovery(
         hrv=50.0,
         rhr=60.0,
         resp=None,
@@ -37,7 +37,7 @@ def test_recovery_at_baseline_near_58():
 def test_high_hrv_high_recovery():
     hrv_b = _make_baseline(50.0, 8.0)
     rhr_b = _make_baseline(60.0, 3.0)
-    score = RecoveryScorer.recovery(
+    score = recovery_calc.recovery(
         hrv=75.0,
         rhr=50.0,
         resp=None,
@@ -53,7 +53,7 @@ def test_high_hrv_high_recovery():
 def test_low_hrv_low_recovery():
     hrv_b = _make_baseline(50.0, 8.0)
     rhr_b = _make_baseline(60.0, 3.0)
-    score = RecoveryScorer.recovery(
+    score = recovery_calc.recovery(
         hrv=25.0,
         rhr=75.0,
         resp=None,
@@ -74,7 +74,7 @@ def test_cold_start_returns_none():
         nights_since_update=0,
         status=BaselineStatus.CALIBRATING,
     )
-    score = RecoveryScorer.recovery(
+    score = recovery_calc.recovery(
         hrv=50.0,
         rhr=60.0,
         resp=None,
@@ -87,14 +87,14 @@ def test_cold_start_returns_none():
 
 
 def test_band_classification():
-    assert RecoveryScorer.band(20.0) == "red"
-    assert RecoveryScorer.band(50.0) == "yellow"
-    assert RecoveryScorer.band(80.0) == "green"
+    assert recovery_calc.band(20.0) == "red"
+    assert recovery_calc.band(50.0) == "yellow"
+    assert recovery_calc.band(80.0) == "green"
 
 
 def test_missing_drivers_renormalize():
     hrv_b = _make_baseline(50.0, 8.0)
-    score = RecoveryScorer.recovery(
+    score = recovery_calc.recovery(
         hrv=50.0,
         rhr=60.0,
         resp=None,

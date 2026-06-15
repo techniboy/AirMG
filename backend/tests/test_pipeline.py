@@ -50,8 +50,12 @@ def test_baseline_fold_is_idempotent_per_day():
     hrv = [{"type": "hrv", "ts": base_ts + i * 300, "value": 52.0} for i in range(10)]
     upsert_samples(conn, hrv)
     upsert_sleep_session(
-        conn, start_ts=base_ts - 28800, end_ts=base_ts - 3600,
-        efficiency=0.9, resting_hr=56, avg_hrv=52.0,
+        conn,
+        start_ts=base_ts - 28800,
+        end_ts=base_ts - 3600,
+        efficiency=0.9,
+        resting_hr=56,
+        avg_hrv=52.0,
     )
     compute_daily_metrics(conn, day)
     first = get_all_baselines(conn)

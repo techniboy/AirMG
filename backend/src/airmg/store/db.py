@@ -1,5 +1,8 @@
 import sqlite3
+from collections.abc import Iterator
 from pathlib import Path
+
+from airmg.config import DB_PATH
 
 _SCHEMA_PATH = Path(__file__).parent / "schema.sql"
 
@@ -11,6 +14,15 @@ def get_connection(db_path: Path) -> sqlite3.Connection:
     conn.execute("PRAGMA foreign_keys=ON")
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def get_db() -> Iterator[sqlite3.Connection]:
+    """FastAPI dependency: one connection per request, always closed (even on error)."""
+    conn = get_connection(DB_PATH)
+    try:
+        yield conn
+    finally:
+        conn.close()
 
 
 def init_db(db_path: Path) -> None:

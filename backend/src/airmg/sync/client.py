@@ -54,25 +54,17 @@ def fetch_data_points(
     filter_field: str | None = None,
 ) -> list[dict]:
     creds = _get_credentials()
-    url = (
-        f"{GOOGLE_HEALTH_BASE}/users/me"
-        f"/dataTypes/{data_type}/dataPoints"
-    )
+    url = f"{GOOGLE_HEALTH_BASE}/users/me/dataTypes/{data_type}/dataPoints"
     headers = {"Authorization": f"Bearer {creds.token}"}
     params: dict[str, str] = {"pageSize": "1000"}
     if filter_field and start_iso and end_iso:
-        params["filter"] = (
-            f'{filter_field} >= "{start_iso}"'
-            f' AND {filter_field} < "{end_iso}"'
-        )
+        params["filter"] = f'{filter_field} >= "{start_iso}" AND {filter_field} < "{end_iso}"'
     all_points: list[dict] = []
     with httpx.Client() as client:
         while True:
             resp = client.get(url, headers=headers, params=params, timeout=30)
             if resp.status_code >= 400:
-                raise RuntimeError(
-                    f"{resp.status_code}: {resp.text}"
-                )
+                raise RuntimeError(f"{resp.status_code}: {resp.text}")
             data = resp.json()
             all_points.extend(data.get("dataPoints", []))
             next_token = data.get("nextPageToken")

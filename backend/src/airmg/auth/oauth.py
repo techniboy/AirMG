@@ -29,11 +29,7 @@ def _create_flow() -> Flow:
 
 def _generate_pkce() -> tuple[str, str]:
     verifier = urlsafe_b64encode(os.urandom(32)).rstrip(b"=").decode()
-    challenge = (
-        urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest())
-        .rstrip(b"=")
-        .decode()
-    )
+    challenge = urlsafe_b64encode(hashlib.sha256(verifier.encode()).digest()).rstrip(b"=").decode()
     return verifier, challenge
 
 
@@ -75,6 +71,7 @@ def exchange_code(code: str, state: str | None = None) -> dict:
     resp.raise_for_status()
     tokens = resp.json()
     import time
+
     return {
         "token": tokens["access_token"],
         "refresh_token": tokens.get("refresh_token"),

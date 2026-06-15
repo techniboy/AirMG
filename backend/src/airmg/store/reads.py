@@ -45,10 +45,13 @@ def get_daily_metrics_range(conn: sqlite3.Connection, start_day: str, end_day: s
     return [normalize_daily_metrics(dict(r)) for r in rows]
 
 
-def get_today_metrics(conn: sqlite3.Connection) -> dict | None:
-    today = date.today().isoformat()
-    row = conn.execute("SELECT * FROM daily_metrics WHERE day = ?", (today,)).fetchone()
+def get_daily_metrics(conn: sqlite3.Connection, day: str) -> dict | None:
+    row = conn.execute("SELECT * FROM daily_metrics WHERE day = ?", (day,)).fetchone()
     return normalize_daily_metrics(dict(row)) if row else None
+
+
+def get_today_metrics(conn: sqlite3.Connection) -> dict | None:
+    return get_daily_metrics(conn, date.today().isoformat())
 
 
 def get_baseline(conn: sqlite3.Connection, metric: str) -> dict | None:
@@ -63,7 +66,9 @@ def get_all_baselines(conn: sqlite3.Connection) -> dict[str, dict]:
 
 def get_journal_entries(conn: sqlite3.Connection, day: str) -> list[dict]:
     rows = conn.execute(
-        "SELECT day, question_key, answer, question FROM journal_entries WHERE day = ? ORDER BY question_key", (day,)
+        "SELECT day, question_key, answer, question FROM journal_entries"
+        " WHERE day = ? ORDER BY question_key",
+        (day,),
     ).fetchall()
     return [
         {

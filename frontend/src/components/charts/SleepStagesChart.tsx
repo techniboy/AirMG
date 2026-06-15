@@ -3,7 +3,7 @@ import { sleepStageColor } from "../../lib/colors";
 import { formatMinutes } from "../../lib/format";
 import type { StageSegment } from "../../lib/types";
 import { themeAtom } from "../../atoms/theme";
-import { Hypnogram } from "../../radio/viz/Hypnogram";
+import { Hypnogram as RadioHypnogram } from "../../radio/viz/Hypnogram";
 
 interface SleepStagesChartProps {
 	stages: StageSegment[] | null;
@@ -142,7 +142,7 @@ export function SleepStagesChart({
 			}))
 			.filter((s) => s.minutes > 0);
 		if (normalizedSegments.length > 0) {
-			return <Hypnogram segments={normalizedSegments} />;
+			return <RadioHypnogram segments={normalizedSegments} />;
 		}
 	}
 

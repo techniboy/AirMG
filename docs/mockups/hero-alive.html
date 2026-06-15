@@ -1,0 +1,86 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Data City — alive backdrop</title>
+<style>
+body{margin:0;background:#04030a;color:#cdd1e0;font-family:ui-monospace,monospace;padding:24px}
+h1{font-size:17px;margin:0 0 4px}.sub{font-size:12px;color:#8a8398;margin:0 0 14px;max-width:1000px;line-height:1.5}
+.stage{position:relative;width:100%;max-width:1200px;margin:0 auto;aspect-ratio:2000/983;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px #000a,0 0 0 1px #211632}
+.stage img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.stage svg{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.stream{stroke-linecap:round;animation:dash linear infinite}
+@keyframes dash{to{stroke-dashoffset:-240}}
+</style></head><body>
+<h1>Data City — image backdrop, brought alive</h1>
+<p class="sub">Your reference as the backdrop; animated SVG overlay aligned in image pixel-space: twinkling stars · flowing road light-trails · moving car headlights/taillights · flickering windows · pulsing cyan lamps + spire bulb · breathing vanishing-point glow. Data widgets would layer on top of this.</p>
+<div class="stage">
+  <img src="assets/citypop-bg.png" alt="city">
+  <svg id="ov" viewBox="0 0 2000 983" preserveAspectRatio="xMidYMid slice"></svg>
+</div>
+<script>
+const NS='http://www.w3.org/2000/svg';const ov=document.getElementById('ov');
+function E(n,a,p,inner){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(inner)e.innerHTML=inner;(p||ov).appendChild(e);return e;}
+function rnd(a,b){return a+Math.random()*(b-a)}
+
+// ---- defs ----
+E('defs',{},ov,`
+<radialGradient id="vp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#fff0d8" stop-opacity="0.85"/><stop offset="0.45" stop-color="#ff9ec4" stop-opacity="0.4"/><stop offset="1" stop-color="#ff9ec4" stop-opacity="0"/></radialGradient>
+<radialGradient id="lamp" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#7af0ff" stop-opacity="0.9"/><stop offset="1" stop-color="#7af0ff" stop-opacity="0"/></radialGradient>
+<radialGradient id="bulb" cx="0.5" cy="0.5" r="0.5"><stop offset="0" stop-color="#ffb0d0" stop-opacity="0.9"/><stop offset="1" stop-color="#ffb0d0" stop-opacity="0"/></radialGradient>
+<filter id="soft" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.5"/></filter>`);
+
+// ---- VP breathing glow (road vanishing point ~960,650) ----
+const vp=E('ellipse',{cx:960,cy:655,rx:330,ry:140,fill:'url(#vp)'});
+E('animate',{attributeName:'opacity',values:'0.55;0.9;0.55',dur:'5s',repeatCount:'indefinite'},vp);
+
+// ---- STARS in the open sky wedge ----
+for(let i=0;i<34;i++){const x=rnd(560,1470),y=rnd(60,470);const r=rnd(1.1,2.4);
+  const s=E('circle',{cx:x,cy:y,r,fill:'#fff',opacity:0});
+  E('animate',{attributeName:'opacity',values:'0.15;0.85;0.2',dur:rnd(2.5,6).toFixed(1)+'s',begin:(-rnd(0,5)).toFixed(1)+'s',repeatCount:'indefinite'},s);}
+
+// ---- ROAD light-trail streams (lanes from VP ~960,630 fanning to bottom) ----
+const lanes=[
+ 'M958,632 Q972,800 980,983','M962,634 Q1000,790 1052,983','M960,633 Q940,795 905,983',
+ 'M963,635 Q1030,800 1110,983','M959,633 Q912,800 815,983','M964,636 Q1060,820 1180,983',
+ 'M960,634 Q955,800 950,983'];
+const tcols=['#fff2d0','#ffd98a','#ff5c6e','#ff3b5c','#ffe0a0','#fff2d0','#ff7a8c'];
+lanes.forEach((d,i)=>{
+  // base faint road glow line
+  E('path',{d,fill:'none',stroke:tcols[i],'stroke-width':2,opacity:0.12});
+  // flowing dashes
+  const p=E('path',{d,fill:'none',stroke:tcols[i],'stroke-width':(2.5+i*0.5).toFixed(1),'stroke-dasharray':'10 30',
+    opacity:0.7,filter:'url(#soft)'});p.setAttribute('class','stream');p.style.animationDuration=(2.2+i*0.5)+'s';
+  if(i%2)p.style.animationDirection='reverse';
+});
+
+// ---- CAR blips (headlights white going away small→big, taillights red) ----
+const carPaths=['M958,632 Q985,800 1010,983','M960,633 Q930,800 895,983','M963,635 Q1035,805 1120,983'];
+carPaths.forEach((d,i)=>{
+  for(let k=0;k<2;k++){const white=k===0;const c=E('circle',{cx:0,cy:0,r:2,fill:white?'#fff6e0':'#ff3b5c',opacity:0,filter:'url(#soft)'});
+    const dur=(4.5+i*1.2+k*1.5).toFixed(1)+'s';const beg=(-rnd(0,5)).toFixed(1)+'s';
+    E('animateMotion',{dur,begin:beg,repeatCount:'indefinite',path:d,keyPoints:white?'0;1':'1;0',keyTimes:'0;1',calcMode:'linear'},c);
+    E('animate',{attributeName:'r',values:white?'1.5;7':'7;1.5',dur,begin:beg,repeatCount:'indefinite'},c);
+    E('animate',{attributeName:'opacity',values:'0;0.9;0.95;0',keyTimes:'0;0.15;0.8;1',dur,begin:beg,repeatCount:'indefinite'},c);}
+});
+
+// ---- WINDOW flicker blips over building clusters (image px regions) ----
+const CLUST=[
+ {x:[40,150],y:[80,360],c:'#7fe6f0',n:6},   // left navy cyan
+ {x:[560,690],y:[220,470],c:'#ffd98a',n:7},  // center dark tower warm
+ {x:[380,520],y:[330,650],c:'#ffd98a',n:6},  // left pink
+ {x:[1285,1455],y:[200,540],c:'#ffe0a0',n:8}, // right pink tower
+ {x:[1500,1610],y:[430,640],c:'#7fe6f0',n:5}, // right blue windows
+ {x:[1840,1985],y:[120,470],c:'#ffe0a0',n:7}, // far right pink
+ {x:[1290,1470],y:[660,780],c:'#d8f5e8',n:4}, // teal building
+];
+CLUST.forEach(cl=>{for(let i=0;i<cl.n;i++){const x=rnd(cl.x[0],cl.x[1]),y=rnd(cl.y[0],cl.y[1]);
+  const w=rnd(6,11),h=rnd(2.5,4);const r=E('rect',{x,y,width:w,height:h,rx:1,fill:cl.c,opacity:0,style:'mix-blend-mode:screen'});
+  E('animate',{attributeName:'opacity',values:'0;0.85;0.2;0.7;0',dur:rnd(3.5,8).toFixed(1)+'s',begin:(-rnd(0,6)).toFixed(1)+'s',repeatCount:'indefinite'},r);}});
+
+// ---- CYAN street-lamp halos (bottom-left ~175,840 / 235,858) ----
+[[178,842,40],[236,860,32]].forEach(([cx,cy,rr])=>{const g=E('circle',{cx,cy,r:rr,fill:'url(#lamp)'});
+  E('animate',{attributeName:'opacity',values:'0.6;1;0.6',dur:'3.5s',begin:(-rnd(0,3)).toFixed(1)+'s',repeatCount:'indefinite'},g);
+  E('circle',{cx,cy,r:6,fill:'#bff8ff'});});
+
+// ---- SPIRE bulb pulse (~885,360) ----
+const sb=E('circle',{cx:885,cy:362,r:34,fill:'url(#bulb)'});
+E('animate',{attributeName:'opacity',values:'0.4;0.85;0.4',dur:'4.5s',repeatCount:'indefinite'},sb);
+</script></body></html>

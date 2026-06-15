@@ -8,5 +8,9 @@ node_modules/
 dist/
 .env
 .playwright-mcp/
+.claude/
+# NOOP — separate upstream project (github.com/NoopApp/noop), reference only; never ship
+noop/
 *.png
+!docs/screenshots/*.png
 .superpowers/

@@ -1,0 +1,27 @@
+AirMG
+Copyright 2026 Surya Prasad
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+------------------------------------------------------------------------------
+Inspiration
+------------------------------------------------------------------------------
+AirMG is inspired by NOOP (https://github.com/NoopApp/noop), © 2026 NoopApp,
+PolyForm Noncommercial License 1.0.0. AirMG reuses NOOP's local-first design
+philosophy only — no NOOP source code, assets, or binaries are included or
+redistributed. See ATTRIBUTION.md for full credits.
+
+------------------------------------------------------------------------------
+Third-party open-source dependencies
+------------------------------------------------------------------------------
+Backend (Python):
+  FastAPI, Uvicorn, httpx, google-auth, google-auth-oauthlib
+
+Frontend (TypeScript/React):
+  React, React DOM, React Router, Vite, TailwindCSS, three.js,
+  @react-three/fiber, @react-three/drei, maath, @tanstack/react-query,
+  jotai, jotai-tanstack-query, recharts, lucide-react, class-variance-authority,
+  clsx, tailwind-merge, @base-ui/react, shadcn
+
+Each dependency is the property of its respective authors and is used under
+its own license.

@@ -1,0 +1,113 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HACF Bento — Today console</title>
+<style>
+:root{--mag:#ff2d78;--cy:#16d8e8;--ind:#8a4dff;--amb:#ffb347;}
+*{box-sizing:border-box}
+@keyframes flick{0%,93%,100%{opacity:1}94%{opacity:.5}95%{opacity:1}97%{opacity:.75}98%{opacity:1}}
+@keyframes flow{0%{transform:translateX(-40%);opacity:0}10%{opacity:1}90%{opacity:1}100%{transform:translateX(150%);opacity:0}}
+@keyframes tw{0%,100%{opacity:var(--o)}50%{opacity:calc(var(--o)*.35)}}
+body{margin:0;background:#06040d;color:#cdd1e0;font-family:ui-monospace,"SFMono-Regular",Menlo,monospace;padding:28px;
+  background-image:radial-gradient(120% 80% at 50% -10%,#160a26,#06040d 60%)}
+.wrap{max-width:1180px;margin:0 auto}
+.top{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px}
+.top h1{font-size:15px;letter-spacing:.22em;margin:0;color:#ff8fbc;text-shadow:0 0 8px #ff2d78}
+.top .date{font-size:11px;color:#6f6a82;letter-spacing:.15em}
+.bento{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:142px;gap:12px;grid-auto-flow:dense}
+.tile{position:relative;border-radius:13px;overflow:hidden;background:#0b0716;border:1px solid #241634;
+  box-shadow:inset 0 0 30px #0006,0 0 0 1px #160e26;padding:11px 13px;display:flex;flex-direction:column}
+.tile::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.16) 2px 3px);mix-blend-mode:multiply}
+/* global CRT ribs + vignette over whole board */
+.crt{position:fixed;inset:0;pointer-events:none;z-index:200;
+  background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.10) 2px 3px);mix-blend-mode:multiply;animation:scan 7s linear infinite}
+.crt2{position:fixed;inset:0;pointer-events:none;z-index:201;
+  background:radial-gradient(130% 100% at 50% 42%,transparent 60%,rgba(0,0,0,.5));box-shadow:inset 0 0 160px #000a}
+@keyframes scan{from{background-position:0 0}to{background-position:0 3px}}
+.tile .lab{font-size:9px;letter-spacing:.18em;text-transform:uppercase;color:#7a7290;z-index:2;display:flex;justify-content:space-between}
+.tile .lab .v{color:#cdd1e0}
+.viz{position:relative;flex:1;z-index:2;display:flex;align-items:center;justify-content:center;min-height:0}
+.c2{grid-column:span 2}.c4{grid-column:span 4}.r2{grid-row:span 2}
+.win{border-radius:1px}
+/* facade */
+.fac{position:absolute;inset:6px;display:grid;grid-template-rows:repeat(7,1fr);grid-auto-flow:column;grid-auto-columns:1fr;gap:2px}
+.fac .win{width:100%;height:100%}
+/* skyline */
+.skyl{position:absolute;inset:auto 8px 4px;display:flex;align-items:flex-end;gap:4px;justify-content:center;height:84%}
+.skyl .twr{flex:1;max-width:18px;border:1px solid #2a1840;border-bottom:none;border-radius:2px 2px 0 0;display:grid;grid-template-columns:repeat(2,1fr);gap:1px;padding:2px;align-content:start;background:#0a0616}
+.skyl .twr .win{aspect-ratio:1}
+/* eq */
+.eq{position:absolute;inset:8px;display:flex;align-items:flex-end;gap:3px}
+.eq .col{flex:1;display:flex;flex-direction:column-reverse;gap:2px;height:100%}
+.eq .col span{height:5px;border-radius:1px;background:#13351f22}
+/* zone stack */
+.zstack{display:flex;flex-direction:column-reverse;gap:3px;width:46px;height:100%;justify-content:flex-end}
+.zstack .seg{border-radius:2px;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff9}
+/* traffic */
+.trail{position:absolute;height:2px;border-radius:2px;animation:flow linear infinite}
+/* billboard */
+.bb{text-align:center}
+.bb .num{font:800 38px/1 ui-sans-serif;background:linear-gradient(#ffe9b0,#ff2d78);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 16px #ff2d7855;animation:flick 6s infinite}
+.bb .lab2{font-size:8px;letter-spacing:.3em;color:#16d8e8;text-shadow:0 0 6px #16d8e8;margin-top:5px}
+.spark{width:100%;height:100%}
+</style></head><body><div class="wrap">
+<div class="top"><h1>◢ TODAY · ORBITAL CONSOLE</h1><div class="date">SAT 14 JUN · 06:42</div></div>
+<div class="bento" id="bento"></div>
+</div>
+<div class="crt"></div><div class="crt2"></div>
+<script>
+const NS='http://www.w3.org/2000/svg';
+function E(n,a,p){const e=document.createElementNS(NS,n);for(const k in a)e.setAttribute(k,a[k]);if(p)p.appendChild(e);return e;}
+function polar(cx,cy,r,d){const a=d*Math.PI/180;return{x:cx+r*Math.cos(a),y:cy+r*Math.sin(a)}}
+function arcP(cx,cy,r,a0,a1){const s=polar(cx,cy,r,a0),e=polar(cx,cy,r,a1);return`M ${s.x} ${s.y} A ${r} ${r} 0 ${(a1-a0)>180?1:0} 1 ${e.x} ${e.y}`}
+const REC=['#FF4F73','#F5A623','#E8C24B','#18C98B','#2FE6A8'];const ZONE=['#16d8e8','#5BD3A0','#E8C24B','#E8743B','#ff2d78'];
+const ZC={1:'#A3D9F5',2:'#7EC8E3',3:'#F5A623',4:'#E8743B',5:'#FF4F73'};const ZMIN={1:42,2:28,3:18,4:9,5:4};
+const bento=document.getElementById('bento');
+function tile(cls,lab,val){const t=document.createElement('div');t.className='tile '+(cls||'');
+  const l=document.createElement('div');l.className='lab';l.innerHTML='<span>'+lab+'</span><span class="v">'+(val||'')+'</span>';t.appendChild(l);
+  const v=document.createElement('div');v.className='viz';t.appendChild(v);bento.appendChild(t);return v;}
+
+// segmented 80s dial
+function dial(host,opt){const size=opt.size||150,cx=size/2,cy=size/2;const svg=E('svg',{width:size,height:size,viewBox:`0 0 ${size} ${size}`,style:'overflow:visible'},host);
+  const START=150,SPAN=240,N=26,r=size*0.40,lit=Math.round(N*opt.frac);
+  E('circle',{cx,cy,r:size*0.49,fill:'#0d0a16',stroke:'#2a1f38','stroke-width':3},svg);
+  for(let i=0;i<N;i++){const a0=START+SPAN*(i+0.12)/N,a1=START+SPAN*(i+0.88)/N;const f=i/(N-1);const on=i<lit;const c=opt.colAt(f);
+    E('path',{d:arcP(cx,cy,r,a0,a1),fill:'none',stroke:on?c:'#241a30','stroke-width':size*0.085,opacity:on?1:.8,style:on?'filter:drop-shadow(0 0 4px '+c+')':''},svg);}
+  const lw=opt.label.length*12+12,lh=26;E('rect',{x:cx-lw/2,y:cy-lh/2,width:lw,height:lh,rx:3,fill:'#0a0f0a',stroke:'#1a2a1a','stroke-width':1.5,opacity:.92},svg);
+  const tt=E('text',{x:cx,y:cy+1,'text-anchor':'middle','dominant-baseline':'central','font-family':'ui-monospace','font-size':20,'font-weight':'800','font-style':'italic',fill:opt.lcd,style:'filter:drop-shadow(0 0 5px '+opt.lcd+')'},svg);tt.textContent=opt.label;tt.style.animation='flick 6s infinite';
+  E('text',{x:cx,y:cy+size*0.17,'text-anchor':'middle','font-size':8.5,'font-weight':'700','letter-spacing':'2',fill:opt.tip,style:'filter:drop-shadow(0 0 5px '+opt.tip+')'},svg).textContent=opt.word;}
+
+// 1 Recovery dial (hero)
+dial(tile('c2 r2','Recovery','PRIMED'),{size:200,frac:.87,colAt:f=>f<.25?'#FF4F73':f<.5?'#F5A623':f<.7?'#E8C24B':f<.88?'#18C98B':'#2FE6A8',tip:'#2FE6A8',lcd:'#39ffae',label:'87',word:'READY'});
+// 2 Strain dial
+dial(tile('c2 r2','Day Strain','HIGH'),{size:200,frac:14.2/21,colAt:f=>f<.33?'#E8B04B':f<.66?'#E8743B':f<.85?'#E0476B':'#C13AC1',tip:'#E0476B',lcd:'#ff7aa0',label:'14.2',word:'STRENUOUS'});
+
+// 3 Sleep canyon (wide)
+(function(){const host=tile('c2','Sleep','7h 12m · 88%');const s=E('svg',{viewBox:'0 0 360 120',style:'width:100%;height:100%;position:absolute;inset:0'},host);
+  const VPx=190,VPy=26;const STG={deep:['#2C3A7A',.22],light:['#5C6FB1',.5],rem:['#5BE0C7',.92],wake:['#E0476B',1]};
+  const N=[['light',16],['deep',46],['light',20],['rem',16],['light',24],['deep',16],['rem',26],['wake',4],['light',16],['rem',32],['light',12],['rem',34],['wake',6]];
+  E('defs',{},s).innerHTML='<radialGradient id="dw"><stop offset="0" stop-color="#16d8e8" stop-opacity=".8"/><stop offset="1" stop-color="#16d8e8" stop-opacity="0"/></radialGradient><filter id="gg"><feGaussianBlur stdDeviation="2"/></filter>';
+  E('circle',{cx:VPx,cy:VPy,r:52,fill:'url(#dw)'},s);
+  const tot=N.reduce((a,[,m])=>a+m,0);let acc=0;const steps=[];N.forEach(([st,m])=>{const n=Math.max(1,Math.round(m/10));for(let k=0;k<n;k++)steps.push([st,(acc+m*(k+0.5)/n)/tot]);acc+=m;});
+  steps.map((x,i)=>[x,i]).sort((a,b)=>b[0][1]-a[0][1]).forEach(([[st,t]])=>{const[c,hh]=STG[st];const sc=1-0.84*t;const gy=120-78*t;const bh=(8+62*hh)*sc;const bw=Math.max(3,26*sc);
+    [[-1,30,VPx-14],[1,330,VPx+14]].forEach(([sd,nx,fx])=>{const x=nx+(fx-nx)*t-sd*bw,y=gy-bh;E('rect',{x,y,width:bw,height:bh,rx:1,fill:c,opacity:(0.45+0.5*(1-t)).toFixed(2),filter:'url(#gg)'},s);});});})();
+
+// 4 HR Zones
+(function(){const host=tile('','HR Zones','101 min');const w=document.createElement('div');w.className='zstack';const tot=Object.values(ZMIN).reduce((a,b)=>a+b,0);
+  for(let z=1;z<=5;z++){const seg=document.createElement('div');seg.className='seg';const h=(ZMIN[z]/tot)*100;seg.style.height=h+'%';const c=ZC[z];seg.style.background=c;seg.style.boxShadow='0 0 8px '+c+'88, inset 0 0 8px #ffffff22';if(h>12)seg.textContent='Z'+z;w.appendChild(seg);}host.appendChild(w);})();
+
+// 5 Steps traffic
+(function(){const host=tile('','Steps','8,420');for(let i=0;i<14;i++){const t=document.createElement('div');t.className='trail';const c=ZONE[Math.floor(Math.random()*5)];
+  t.style.top=(20+Math.random()*60)+'%';t.style.left='0';t.style.width=(16+Math.random()*40)+'px';t.style.background='linear-gradient(90deg,transparent,'+c+')';t.style.boxShadow='0 0 6px '+c;t.style.opacity=(0.5+Math.random()*0.5).toFixed(2);t.style.animationDuration=(1.4+Math.random()*1.6)+'s';t.style.animationDelay=(-Math.random()*3)+'s';host.appendChild(t);}})();
+
+// 6 Trends skyline (wide)
+(function(){const host=tile('c2','HRV · 30d','62 ms');const sl=document.createElement('div');sl.className='skyl';const H=[5,7,6,9,8,11,9,10,13,11,9,12,8,10,7,9,12,10];
+  H.forEach(h=>{const tw=document.createElement('div');tw.className='twr';tw.style.height=(h*7)+'px';const c=REC[Math.min(4,Math.floor(h/3))];for(let i=0;i<h;i++){const wn=document.createElement('div');wn.className='win';if(Math.random()>.2){wn.style.background=c;wn.style.boxShadow='0 0 3px '+c;wn.style.opacity=(0.6+Math.random()*0.4).toFixed(2);}else{wn.style.background='#160e26';}tw.appendChild(wn);}sl.appendChild(tw);});host.appendChild(sl);})();
+
+// 7 Billboard headline (Resting HR)
+(function(){const host=tile('','Resting HR','bpm');const b=document.createElement('div');b.className='bb';b.innerHTML='<div class="num">48</div><div class="lab2">RESTING</div>';host.appendChild(b);})();
+
+// 8 Recovery year facade (full strip)
+(function(){const host=tile('c4','Recovery · Past Year','52 wk · 365 d');const f=document.createElement('div');f.className='fac';
+  const weeks=52,days=7;const wk=[];let m=3.4;for(let c=0;c<weeks;c++){m+=(Math.random()-0.5)*1.2;m=Math.max(0.4,Math.min(4.3,m));wk[c]=m;}
+  for(let c=0;c<weeks;c++)for(let d=0;d<days;d++){const v=wk[c]+(Math.random()-0.5)*0.9;const idx=Math.max(0,Math.min(4,Math.round(v)));const col=REC[idx];
+    const w=document.createElement('div');w.className='win';w.style.background=col;w.style.opacity=(0.7+Math.random()*0.3).toFixed(2);w.style.boxShadow='0 0 3px '+col;f.appendChild(w);}host.appendChild(f);})();
+</script></body></html>

@@ -1,0 +1,85 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Data City — luminance-alive</title>
+<style>
+body{margin:0;background:#04030a;color:#cdd1e0;font-family:ui-monospace,monospace;padding:24px}
+h1{font-size:17px;margin:0 0 4px}.sub{font-size:12px;color:#8a8398;margin:0 0 14px;max-width:1000px;line-height:1.5}
+.stage{position:relative;width:100%;max-width:1200px;margin:0 auto;aspect-ratio:2000/983;border-radius:12px;overflow:hidden;box-shadow:0 20px 60px #000a,0 0 0 1px #211632}
+canvas{display:block;width:100%;height:100%}
+.err{color:#ff6b8c;font-size:12px;margin-top:8px}
+</style></head><body>
+<h1>Data City — alive via image luminance (auto-aligned)</h1>
+<p class="sub">Effects derived from the image's own bright pixels in a WebGL shader: window-glow bloom + per-cell twinkle (aligned because it modulates the actual painted windows), road light-flow on the bright avenue pixels, global breathing. Nothing hand-placed.</p>
+<div class="stage"><canvas id="c"></canvas></div>
+<div class="err" id="err"></div>
+<script>
+const IMG_SRC='assets/citypop-bg.png';
+const cv=document.getElementById('c');const gl=cv.getContext('webgl');
+const errEl=document.getElementById('err');
+function fail(m){errEl.textContent=m;}
+if(!gl){fail('WebGL unavailable');}
+const VERT=`attribute vec2 p;varying vec2 uv;void main(){uv=p*0.5+0.5;gl_Position=vec4(p,0.0,1.0);}`;
+const FRAG=`precision highp float;
+uniform sampler2D tex;uniform float t;uniform vec2 res;varying vec2 uv;
+float L(vec3 c){return dot(c,vec3(0.299,0.587,0.114));}
+float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+void main(){
+  vec2 u=vec2(uv.x,1.0-uv.y);              // image top-left origin
+  vec3 base=texture2D(tex,u).rgb;
+  float lum=L(base);
+  float hi=smoothstep(0.42,0.88,lum);      // bright = windows/lights/trails
+  // bloom: ring taps of bright neighbours
+  vec3 glow=vec3(0.0);
+  for(int i=0;i<8;i++){float a=float(i)/8.0*6.2831;vec2 o=vec2(cos(a),sin(a));
+    vec3 s1=texture2D(tex,u+o*2.5/res).rgb; vec3 s2=texture2D(tex,u+o*6.0/res).rgb;
+    glow+=s1*smoothstep(0.6,1.0,L(s1))*0.6 + s2*smoothstep(0.66,1.0,L(s2))*0.4;}
+  glow/=8.0;
+  // per-cell twinkle (windows flicker in place)
+  vec2 cell=floor(u*vec2(150.0,95.0));
+  float ph=hash(cell)*6.2831; float spd=1.2+hash(cell+3.1)*2.5;
+  float tw=0.55+0.45*sin(t*spd+ph);
+  // sky star twinkle (upper region) sharper
+  float sky=smoothstep(0.5,0.42,u.y);
+  // ROAD flow: bright pixels in lower-centre, scroll brightness toward viewer
+  float roadY=smoothstep(0.6,0.66,u.y);
+  float roadX=smoothstep(0.30,0.06,abs(u.x-0.49));
+  float roadMask=roadY*roadX*hi;
+  float flow=0.45+0.55*sin(u.y*46.0 - t*7.0);
+  // window mask = bright, excluding the road region
+  float winMask=hi*(1.0-roadY*roadX);
+  float blink=step(0.93,hash(cell+floor(t*0.5)*7.0));   // a few windows blink each beat
+  // compose
+  vec3 col=base;
+  col *= 1.0 + winMask*((tw-0.5)*1.2 + blink*0.9);       // windows flicker/blink IN PLACE
+  col += glow*winMask*tw*1.2;                            // window bloom
+  col += glow*winMask*sky*(0.4+0.6*sin(t*3.0+ph))*0.7;  // sky star twinkle
+  col += base*roadMask*flow*1.1;                         // road light-flow
+  col *= 1.0+0.025*sin(t*0.7);                           // breathing
+  gl_FragColor=vec4(col,1.0);
+}`;
+function sh(type,src){const s=gl.createShader(type);gl.shaderSource(s,src);gl.compileShader(s);
+  if(!gl.getShaderParameter(s,gl.COMPILE_STATUS)){fail('shader: '+gl.getShaderInfoLog(s));}return s;}
+let prog,uT,uRes,tex;
+function init(img){
+  const p=gl.createProgram();gl.attachShader(p,sh(gl.VERTEX_SHADER,VERT));gl.attachShader(p,sh(gl.FRAGMENT_SHADER,FRAG));gl.linkProgram(p);
+  if(!gl.getProgramParameter(p,gl.LINK_STATUS)){fail('link: '+gl.getProgramInfoLog(p));return;}
+  prog=p;gl.useProgram(p);
+  const buf=gl.createBuffer();gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+  gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([-1,-1,3,-1,-1,3]),gl.STATIC_DRAW);
+  const loc=gl.getAttribLocation(p,'p');gl.enableVertexAttribArray(loc);gl.vertexAttribPointer(loc,2,gl.FLOAT,false,0,0);
+  tex=gl.createTexture();gl.bindTexture(gl.TEXTURE_2D,tex);
+  gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL,false);
+  gl.texImage2D(gl.TEXTURE_2D,0,gl.RGB,gl.RGB,gl.UNSIGNED_BYTE,img);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MIN_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_MAG_FILTER,gl.LINEAR);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_S,gl.CLAMP_TO_EDGE);
+  gl.texParameteri(gl.TEXTURE_2D,gl.TEXTURE_WRAP_T,gl.CLAMP_TO_EDGE);
+  uT=gl.getUniformLocation(p,'t');uRes=gl.getUniformLocation(p,'res');
+  resize();window.addEventListener('resize',resize);
+  const t0=performance.now();
+  (function loop(now){gl.uniform1f(uT,(now-t0)/1000);gl.drawArrays(gl.TRIANGLES,0,3);requestAnimationFrame(loop);})(t0);
+}
+function resize(){const r=cv.getBoundingClientRect();const dpr=Math.min(2,window.devicePixelRatio||1);
+  cv.width=Math.round(r.width*dpr);cv.height=Math.round(r.height*dpr);gl.viewport(0,0,cv.width,cv.height);
+  if(uRes)gl.uniform2f(uRes,cv.width,cv.height);}
+const img=new Image();img.crossOrigin='anonymous';img.onload=()=>{if(gl)init(img);};img.onerror=()=>fail('image load failed');img.src=IMG_SRC;
+</script></body></html>

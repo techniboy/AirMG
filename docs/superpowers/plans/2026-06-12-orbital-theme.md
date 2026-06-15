@@ -50,6 +50,7 @@ frontend/vitest.config.ts, frontend/src/orbital/worldState.test.ts
 `tsc -b` must be clean so every later task can use it as a check.
 
 **Files:**
+
 - Modify: `frontend/src/atoms/api.ts` (line ~12: remove `SleepSession` from the type-import list)
 - Modify: `frontend/src/components/ui/scroll-area.tsx` (line 4: delete `import * as React from "react"` if unused — check first; if JSX needs it the project uses react-jsx transform, so it is removable)
 - Modify: `frontend/src/pages/Journal.tsx` (line 2: drop unused `useSetAtom`; line ~79: `JournalQuestion` is not exported from atoms — export it from `frontend/src/atoms/api.ts` (`export interface JournalQuestion`) and import it in Journal.tsx)
@@ -74,6 +75,7 @@ formatter={(val) => [`${Number(val)}`, metricLabel]}
 ### Task 2: Dependencies + vitest
 
 **Files:**
+
 - Modify: `frontend/package.json`
 - Create: `frontend/vitest.config.ts`
 
@@ -82,7 +84,9 @@ formatter={(val) => [`${Number(val)}`, metricLabel]}
 
 ```ts
 import { defineConfig } from "vitest/config";
-export default defineConfig({ test: { environment: "node", include: ["src/**/*.test.ts"] } });
+export default defineConfig({
+  test: { environment: "node", include: ["src/**/*.test.ts"] },
+});
 ```
 
 - [ ] **Step 3:** Add to package.json scripts: `"test": "vitest run"`.
@@ -92,6 +96,7 @@ export default defineConfig({ test: { environment: "node", include: ["src/**/*.t
 ### Task 3: worldStateAtom — the data→visual contract (TDD)
 
 **Files:**
+
 - Create: `frontend/src/orbital/worldState.ts`
 - Test: `frontend/src/orbital/worldState.test.ts`
 
@@ -105,9 +110,16 @@ import { describe, expect, it } from "vitest";
 import { computeWorldState, DORMANT } from "./worldState";
 
 const base = {
-  recovery: 70, strainToday: 10, hrvZ: 0.5, rhrDelta: -2,
-  sleepPerf: 85, sleepMinutes: 450, sleepNeedMinutes: 480,
-  steps: 9000, syncStale: false, hasData: true,
+  recovery: 70,
+  strainToday: 10,
+  hrvZ: 0.5,
+  rhrDelta: -2,
+  sleepPerf: 85,
+  sleepMinutes: 450,
+  sleepNeedMinutes: 480,
+  steps: 9000,
+  syncStale: false,
+  hasData: true,
 };
 
 describe("computeWorldState", () => {
@@ -124,21 +136,35 @@ describe("computeWorldState", () => {
   it("hrv z drives aurora, clamped 0..1", () => {
     expect(computeWorldState({ ...base, hrvZ: 3 }).auroraIntensity).toBe(1);
     expect(computeWorldState({ ...base, hrvZ: -3 }).auroraIntensity).toBe(0);
-    expect(computeWorldState({ ...base, hrvZ: -1 }).auroraVioletShift).toBeGreaterThan(
+    expect(
+      computeWorldState({ ...base, hrvZ: -1 }).auroraVioletShift,
+    ).toBeGreaterThan(
       computeWorldState({ ...base, hrvZ: 1 }).auroraVioletShift,
     );
   });
   it("strain drives corona 0..1 over 0..21", () => {
-    expect(computeWorldState({ ...base, strainToday: 21 }).coronaActivity).toBe(1);
-    expect(computeWorldState({ ...base, strainToday: 0 }).coronaActivity).toBe(0);
+    expect(computeWorldState({ ...base, strainToday: 21 }).coronaActivity).toBe(
+      1,
+    );
+    expect(computeWorldState({ ...base, strainToday: 0 }).coronaActivity).toBe(
+      0,
+    );
   });
   it("moon phase = sleep minutes vs need, clamped", () => {
     expect(computeWorldState({ ...base, sleepMinutes: 480 }).moonPhase).toBe(1);
-    expect(computeWorldState({ ...base, sleepMinutes: 240 }).moonPhase).toBeCloseTo(0.5);
+    expect(
+      computeWorldState({ ...base, sleepMinutes: 240 }).moonPhase,
+    ).toBeCloseTo(0.5);
   });
   it("null metrics fall back to neutral, not NaN", () => {
-    const s = computeWorldState({ ...base, recovery: null, hrvZ: null, strainToday: null });
-    for (const v of Object.values(s)) expect(Number.isNaN(v as number)).toBe(false);
+    const s = computeWorldState({
+      ...base,
+      recovery: null,
+      hrvZ: null,
+      strainToday: null,
+    });
+    for (const v of Object.values(s))
+      expect(Number.isNaN(v as number)).toBe(false);
   });
 });
 ```
@@ -150,39 +176,55 @@ describe("computeWorldState", () => {
 // worldState.ts
 import { atom } from "jotai";
 import {
-  todayMetricsAtom, baselinesAtom, controlCenterDayAtom,
+  todayMetricsAtom,
+  baselinesAtom,
+  controlCenterDayAtom,
 } from "../atoms/api";
 
 export interface WorldInputs {
-  recovery: number | null; strainToday: number | null; hrvZ: number | null;
-  rhrDelta: number | null; sleepPerf: number | null;
-  sleepMinutes: number | null; sleepNeedMinutes: number;
-  steps: number | null; syncStale: boolean; hasData: boolean;
+  recovery: number | null;
+  strainToday: number | null;
+  hrvZ: number | null;
+  rhrDelta: number | null;
+  sleepPerf: number | null;
+  sleepMinutes: number | null;
+  sleepNeedMinutes: number;
+  steps: number | null;
+  syncStale: boolean;
+  hasData: boolean;
 }
 
 export interface WorldState {
-  atmosphereDensity: number;   // 0..1
-  atmosphereHue: number;       // 0 grey-blue .. 1 deep teal
-  surfaceSaturation: number;   // 0 ashen .. 1 lush
-  stormCount: number;          // integer 0..6
-  auroraIntensity: number;     // 0..1
-  auroraVioletShift: number;   // 0 teal .. 1 violet
-  rotationSpeed: number;       // rad/s, subtle range
-  coronaActivity: number;      // 0..1
-  cityCalm: number;            // 0 flicker .. 1 steady
-  moonPhase: number;           // 0 new .. 1 full
-  satelliteSpeed: number;      // rad/s
-  desaturate: number;          // 0..0.3 sync-stale wash
+  atmosphereDensity: number; // 0..1
+  atmosphereHue: number; // 0 grey-blue .. 1 deep teal
+  surfaceSaturation: number; // 0 ashen .. 1 lush
+  stormCount: number; // integer 0..6
+  auroraIntensity: number; // 0..1
+  auroraVioletShift: number; // 0 teal .. 1 violet
+  rotationSpeed: number; // rad/s, subtle range
+  coronaActivity: number; // 0..1
+  cityCalm: number; // 0 flicker .. 1 steady
+  moonPhase: number; // 0 new .. 1 full
+  satelliteSpeed: number; // rad/s
+  desaturate: number; // 0..0.3 sync-stale wash
 }
 
 const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
 const nz = (v: number | null, fallback: number) => (v == null ? fallback : v);
 
 export const DORMANT: WorldState = {
-  atmosphereDensity: 0.15, atmosphereHue: 0, surfaceSaturation: 0.05,
-  stormCount: 0, auroraIntensity: 0, auroraVioletShift: 0,
-  rotationSpeed: 0.01, coronaActivity: 0.05, cityCalm: 0.2,
-  moonPhase: 0.3, satelliteSpeed: 0.05, desaturate: 0.3,
+  atmosphereDensity: 0.15,
+  atmosphereHue: 0,
+  surfaceSaturation: 0.05,
+  stormCount: 0,
+  auroraIntensity: 0,
+  auroraVioletShift: 0,
+  rotationSpeed: 0.01,
+  coronaActivity: 0.05,
+  cityCalm: 0.2,
+  moonPhase: 0.3,
+  satelliteSpeed: 0.05,
+  desaturate: 0.3,
 };
 
 export function computeWorldState(i: WorldInputs): WorldState {
@@ -210,11 +252,23 @@ export const worldStateAtom = atom<WorldState>((get) => {
   const today = get(todayMetricsAtom);
   const baselines = get(baselinesAtom);
   const d = today.data as Record<string, number | null> | undefined;
-  const hasData = !!d && !("status" in (d as object) && (d as { status?: string }).status === "no_data");
-  const b = baselines.data?.baselines ?? (baselines.data as Record<string, { mean: number; spread: number }> | undefined);
+  const hasData =
+    !!d &&
+    !(
+      "status" in (d as object) &&
+      (d as { status?: string }).status === "no_data"
+    );
+  const b =
+    baselines.data?.baselines ??
+    (baselines.data as
+      | Record<string, { mean: number; spread: number }>
+      | undefined);
   const hrv = d?.hrv_rmssd ?? null;
   const hb = b?.hrv;
-  const hrvZ = hrv != null && hb ? (hrv - hb.mean) / Math.max(1.253 * hb.spread, 1e-9) : null;
+  const hrvZ =
+    hrv != null && hb
+      ? (hrv - hb.mean) / Math.max(1.253 * hb.spread, 1e-9)
+      : null;
   const rb = b?.resting_hr;
   const rhrDelta = d?.resting_hr != null && rb ? d.resting_hr - rb.mean : null;
   return computeWorldState({
@@ -241,6 +295,7 @@ export const worldDayAtom = controlCenterDayAtom; // date-nav = time travel
 ### Task 4: Theme plumbing — atom, Settings, Shell branch, lazy chunk
 
 **Files:**
+
 - Modify: `frontend/src/atoms/theme.ts`
 - Modify: `frontend/src/pages/Settings.tsx` (THEMES array)
 - Modify: `frontend/src/components/layout/Shell.tsx`
@@ -256,7 +311,7 @@ const OrbitalWorld = lazy(() => import("../../orbital"));
 // in Shell render:
 if (theme === "orbital") {
   return (
-    <Suspense fallback={<div className="h-screen w-screen bg-black" />}> 
+    <Suspense fallback={<div className="h-screen w-screen bg-black" />}>
       <OrbitalWorld />
     </Suspense>
   );
@@ -270,6 +325,7 @@ if (theme === "orbital") {
 ### Task 5: Renderer + Starfield + Effects scaffold
 
 **Files:**
+
 - Modify: `frontend/src/orbital/index.tsx`
 - Create: `frontend/src/orbital/scene/Starfield.tsx`
 - Create: `frontend/src/orbital/scene/Effects.tsx`
@@ -301,6 +357,7 @@ import * as THREE from "three/webgpu";
 ### Task 6: Planet — surface, terminator, city lights
 
 **Files:**
+
 - Create: `frontend/src/orbital/scene/Planet.tsx`
 
 - [ ] **Step 1:** TSL node material on a 64-seg sphere (radius 2): fbm noise (4 octaves, `mx_noise_float` or hand-rolled) → continents/ocean mix; `surfaceSaturation` uniform lerps lush↔ashen palette; lighting from star direction uniform; terminator = smoothstep on NdotL; night side: second noise threshold = city-light dots, brightness × `cityCalm`, flicker = time-noise × (1−cityCalm); `desaturate` uniform mixes toward grey.
@@ -313,6 +370,7 @@ import * as THREE from "three/webgpu";
 ### Task 7: Atmosphere + Aurora
 
 **Files:**
+
 - Create: `frontend/src/orbital/scene/Atmosphere.tsx`
 - Create: `frontend/src/orbital/scene/Aurora.tsx`
 
@@ -325,6 +383,7 @@ import * as THREE from "three/webgpu";
 ### Task 8: Star, corona, moon, satellite
 
 **Files:**
+
 - Create: `frontend/src/orbital/scene/Star.tsx`
 - Create: `frontend/src/orbital/scene/MoonSat.tsx`
 
@@ -337,19 +396,23 @@ import * as THREE from "three/webgpu";
 ### Task 9: Camera rig + route sync + clickable bodies + a11y
 
 **Files:**
+
 - Create: `frontend/src/orbital/cameraRig.tsx`
 - Modify: `frontend/src/orbital/index.tsx`
 
 - [ ] **Step 1:** Camera targets map:
 
 ```ts
-const CAMERA_TARGETS: Record<string, { pos: [number,number,number]; look: [number,number,number] }> = {
-  "/":         { pos: [0, 1.2, 9],   look: [0, 0, 0] },
+const CAMERA_TARGETS: Record<
+  string,
+  { pos: [number, number, number]; look: [number, number, number] }
+> = {
+  "/": { pos: [0, 1.2, 9], look: [0, 0, 0] },
   "/recovery": { pos: [0.5, 0.8, 4], look: [0, 0, 0] },
-  "/sleep":    { pos: [-2.6, 0.6, 3.4], look: [-0.8, 0, 0] },   // night side
-  "/strain":   { pos: [8, 2, -13],  look: [22, 5, -36] },   // derive from SUN_POSITION (moved in Task 8 so the sun frames on-screen)
+  "/sleep": { pos: [-2.6, 0.6, 3.4], look: [-0.8, 0, 0] }, // night side
+  "/strain": { pos: [8, 2, -13], look: [22, 5, -36] }, // derive from SUN_POSITION (moved in Task 8 so the sun frames on-screen)
 };
-const CONSOLE_TARGET = { pos: [0, 2.2, 11], look: [0, 0, 0] };  // pulled back, scene blurred behind panel
+const CONSOLE_TARGET = { pos: [0, 2.2, 11], look: [0, 0, 0] }; // pulled back, scene blurred behind panel
 ```
 
 - [ ] **Step 2:** Rig: `useLocation()` → target; `useFrame` damps `camera.position` + a lookAt proxy with `maath/easing.damp3` (smoothTime ~0.45 → ≈1.2s settle); `prefers-reduced-motion` (via `matchMedia`) → snap instantly. Mouse parallax: ±0.15 offset, damped, disabled under reduced motion.
@@ -361,6 +424,7 @@ const CONSOLE_TARGET = { pos: [0, 2.2, 11], look: [0, 0, 0] };  // pulled back, 
 ### Task 10: HUD primitives + landing HUD + dock
 
 **Files:**
+
 - Create: `frontend/src/orbital/hud/HudPanel.tsx`
 - Create: `frontend/src/orbital/hud/LandingHud.tsx`
 - Modify: `frontend/src/orbital/orbital.css`
@@ -375,6 +439,7 @@ const CONSOLE_TARGET = { pos: [0, 2.2, 11], look: [0, 0, 0] };  // pulled back, 
 ### Task 11: Console pages
 
 **Files:**
+
 - Create: `frontend/src/orbital/hud/ConsolePanel.tsx`
 - Modify: `frontend/src/orbital/index.tsx` (route table)
 - Modify: `frontend/src/orbital/orbital.css`
@@ -388,6 +453,7 @@ const CONSOLE_TARGET = { pos: [0, 2.2, 11], look: [0, 0, 0] };  // pulled back, 
 ### Task 12: Recovery diorama — baseline rings
 
 **Files:**
+
 - Create: `frontend/src/orbital/hud/RecoveryRings.tsx` (DOM readouts)
 - Modify: `frontend/src/orbital/scene/Planet.tsx` (rings render when route is /recovery)
 
@@ -400,6 +466,7 @@ const CONSOLE_TARGET = { pos: [0, 2.2, 11], look: [0, 0, 0] };  // pulled back, 
 ### Task 13: Sleep diorama — descent track
 
 **Files:**
+
 - Create: `frontend/src/orbital/hud/SleepDescent.tsx` (scene piece + DOM readout co-located)
 
 - [ ] **Step 1:** Data: `sleepDetailAtom` stages → decimate: merge consecutive same-stage segments, drop segments < 2 min (keep wake events as point markers). Map: time → angle along a 70° arc over the night side; stage → altitude band (wake 3.4, rem 3.0, light 2.6, deep 2.3 radius).
@@ -412,6 +479,7 @@ const CONSOLE_TARGET = { pos: [0, 2.2, 11], look: [0, 0, 0] };  // pulled back, 
 ### Task 14: Strain diorama — corona shells + flare ring
 
 **Files:**
+
 - Create: `frontend/src/orbital/hud/StrainFlares.tsx`
 - Modify: `frontend/src/orbital/scene/Star.tsx`
 
@@ -425,6 +493,7 @@ const CONSOLE_TARGET = { pos: [0, 2.2, 11], look: [0, 0, 0] };  // pulled back, 
 ### Task 15: Performance degrade + visibility pause + reduced motion sweep
 
 **Files:**
+
 - Modify: `frontend/src/orbital/index.tsx`, `scene/Effects.tsx`
 
 - [ ] **Step 1:** FPS monitor (rolling 120-frame avg in useFrame): < 45fps for 5s → set `qualityAtom` "low" (Effects minimal) → still < 30 → DPR 1. One-way ratchet per session.
@@ -436,6 +505,7 @@ const CONSOLE_TARGET = { pos: [0, 2.2, 11], look: [0, 0, 0] };  // pulled back, 
 ### Task 16: End-to-end flow + polish rounds
 
 **Files:**
+
 - Create: `frontend/e2e-orbital.md` (manual checklist; Playwright is MCP-driven here, no test harness file)
 
 - [ ] **Step 1:** Full Playwright pass: switch theme → landing → click planet/moon/star → each diorama renders data → console routes → back/Esc → return to orbit → switch theme back to dark (everything intact).

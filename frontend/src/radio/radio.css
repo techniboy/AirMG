@@ -76,16 +76,16 @@
 .radio-mount{border-left:2px solid #2a2545;padding-left:14px}
 .radio-mount .kana{font-size:22px;color:var(--mag);text-shadow:0 0 10px var(--mag);line-height:1}
 .radio-mount .small{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-top:6px}
-.radio-topctl{margin-left:auto;display:flex;align-items:center;gap:8px;position:relative}
-.radio-toast{position:absolute;top:calc(100% + 8px);right:0;z-index:70;white-space:nowrap;padding:8px 12px;background:#120f28;border:1px solid var(--acc);border-radius:9px;color:var(--txt);font:600 11px ui-monospace,Menlo,monospace;letter-spacing:.02em;box-shadow:0 0 14px color-mix(in srgb,var(--acc) 35%,transparent),0 12px 32px #0009;animation:radio-toast-in .22s ease-out}
-@keyframes radio-toast-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
-.radio-synced{font:600 9px ui-monospace,Menlo,monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);white-space:nowrap}
+.radio-topctl{margin-top:auto;padding-top:12px;display:flex;flex-direction:column;align-items:center;gap:7px;position:relative}
+.radio-toast{position:absolute;left:calc(100% + 10px);bottom:0;z-index:70;white-space:nowrap;padding:8px 12px;background:#120f28;border:1px solid var(--acc);border-radius:9px;color:var(--txt);font:600 11px ui-monospace,Menlo,monospace;letter-spacing:.02em;box-shadow:0 0 14px color-mix(in srgb,var(--acc) 35%,transparent),0 12px 32px #0009;animation:radio-toast-in .22s ease-out}
+@keyframes radio-toast-in{from{opacity:0;transform:translateX(-4px)}to{opacity:1;transform:none}}
+.radio-synced{font:600 8px ui-monospace,Menlo,monospace;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);white-space:nowrap;text-align:center}
 .radio-iconbtn{display:flex;align-items:center;justify-content:center;width:30px;height:30px;border:1px solid #342b58;border-radius:8px;background:#171232;color:var(--txt);cursor:pointer;transition:.15s}
 .radio-iconbtn:hover{border-color:var(--acc);color:#fff;box-shadow:0 0 10px color-mix(in srgb,var(--acc) 30%,transparent)}
 .radio-iconbtn:disabled{opacity:.6;cursor:default}
 .radio-iconbtn .spin{animation:radio-spin .9s linear infinite}
 @keyframes radio-spin{to{transform:rotate(360deg)}}
-.radio-menu{position:absolute;top:calc(100% + 6px);right:0;z-index:60;min-width:176px;padding:5px;background:#120f28;border:1px solid #342b58;border-radius:10px;box-shadow:0 12px 32px #0009;display:flex;flex-direction:column;gap:2px}
+.radio-menu{position:absolute;left:calc(100% + 8px);bottom:0;z-index:60;min-width:176px;padding:5px;background:#120f28;border:1px solid #342b58;border-radius:10px;box-shadow:0 12px 32px #0009;display:flex;flex-direction:column;gap:2px}
 .radio-menu-item{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:7px 9px;border:none;border-radius:7px;background:transparent;color:var(--txt);font:600 11px ui-monospace,Menlo,monospace;letter-spacing:.03em;cursor:pointer;text-align:left}
 .radio-menu-item:hover{background:#1f1840}
 .radio-menu-item.on{color:var(--acc)}

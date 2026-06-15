@@ -1,6 +1,5 @@
 import { useLocation } from "react-router";
 import { RADIO_NAV } from "./nav";
-import { RadioTopControls } from "./RadioTopControls";
 
 export function RadioBillboard() {
 	const { pathname } = useLocation();
@@ -21,7 +20,6 @@ export function RadioBillboard() {
 				<div className="kana">{item.kana}</div>
 				<div className="small">{item.en}</div>
 			</div>
-			<RadioTopControls />
 		</div>
 	);
 }

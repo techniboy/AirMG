@@ -1,5 +1,6 @@
 import { NavLink } from "react-router";
 import { RADIO_LOGO, RADIO_NAV } from "./nav";
+import { RadioTopControls } from "./RadioTopControls";
 
 export function RadioSidebar() {
 	return (
@@ -20,6 +21,7 @@ export function RadioSidebar() {
 					</NavLink>
 				);
 			})}
+			<RadioTopControls />
 		</nav>
 	);
 }

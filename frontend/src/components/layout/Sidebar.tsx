@@ -1,6 +1,7 @@
 import { useAtomValue } from "jotai";
 import { NavLink } from "react-router";
 import { themeAtom } from "../../atoms/theme";
+import { SidebarControls } from "./SidebarControls";
 
 const NAV_ITEMS = [
 	{ path: "/", label: "Today", icon: "◉" },
@@ -42,6 +43,7 @@ export function Sidebar() {
 					{item.label}
 				</NavLink>
 			))}
+			<SidebarControls />
 		</nav>
 	);
 }

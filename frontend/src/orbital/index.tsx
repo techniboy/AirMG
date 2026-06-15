@@ -22,6 +22,7 @@ import ConsolePanel from "./hud/ConsolePanel";
 import Dock from "./hud/Dock";
 import { hoveredObjectAtom } from "./hud/hoverAtom";
 import LandingHud from "./hud/LandingHud";
+import { OrbitalControls } from "./hud/OrbitalControls";
 import RecoveryHud from "./hud/RecoveryHud";
 import SleepHud from "./hud/SleepHud";
 import StrainHud from "./hud/StrainHud";
@@ -228,6 +229,7 @@ export default function OrbitalWorld() {
         </ConsolePanel>
       )}
       <Dock pathname={location.pathname} />
+      <OrbitalControls />
       {/* a11y mirrors for the clickable bodies (canvas raycast targets) */}
       <div className="orbital-sr-nav">
         <button type="button" className="orbital-sr-only" onClick={goRecovery}>

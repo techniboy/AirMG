@@ -1,5 +1,8 @@
+@import url("https://fonts.googleapis.com/css2?family=Orbitron:wght@400..900&display=swap");
+
 .radio {
 	--mag: #ff2d78; --cy: #16d8e8; --ind: #8a4dff; --amb: #ffb347;
+	--display: "Orbitron", ui-sans-serif, system-ui, sans-serif;
 	--txt: #cdd1e0; --mut: #6f6a82;
 	/* phase vars (set inline by RadioShell from PhaseTokens): */
 	--g1: #1a1130; --g2: #0a0818; --g3: #04030a;
@@ -9,32 +12,38 @@
 }
 .radio-app {
 	position: relative; height: 100vh; display: flex; overflow: hidden;
-	background: radial-gradient(125% 85% at var(--bx,50%) 6%, var(--g1) 0%, var(--g2) 44%, var(--g3) 100%);
-	transition: background 1.4s; animation: radio-drift 26s ease-in-out infinite alternate;
+	/* Static baked backdrop: aurora glow (top corners) + bloom (bottom) + base,
+	   all painted once and compositor-cached. Replaces the old animated aurora/
+	   bloom/dust/drift layers that re-painted the full screen every frame. */
+	background:
+		radial-gradient(46% 40% at 16% 4%, color-mix(in srgb, var(--acc) 22%, transparent), transparent 68%),
+		radial-gradient(48% 42% at 86% 8%, color-mix(in srgb, var(--mag) 20%, transparent), transparent 70%),
+		radial-gradient(85% 60% at 50% 106%, var(--bloomA), transparent 72%),
+		radial-gradient(60% 50% at 28% 108%, var(--bloomB), transparent 70%),
+		radial-gradient(125% 85% at 50% 6%, var(--g1) 0%, var(--g2) 44%, var(--g3) 100%);
+	transition: background 1.4s;
 }
-@keyframes radio-drift { 0%{--bx:40%} 100%{--bx:60%} }
 @keyframes radio-tw { 0%,100%{opacity:var(--o)} 50%{opacity:calc(var(--o)*.25)} }
 @keyframes radio-flick { 0%,93%,100%{opacity:1} 94%{opacity:.45} 95%{opacity:1} 97%{opacity:.7} 98%{opacity:1} }
 @keyframes radio-flk { 0%,92%,100%{opacity:1} 93%{opacity:.25} 94%{opacity:1} 96%{opacity:.5} 97%{opacity:1} }
-@keyframes radio-breathe { 0%,100%{opacity:.8} 50%{opacity:1} }
-@keyframes radio-float { 0%{transform:translateY(20px);opacity:0} 10%{opacity:.55} 100%{transform:translateY(-260px);opacity:0} }
 @keyframes radio-drop { to{transform:translateY(130vh)} }
-@keyframes radio-au1 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(18%,8%) scale(1.25)} }
-@keyframes radio-au2 { 0%{transform:translate(0,0) scale(1.1)} 100%{transform:translate(-16%,4%) scale(.85)} }
 @keyframes radio-shoot { 0%,100%{opacity:0;left:-5%;top:8%} 2%{opacity:1} 9%{opacity:0;left:60%;top:30%} }
+/* steps light-trail (Traffic viz) — streaks across horizontally.
+   transform/opacity only (compositor) — never animate `left` (layout+paint).
+   cqw lets translateX span the full card width. */
+.radio-traffic { container-type: inline-size; }
+@keyframes radio-flow {
+	0% { transform: translateX(-60px); opacity: 0 }
+	12% { opacity: 1 }
+	88% { opacity: 1 }
+	100% { transform: translateX(calc(100cqw + 60px)); opacity: 0 }
+}
 
 /* backdrop layers */
 .radio-stars{position:absolute;inset:0 0 30% 0;z-index:0;pointer-events:none;transition:opacity 1s}
 .radio-app.cp .radio-stars{opacity:0}
 .radio-stars i{position:absolute;width:2px;height:2px;border-radius:50%;background:#fff;box-shadow:0 0 3px #fff;animation:radio-tw 4s ease-in-out infinite}
-.radio-aurora{position:absolute;left:-20%;right:-20%;top:-10%;height:75%;z-index:0;pointer-events:none;filter:blur(36px);opacity:.5;mix-blend-mode:screen}
-.radio-aurora b{position:absolute;border-radius:50%;width:50%;height:80%}
-.radio-aurora .a1{left:6%;top:0;background:radial-gradient(closest-side,var(--acc),transparent);animation:radio-au1 18s ease-in-out infinite alternate}
-.radio-aurora .a2{right:4%;top:8%;background:radial-gradient(closest-side,var(--mag),transparent);animation:radio-au2 22s ease-in-out infinite alternate}
 .radio-shoot{position:absolute;top:12%;left:-5%;width:90px;height:1.5px;z-index:0;background:linear-gradient(90deg,transparent,#fff);box-shadow:0 0 8px #fff;opacity:0;transform:rotate(14deg);animation:radio-shoot 13s ease-in infinite}
-.radio-bloom{position:absolute;left:0;right:0;bottom:-40px;height:280px;z-index:0;pointer-events:none;transition:background 1.4s;background:radial-gradient(75% 100% at 50% 100%,var(--bloomA),transparent 72%),radial-gradient(55% 100% at 28% 100%,var(--bloomB),transparent 70%);animation:radio-breathe 9s ease-in-out infinite}
-.radio-dust{position:absolute;inset:0;z-index:1;pointer-events:none;overflow:hidden}
-.radio-dust i{position:absolute;width:2px;height:2px;border-radius:50%;background:#bdfff0;box-shadow:0 0 5px var(--acc);opacity:.5;animation:radio-float linear infinite}
 .radio-rain{position:absolute;inset:0;z-index:2;pointer-events:none;overflow:hidden;opacity:0;transition:.8s}
 .radio-app.rain .radio-rain{opacity:1}
 .radio-rain i{position:absolute;top:-14%;width:1px;height:60px;background:linear-gradient(transparent,#b9d4ff66);animation:radio-drop linear infinite}
@@ -60,14 +69,50 @@
 .radio-mount .small{font-size:8px;letter-spacing:.22em;text-transform:uppercase;color:var(--mut);margin-top:6px}
 
 /* CRT overlays */
-.radio-scan{position:absolute;inset:0;pointer-events:none;z-index:8;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.05) 3px 4px);mix-blend-mode:multiply}
-.radio-grain{position:absolute;inset:0;pointer-events:none;z-index:9;opacity:.06;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+.radio-scan{position:absolute;inset:0;pointer-events:none;z-index:8;background:repeating-linear-gradient(0deg,transparent 0 3px,rgba(0,0,0,.05) 3px 4px)}
+.radio-grain{position:absolute;inset:0;pointer-events:none;z-index:9;opacity:.06;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 .radio-vig{position:absolute;inset:0;pointer-events:none;z-index:8;background:radial-gradient(125% 95% at 50% 35%,transparent 58%,rgba(0,0,0,.55))}
 
 /* reduced motion: freeze ambient animation */
 @media (prefers-reduced-motion: reduce) {
-	.radio-app, .radio-bloom, .radio-aurora b, .radio-shoot, .radio-stars i, .radio-dust i, .radio-rain i, .radio-tube .x { animation: none !important; }
+	.radio-shoot, .radio-stars i, .radio-rain i, .radio-tube .x { animation: none !important; }
 }
+
+/* tab hidden: pause every ambient animation so the GPU compositor idles */
+.radio-app.paused, .radio-app.paused * { animation-play-state: paused !important; }
 
 /* themed-card surface for content pages */
 .radio .radio-card{border:1px solid #1c1a2c;border-radius:11px;padding:13px;background:#0a0815c2;backdrop-filter:blur(2px)}
+
+/* ---- typography: Orbitron display for titles + glow on titles/numbers ---- */
+/* Titles → geometric 80s display face. Data/labels stay monospace (terminal). */
+.radio h1, .radio h2, .radio h3,
+.radio .font-bold, .radio .font-semibold, .radio .font-medium {
+	font-family: var(--display);
+	letter-spacing: .04em;
+}
+.radio h1, .radio h2, .radio h3 {
+	text-transform: uppercase;
+	letter-spacing: .08em;
+	text-shadow: 0 0 12px color-mix(in srgb, var(--acc) 50%, transparent);
+}
+/* card/section titles glow subtly in the phase accent */
+.radio .font-semibold, .radio .font-medium {
+	color: #e6e2f0;
+	text-shadow: 0 0 8px color-mix(in srgb, var(--acc) 35%, transparent);
+}
+/* numeric values (recharts-free) glow like neon readouts */
+.radio .tabular-nums { text-shadow: 0 0 10px currentColor; }
+/* the neon billboard headline uses the display face too */
+.radio .radio-tube { font-family: var(--display); }
+
+/* ---- CRT / LCD hover tooltip ---- */
+.radio-tip-box{position:relative;background:#0a0f0a;border:1px solid var(--acc);border-radius:4px;padding:5px 9px;
+	box-shadow:0 0 12px color-mix(in srgb,var(--acc) 50%,transparent),inset 0 0 10px #00000088;
+	font-family:ui-monospace,"SFMono-Regular",Menlo,monospace;overflow:hidden}
+.radio-tip-box::after{content:"";position:absolute;inset:0;pointer-events:none;
+	background:repeating-linear-gradient(0deg,transparent 0 2px,rgba(0,0,0,.18) 2px 3px)}
+.radio-tip-label{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#b9b2cf;margin-bottom:2px}
+.radio-tip-val{font-size:16px;font-weight:800;letter-spacing:.04em;white-space:nowrap}
+.radio-tip-caret{margin-left:3px;color:#39ffae;animation:radio-blink 1s steps(1) infinite}
+@keyframes radio-blink{0%,50%{opacity:1}50.01%,100%{opacity:0}}

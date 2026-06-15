@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { useAtomValue, useAtom } from "jotai";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -24,6 +25,34 @@ export default function Settings() {
 	const [saving, setSaving] = useState(false);
 	const [saved, setSaved] = useState(false);
 	const [saveError, setSaveError] = useState<string | null>(null);
+
+	const queryClient = useQueryClient();
+	const [syncing, setSyncing] = useState(false);
+	const [syncMsg, setSyncMsg] = useState<string | null>(null);
+	const [syncError, setSyncError] = useState<string | null>(null);
+
+	async function handleSync() {
+		setSyncing(true);
+		setSyncMsg(null);
+		setSyncError(null);
+		try {
+			const res = await api<{ synced: Record<string, number | { error: string }> }>(
+				"/sync/start",
+				{ method: "POST" },
+			);
+			const total = Object.values(res.synced).reduce<number>(
+				(n, v) => n + (typeof v === "number" ? v : 0),
+				0,
+			);
+			setSyncMsg(`Synced ${total} new record${total === 1 ? "" : "s"}.`);
+			// Refresh every dashboard query with the freshly synced data.
+			queryClient.invalidateQueries();
+		} catch (err) {
+			setSyncError(err instanceof Error ? err.message : "Sync failed");
+		} finally {
+			setSyncing(false);
+		}
+	}
 
 	function setField<K extends keyof ProfileSettings>(
 		key: K,
@@ -86,6 +115,32 @@ export default function Settings() {
 							<div className="text-[11px] mt-0.5 opacity-60">{t.desc}</div>
 						</button>
 					))}
+				</div>
+			</Card>
+
+			<Card className="border-hairline bg-surface-raised p-5 space-y-4">
+				<div className="text-xs uppercase tracking-widest text-text-tertiary">
+					Data
+				</div>
+				<p className="text-sm text-text-secondary">
+					Pull the latest heart rate, HRV, sleep, SpO₂, workouts and steps from
+					Google Health, then recompute your metrics.
+				</p>
+				<div className="flex items-center gap-3">
+					<Button
+						type="button"
+						onClick={handleSync}
+						disabled={syncing}
+						className="bg-accent text-surface-base hover:bg-accent-hover"
+					>
+						{syncing ? "Syncing…" : "Sync now"}
+					</Button>
+					{syncMsg && (
+						<span className="text-sm text-status-positive">{syncMsg}</span>
+					)}
+					{syncError && (
+						<span className="text-sm text-status-critical">{syncError}</span>
+					)}
 				</div>
 			</Card>
 

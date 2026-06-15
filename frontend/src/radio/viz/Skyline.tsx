@@ -1,10 +1,26 @@
 import { useMemo } from "react";
 import { useRadioPhase } from "../phase";
+import { useTipBind } from "../tooltip";
 
 const REC = ["#FF4F73", "#F5A623", "#E8C24B", "#18C98B", "#2FE6A8"];
 
-export function Skyline({ data, height = 140 }: { data: number[]; height?: number }) {
+function fmt(v: number) {
+	return Number.isInteger(v) ? String(v) : v.toFixed(1);
+}
+
+export function Skyline({
+	data,
+	height = 140,
+	labels,
+	unit = "",
+}: {
+	data: number[];
+	height?: number;
+	labels?: string[];
+	unit?: string;
+}) {
 	const { tokens } = useRadioPhase();
+	const bind = useTipBind();
 	const max = Math.max(1, ...data);
 
 	// Per-tower lit-window pattern. Computed once per (data.length, cp) so windows
@@ -26,7 +42,11 @@ export function Skyline({ data, height = 140 }: { data: number[]; height?: numbe
 				const c = REC[Math.min(4, Math.floor((v / max) * 5))];
 				const cells = windows[i] ?? [];
 				return (
-					<div key={i} style={{ flex: 1, height: h, border: `1px solid ${tokens.cp ? "#5a6a86" : "#241634"}`, borderBottom: "none", borderRadius: "2px 2px 0 0", background: tokens.cp ? "#2a3a52" : "#0a0616", display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 2, padding: 3, alignContent: "start" }}>
+					<div
+						key={i}
+						{...bind(`${fmt(v)}${unit ? ` ${unit}` : ""}`, labels?.[i], c)}
+						style={{ flex: 1, height: h, border: `1px solid ${tokens.cp ? "#5a6a86" : "#241634"}`, borderBottom: "none", borderRadius: "2px 2px 0 0", background: tokens.cp ? "#2a3a52" : "#0a0616", display: "grid", gridTemplateColumns: "repeat(2,1fr)", gap: 2, padding: 3, alignContent: "start", cursor: "crosshair" }}
+					>
 						{cells.map((on, k) => (
 							<span key={k} style={{ aspectRatio: "1", borderRadius: 1, background: on ? c : "#1a1228", opacity: on ? 0.5 + 0.5 * tokens.glow : 0.4, boxShadow: on && tokens.glow > 0.3 ? `0 0 ${(2 + 4 * tokens.glow).toFixed(0)}px ${c}` : "none" }} />
 						))}
@@ -37,21 +57,51 @@ export function Skyline({ data, height = 140 }: { data: number[]; height?: numbe
 	);
 }
 
-export function Spire({ data, width = 200, height = 80 }: { data: number[]; width?: number; height?: number }) {
+/** Mini "spire" sparkline — discrete neon bars (one per point), each a vertical
+ *  gradient to the metric colour. Bars (not a filled area) so a row of them reads
+ *  as data points / a tiny skyline, and each metric keeps its own colour. */
+export function Spire({
+	data,
+	height = 40,
+	color = "#16d8e8",
+	labels,
+	unit = "",
+}: {
+	data: number[];
+	width?: number;
+	height?: number;
+	color?: string;
+	labels?: string[];
+	unit?: string;
+}) {
 	const { tokens } = useRadioPhase();
+	const bind = useTipBind();
 	const max = Math.max(1, ...data);
-	const step = width / Math.max(1, data.length - 1);
-	const pts = data.map((v, i) => `${(i * step).toFixed(1)},${(height - (v / max) * height).toFixed(1)}`).join(" ");
-	const id = `spire-${Math.round(max * 100)}`;
+	const min = Math.min(...data, 0);
+	const span = Math.max(1, max - min);
 	return (
-		<svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} style={{ overflow: "visible" }}>
-			<defs>
-				<linearGradient id={id} x1="0" y1="1" x2="0" y2="0">
-					<stop offset="0" stopColor="#8a4dff" /><stop offset=".5" stopColor="#ff2d78" /><stop offset="1" stopColor="#16d8e8" />
-				</linearGradient>
-				<filter id={`f${id}`}><feGaussianBlur stdDeviation={(0.6 + 1.4 * tokens.glow).toFixed(1)} result="b" /><feMerge><feMergeNode in="b" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-			</defs>
-			<polyline points={pts} fill="none" stroke={`url(#${id})`} strokeWidth={2} opacity={0.6 + 0.38 * tokens.glow} filter={`url(#f${id})`} />
-		</svg>
+		<div style={{ display: "flex", alignItems: "flex-end", gap: 1.5, height, width: "100%" }}>
+			{data.map((v, i) => {
+				const h = Math.max(2, ((v - min) / span) * height);
+				return (
+					<div
+						key={i}
+						{...bind(`${fmt(v)}${unit ? ` ${unit}` : ""}`, labels?.[i], color)}
+						style={{
+							flex: 1,
+							height: h,
+							borderRadius: "1px 1px 0 0",
+							background: `linear-gradient(${color}, ${color}22)`,
+							boxShadow:
+								tokens.glow > 0.3
+									? `0 0 ${(2 + 3 * tokens.glow).toFixed(0)}px ${color}88`
+									: "none",
+							opacity: 0.55 + 0.4 * tokens.glow,
+							cursor: "crosshair",
+						}}
+					/>
+				);
+			})}
+		</div>
 	);
 }

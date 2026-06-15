@@ -71,7 +71,7 @@ export default function Strain() {
 							<div className="text-sm font-medium text-text-secondary">
 								7-Day Strain Trend
 							</div>
-							<TrendLine data={trendPoints} color="#E8743B" domain={[0, 21]} />
+							<TrendLine data={trendPoints} color="#E8743B" domain={[0, 21]} radioForm="eq" />
 						</Card>
 					)}
 				</>

@@ -1,6 +1,6 @@
 import { useAtomValue } from "jotai";
 import { themeAtom } from "../../atoms/theme";
-import { recoveryColor, recoveryState } from "../../lib/colors";
+import { recoveryHex, recoveryState } from "../../lib/colors";
 import { Dial } from "../../radio/viz/Dial";
 
 interface RecoveryGaugeProps {
@@ -34,25 +34,16 @@ function describeArc(
 	return `M ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y}`;
 }
 
-// Map recovery score → hex color for SVG use
-function recoveryHex(score: number): string {
-	if (score < 25) return "#FF4F73";
-	if (score < 50) return "#F5A623";
-	if (score < 70) return "#E8C24B";
-	if (score < 88) return "#18C98B";
-	return "#2FE6A8";
-}
-
 export function RecoveryGauge({ score, size = 200 }: RecoveryGaugeProps) {
 	const theme = useAtomValue(themeAtom);
 	const cx = size / 2;
 	const cy = size / 2;
 	const strokeWidth = size * 0.075;
 	const r = (size - strokeWidth) / 2 - 4;
-	const fraction = score !== null ? Math.min(Math.max(score / 100, 0), 1) : 0;
-	const color = score !== null ? recoveryHex(score) : "var(--color-chart-track)";
-	const state = score !== null ? recoveryState(score) : "--";
-	const displayScore = score !== null ? Math.round(score).toString() : "--";
+	const fraction = score != null ? Math.min(Math.max(score / 100, 0), 1) : 0;
+	const color = recoveryHex(score) ?? "var(--color-chart-track)";
+	const state = score != null ? recoveryState(score) : "--";
+	const displayScore = score != null ? Math.round(score).toString() : "--";
 
 	if (theme === "radio") {
 		return (
@@ -69,11 +60,12 @@ export function RecoveryGauge({ score, size = 200 }: RecoveryGaugeProps) {
 									? "#18C98B"
 									: "#2FE6A8"
 				}
-				tip="#2FE6A8"
-				lcd="#39ffae"
+				tip={color}
+				lcd={color}
 				label={displayScore}
-				word={score !== null ? state.toUpperCase() : "--"}
+				word={score != null ? state.toUpperCase() : "--"}
 				size={size * 0.6}
+				wordDy={size * 0.6 * 0.14}
 			/>
 		);
 	}
@@ -90,8 +82,6 @@ export function RecoveryGauge({ score, size = 200 }: RecoveryGaugeProps) {
 
 	// Gradient id unique per instance
 	const gradId = `rg-grad-${Math.round((score ?? 0) * 10)}`;
-
-	const colorClass = recoveryColor(score);
 
 	return (
 		<div className="flex flex-col items-center">
@@ -174,23 +164,26 @@ export function RecoveryGauge({ score, size = 200 }: RecoveryGaugeProps) {
 				)}
 			</svg>
 
-			{/* Center label — positioned over the SVG */}
+			{/* Center label — positioned over the SVG. translateY nudges it down so
+			    the number clears the gauge center / value box above. */}
 			<div
 				className="flex flex-col items-center"
 				style={{
 					marginTop: -(size * 0.72),
 					height: size * 0.72 - strokeWidth,
 					justifyContent: "center",
+					transform: `translateY(${size * 0.08}px)`,
 				}}
 			>
 				<span
-					className="font-bold tabular-nums text-text-primary"
-					style={{ fontSize: size * 0.28, lineHeight: 1 }}
+					className="font-bold tabular-nums"
+					style={{ fontSize: size * 0.28, lineHeight: 1, color }}
 				>
 					{displayScore}
 				</span>
 				<span
-					className={`mt-1 text-xs font-semibold tracking-widest uppercase ${colorClass}`}
+					className="mt-1 text-xs font-semibold tracking-widest uppercase"
+					style={{ color }}
 				>
 					{state}
 				</span>

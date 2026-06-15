@@ -10,7 +10,8 @@ import {
 	YAxis,
 } from "recharts";
 import { themeAtom } from "../../atoms/theme";
-import { Skyline } from "../../radio/viz/Skyline";
+import { Skyline, Spire } from "../../radio/viz/Skyline";
+import { EQ } from "../../radio/viz/EQ";
 
 interface TrendPoint {
 	day: string;
@@ -23,6 +24,11 @@ interface TrendLineProps {
 	unit?: string;
 	domain?: [number | "auto", number | "auto"];
 	referenceValue?: number;
+	/** Radio theme: which form to render. Default "skyline".
+	 *  "eq" = HR-style (hotter = higher), "eq-good" = more-is-better (greener = higher),
+	 *  "eq-ladder" = zone-stack bars (bands red→green by row, fill to value),
+	 *  "spire" = compact silhouette. */
+	radioForm?: "skyline" | "eq" | "eq-good" | "eq-ladder" | "spire";
 }
 
 function shortDay(day: string): string {
@@ -37,6 +43,7 @@ export function TrendLine({
 	unit = "",
 	domain,
 	referenceValue,
+	radioForm = "skyline",
 }: TrendLineProps) {
 	const theme = useAtomValue(themeAtom);
 	const isGlass = theme === "liquid-glass";
@@ -51,7 +58,13 @@ export function TrendLine({
 	const filtered = data.filter((d) => d.value !== null);
 
 	if (theme === "radio") {
-		return <Skyline data={filtered.map((d) => d.value as number)} />;
+		const vals = filtered.map((d) => d.value as number);
+		const labels = filtered.map((d) => shortDay(d.day));
+		if (radioForm === "eq") return <EQ data={vals} labels={labels} unit={unit} color={color} />;
+		if (radioForm === "eq-good") return <EQ data={vals} labels={labels} unit={unit} colorMode="value" />;
+		if (radioForm === "eq-ladder") return <EQ data={vals} labels={labels} unit={unit} colorMode="ladder" height={150} rows={18} />;
+		if (radioForm === "spire") return <Spire data={vals} labels={labels} unit={unit} height={56} color={color} />;
+		return <Skyline data={vals} labels={labels} unit={unit} />;
 	}
 
 	if (filtered.length < 2) {

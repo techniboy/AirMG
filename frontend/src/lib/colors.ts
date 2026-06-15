@@ -6,6 +6,16 @@ export function recoveryState(score: number): string {
 	return "PEAK";
 }
 
+// Recovery score → hex (for SVG / inline-style use, e.g. calendar dots).
+export function recoveryHex(score: number | null): string | null {
+	if (score === null) return null;
+	if (score < 25) return "#FF4F73";
+	if (score < 50) return "#F5A623";
+	if (score < 70) return "#E8C24B";
+	if (score < 88) return "#18C98B";
+	return "#2FE6A8";
+}
+
 export function recoveryColor(score: number | null): string {
 	if (score === null) return "text-text-secondary";
 	if (score < 25) return "text-recovery-000";

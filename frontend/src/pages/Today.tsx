@@ -149,7 +149,7 @@ export default function Today() {
               </span>
             )}
           </div>
-          <TrendLine data={hrPoints} color="#FF4F73" />
+          <TrendLine data={hrPoints} color="#FF4F73" radioForm="eq" />
           {hrTrend && (
             <div className="flex gap-6 border-t border-hairline pt-2 text-xs text-text-tertiary">
               <span>
@@ -242,6 +242,7 @@ export default function Today() {
             color="text-metric-cyan"
             sparkline={sparklines?.steps}
             sparkColor="#2FC7FF"
+            radioForm="traffic"
           />
           <StatTile
             label="Calories"

@@ -54,6 +54,18 @@ const METRICS: Array<{
 	{ key: "resp_rate", label: "Resp Rate", color: "#2FC7FF", unit: "rpm" },
 ];
 
+// Radio-theme form per metric: "reach the green" ladders for good-high metrics,
+// hot zone bars for metrics where higher is worse.
+const RADIO_FORM: Record<MetricKey, "eq-ladder" | "eq"> = {
+	recovery: "eq-ladder",
+	hrv_rmssd: "eq-ladder",
+	sleep_performance: "eq-ladder",
+	sleep_minutes: "eq-ladder",
+	strain: "eq",
+	resting_hr: "eq",
+	resp_rate: "eq",
+};
+
 const RANGES: Array<{ key: RangeKey; label: string }> = [
 	{ key: "7d", label: "7D" },
 	{ key: "30d", label: "30D" },
@@ -179,6 +191,7 @@ export default function Trends() {
 					color={metricMeta.color}
 					unit={metricMeta.unit}
 					domain={metricMeta.domain}
+					radioForm={RADIO_FORM[selectedMetric]}
 				/>
 
 				{/* Footer stats */}
@@ -229,7 +242,7 @@ export default function Trends() {
 						return (
 							<Card key={m.key} className="border-hairline bg-surface-raised p-3 space-y-1">
 								<div className="text-xs text-text-tertiary">{m.label}</div>
-								{pts.length >= 2 && <TrendLine data={pts} color={m.color} />}
+								{pts.length >= 2 && <TrendLine data={pts} color={m.color} radioForm="spire" />}
 							</Card>
 						);
 					})}

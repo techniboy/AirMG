@@ -8,6 +8,7 @@ export interface DialProps {
 	label: string; // big readout text
 	word: string; // status word
 	size?: number;
+	wordDy?: number; // extra vertical offset for the status word only (px, default 0)
 }
 
 function polar(cx: number, cy: number, r: number, deg: number) {
@@ -29,6 +30,7 @@ export function Dial({
 	label,
 	word,
 	size = 120,
+	wordDy = 0,
 }: DialProps) {
 	const { tokens } = useRadioPhase();
 	const day = tokens.cp;
@@ -68,7 +70,9 @@ export function Dial({
 	});
 	const lw = label.length * 12 + 12,
 		lh = 26;
-	const lcdc = day ? "#7fd0ea" : lcd;
+	// readout + word follow the passed reading color (matches the lit meter
+	// segments) in both grades — the LCD box is dark in day too, so legible.
+	const lcdc = lcd;
 	return (
 		<svg
 			width={size}
@@ -122,12 +126,12 @@ export function Dial({
 			</text>
 			<text
 				x={cx}
-				y={cy + size * 0.17}
+				y={cy + size * 0.17 + wordDy}
 				textAnchor="middle"
 				fontSize={8}
 				fontWeight={700}
 				letterSpacing={2}
-				fill={day ? "#0e3a66" : tip}
+				fill={tip}
 				style={day ? undefined : { filter: `drop-shadow(0 0 5px ${tip})` }}
 			>
 				{word}

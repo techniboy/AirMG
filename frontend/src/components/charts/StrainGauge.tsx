@@ -55,10 +55,10 @@ export function StrainGauge({ strain, size = 200 }: StrainGaugeProps) {
 	const cy = size / 2;
 	const strokeWidth = size * 0.07;
 	const r = (size - strokeWidth) / 2 - 4;
-	const fraction = strain !== null ? Math.min(Math.max(strain / 21, 0), 1) : 0;
-	const color = strain !== null ? strainHex(strain) : "var(--color-chart-track)";
-	const word = strain !== null ? strainWord(strain) : "--";
-	const displayStrain = strain !== null ? strain.toFixed(1) : "--";
+	const fraction = strain != null ? Math.min(Math.max(strain / 21, 0), 1) : 0;
+	const color = strain != null ? strainHex(strain) : "var(--color-chart-track)";
+	const word = strain != null ? strainWord(strain) : "--";
+	const displayStrain = strain != null ? strain.toFixed(1) : "--";
 
 	if (theme === "radio") {
 		return (
@@ -73,11 +73,11 @@ export function StrainGauge({ strain, size = 200 }: StrainGaugeProps) {
 								? "#E0476B"
 								: "#C13AC1"
 				}
-				tip="#E0476B"
-				lcd="#ff7aa0"
+				tip={color}
+				lcd={color}
 				label={displayStrain}
 				word={
-					strain === null
+					strain == null
 						? "--"
 						: fraction > 0.66
 							? "HIGH"

@@ -1,6 +1,9 @@
 import { useMemo } from "react";
 import { prefersReducedMotion } from "./phase";
 
+// Aurora / bloom / drift are baked into the static .radio-app gradient (CSS) —
+// they used to repaint the full screen every frame. Only the cheap layers stay:
+// stars (opacity twinkle) + the occasional shoot streak.
 export function RadioBackdrop() {
 	const reduced = prefersReducedMotion();
 	const stars = useMemo(
@@ -8,12 +11,6 @@ export function RadioBackdrop() {
 			left: Math.random() * 100, top: Math.random() * 100,
 			o: 0.3 + Math.random() * 0.7, big: Math.random() > 0.85,
 			delay: -Math.random() * 4, dur: 3 + Math.random() * 3,
-		})),
-		[reduced],
-	);
-	const dust = useMemo(
-		() => reduced ? [] : Array.from({ length: 24 }, () => ({
-			left: Math.random() * 100, dur: 7 + Math.random() * 9, delay: -Math.random() * 12,
 		})),
 		[reduced],
 	);
@@ -26,15 +23,7 @@ export function RadioBackdrop() {
 						animationDelay: `${s.delay}s`, animationDuration: `${s.dur}s` }} />
 				))}
 			</div>
-			<div className="radio-aurora"><b className="a1" /><b className="a2" /></div>
 			<div className="radio-shoot" />
-			<div className="radio-bloom" />
-			<div className="radio-dust">
-				{dust.map((d, i) => (
-					<i key={i} style={{ left: `${d.left}%`, bottom: -10,
-						animationDuration: `${d.dur}s`, animationDelay: `${d.delay}s` }} />
-				))}
-			</div>
 		</>
 	);
 }

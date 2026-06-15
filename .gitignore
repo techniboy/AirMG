@@ -15,3 +15,4 @@ noop/
 !docs/screenshots/*.png
 !docs/gallery/*.png
 .superpowers/
+.DS_Store

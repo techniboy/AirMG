@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/screenshots/herov2b.png" alt="AirMG hero" width="900">
+  <img src="docs/gallery/r-home.png" alt="AirMG — Radio City home" width="900">
 </p>
 
 ---
@@ -63,25 +63,25 @@ One data model, four interchangeable skins — switch live from the sidebar. Bel
 
 | Home | Strain | Trends |
 |---|---|---|
-| ![Radio City home](docs/gallery/radio-home.png) | ![Radio City strain](docs/gallery/radio-strain.png) | ![Radio City trends](docs/gallery/radio-trends.png) |
+| ![Radio City home](docs/gallery/r-home.png) | ![Radio City strain](docs/gallery/r-strain.png) | ![Radio City trends](docs/gallery/r-trends.png) |
 
 ### Dark — focused, NOOP-inspired dashboard
 
 | Home | Strain | Trends |
 |---|---|---|
-| ![Dark home](docs/gallery/dark-home.png) | ![Dark strain](docs/gallery/dark-strain.png) | ![Dark trends](docs/gallery/dark-trends.png) |
+| ![Dark home](docs/gallery/d-home.png) | ![Dark strain](docs/gallery/d-strain.png) | ![Dark trends](docs/gallery/d-trends.png) |
 
 ### Liquid Glass — frosted, translucent
 
-| Home | Strain | Trends |
-|---|---|---|
-| ![Liquid Glass home](docs/gallery/glass-home.png) | ![Liquid Glass strain](docs/gallery/glass-strain.png) | ![Liquid Glass trends](docs/gallery/glass-trends.png) |
+| Home | Trends |
+|---|---|
+| ![Liquid Glass home](docs/gallery/l-home.png) | ![Liquid Glass trends](docs/gallery/l-trends.png) |
 
 ### Orbital — 3D WebGPU data-city
 
 | Home | Strain | Trends |
 |---|---|---|
-| ![Orbital home](docs/gallery/orbital-home.png) | ![Orbital strain](docs/gallery/orbital-strain.png) | ![Orbital trends](docs/gallery/orbital-trends.png) |
+| ![Orbital home](docs/gallery/o-home.png) | ![Orbital strain](docs/gallery/o-strain.png) | ![Orbital trends](docs/gallery/o-trends.png) |
 
 <sub>Screenshots use representative sample data.</sub>
 

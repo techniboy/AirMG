@@ -11,10 +11,6 @@ class SleepScore:
     architecture: float
     autonomic: float
 
-    @property
-    def rounded(self) -> int:
-        return max(0, min(100, round(self.total)))
-
 
 # Ideal ranges from sleep medicine literature (Walker, AASM guidelines)
 TARGET_SLEEP_MIN = 480  # 8 hours

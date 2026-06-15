@@ -17,16 +17,6 @@ export interface DailyMetrics {
 	wake_minutes: number | null;
 }
 
-export interface SleepSession {
-	id: number;
-	start_ts: number;
-	end_ts: number;
-	efficiency: number | null;
-	stages: StageSegment[] | null;
-	resting_hr: number | null;
-	avg_hrv: number | null;
-}
-
 export interface StageSegment {
 	start: number;
 	end: number;

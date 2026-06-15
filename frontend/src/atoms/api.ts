@@ -357,12 +357,3 @@ export const healthAgeAtom = atomWithQuery(() => ({
 	queryKey: ["health-age"],
 	queryFn: () => api<HealthAgeResult>("/api/health-age"),
 }));
-
-// ---------------------------------------------------------------------------
-// Auth
-// ---------------------------------------------------------------------------
-
-export const authStatusAtom = atomWithQuery(() => ({
-	queryKey: ["auth-status"],
-	queryFn: () => api<{ authenticated: boolean }>("/auth/status"),
-}));

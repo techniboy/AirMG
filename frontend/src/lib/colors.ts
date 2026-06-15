@@ -16,23 +16,6 @@ export function recoveryHex(score: number | null): string | null {
 	return "#2FE6A8";
 }
 
-export function recoveryColor(score: number | null): string {
-	if (score === null) return "text-text-secondary";
-	if (score < 25) return "text-recovery-000";
-	if (score < 50) return "text-recovery-030";
-	if (score < 70) return "text-recovery-055";
-	if (score < 88) return "text-recovery-078";
-	return "text-recovery-100";
-}
-
-export function recoveryBg(score: number | null): string {
-	if (score === null) return "bg-surface-raised";
-	if (score < 25) return "bg-recovery-000/20";
-	if (score < 50) return "bg-recovery-030/20";
-	if (score < 70) return "bg-recovery-055/20";
-	return "bg-recovery-078/20";
-}
-
 export function strainColor(strain: number | null): string {
 	if (strain === null) return "text-text-secondary";
 	const t = strain / 21;
@@ -56,12 +39,3 @@ export function sleepStageColor(stage: string): string {
 			return "#5C6FB1";
 	}
 }
-
-export const HR_ZONE_COLORS = [
-	"#4FA9C9",
-	"#4FA9C9",
-	"#5BD3A0",
-	"#E8C24B",
-	"#E8743B",
-	"#E0476B",
-];

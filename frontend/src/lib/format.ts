@@ -9,8 +9,3 @@ export function formatScore(score: number | null, decimals = 0): string {
 	if (score == null) return "--";
 	return score.toFixed(decimals);
 }
-
-export function formatPercent(value: number | null): string {
-	if (value == null) return "--";
-	return `${Math.round(value * 100)}%`;
-}

@@ -36,13 +36,11 @@ day — heart rate, HRV, sleep stages, respiratory rate — and turn it into thr
 change behaviour: **Recovery**, **Strain**, **Sleep Performance**. The hardware is commodity. The
 moat is the analytics layer and the subscription wrapped around your own data.
 
-**AirMG is that analytics layer, rebuilt by one engineer, running entirely on your own machine.**
+**AirMG is that analytics layer, running entirely on your own machine.**
 
 It reads the health data you already own through the **Google Health API**, stores it in a local
 SQLite database that never leaves your laptop, and computes a full recovery/strain/sleep/health-age
 model on top of it — then renders it through a dashboard.
-
-No account. No cloud. No subscription. The data is yours; AirMG just does the math on it, locally.
 
 ### Highlights
 
@@ -55,8 +53,6 @@ No account. No cloud. No subscription. The data is yours; AirMG just does the ma
   Coach, Journal, Settings, Onboarding.
 - **Four switchable themes** — from a focused dark dashboard to a WebGL orbital data-space and a
   neon "Radio City" skin. One data model, four ways to see it.
-- **Genuinely full stack** — typed Python analytics backend, React 19 + TypeScript frontend,
-  real-time 3D (three.js / React Three Fiber), and a tested data pipeline.
 
 ## Themes & screenshots
 

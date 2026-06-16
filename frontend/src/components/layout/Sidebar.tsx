@@ -35,33 +35,37 @@ export function Sidebar() {
 	const isGlass = theme === "liquid-glass";
 
 	return (
-		<nav className={`relative z-[1] flex h-full w-16 shrink-0 flex-col gap-1 overflow-y-auto border-r border-hairline p-2 sm:w-56 sm:p-4 ${isGlass ? "lg-sidebar" : "bg-surface-raised"}`}>
+		<nav className={`relative z-30 flex h-full w-16 shrink-0 flex-col border-r border-hairline p-2 sm:w-56 sm:p-4 ${isGlass ? "lg-sidebar" : "bg-surface-raised"}`}>
 			<div className="mb-6 px-2 text-center text-xl font-bold text-accent sm:text-left">
 				<span className="sm:hidden">A</span>
 				<span className="hidden sm:inline">AirMG</span>
 			</div>
-			{NAV_ITEMS.map((item) => {
-				const Icon = item.icon;
-				return (
-					<NavLink
-						key={item.path}
-						to={item.path}
-						end={item.path === "/"}
-						className={({ isActive }) =>
-							`flex items-center justify-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors sm:justify-start sm:px-3 ${
-								isActive
-									? isGlass
-										? "lg-nav-active text-accent"
-										: "bg-accent-muted text-accent"
-									: "text-text-secondary hover:bg-surface-overlay hover:text-text-primary"
-							}`
-						}
-					>
-						<Icon size={18} className="shrink-0" />
-						<span className="hidden sm:inline">{item.label}</span>
-					</NavLink>
-				);
-			})}
+			{/* Only the nav list scrolls; controls + their pop-ups sit outside the
+			    overflow so the theme menu isn't clipped by the sidebar. */}
+			<div className="flex flex-1 flex-col gap-1 overflow-y-auto">
+				{NAV_ITEMS.map((item) => {
+					const Icon = item.icon;
+					return (
+						<NavLink
+							key={item.path}
+							to={item.path}
+							end={item.path === "/"}
+							className={({ isActive }) =>
+								`flex items-center justify-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors sm:justify-start sm:px-3 ${
+									isActive
+										? isGlass
+											? "lg-nav-active text-accent"
+											: "bg-accent-muted text-accent"
+										: "text-text-secondary hover:bg-surface-overlay hover:text-text-primary"
+								}`
+							}
+						>
+							<Icon size={18} className="shrink-0" />
+							<span className="hidden sm:inline">{item.label}</span>
+						</NavLink>
+					);
+				})}
+			</div>
 			<SidebarControls />
 		</nav>
 	);

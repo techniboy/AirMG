@@ -35,7 +35,7 @@ export function Sidebar() {
 	const isGlass = theme === "liquid-glass";
 
 	return (
-		<nav className={`relative z-[1] flex w-16 flex-col gap-1 border-r border-hairline p-2 sm:w-56 sm:p-4 ${isGlass ? "lg-sidebar" : "bg-surface-raised"}`}>
+		<nav className={`relative z-[1] flex h-full w-16 shrink-0 flex-col gap-1 overflow-y-auto border-r border-hairline p-2 sm:w-56 sm:p-4 ${isGlass ? "lg-sidebar" : "bg-surface-raised"}`}>
 			<div className="mb-6 px-2 text-center text-xl font-bold text-accent sm:text-left">
 				<span className="sm:hidden">A</span>
 				<span className="hidden sm:inline">AirMG</span>

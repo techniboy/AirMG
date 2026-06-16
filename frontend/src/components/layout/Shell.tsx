@@ -41,7 +41,7 @@ export function Shell() {
 	}
 
 	return (
-		<div className={`flex h-screen [height:100dvh] text-text-primary ${isGlass ? "liquid-glass bg-transparent" : "bg-surface-base"}`}>
+		<div className={`flex h-screen [height:100dvh] overflow-hidden text-text-primary ${isGlass ? "liquid-glass bg-transparent" : "bg-surface-base"}`}>
 			{isGlass && <GlassBackground />}
 			<Sidebar />
 			<main className="relative z-[1] flex-1 overflow-y-auto p-3 sm:p-6">

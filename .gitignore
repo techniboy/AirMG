@@ -16,3 +16,4 @@ noop/
 !docs/gallery/*.png
 .superpowers/
 .DS_Store
+docs/superpowers/

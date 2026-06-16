@@ -49,4 +49,5 @@ function Badge({
 	});
 }
 
+// eslint-disable-next-line react-refresh/only-export-components -- vendored shadcn: variants co-exported by convention
 export { Badge, badgeVariants };

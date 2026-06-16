@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { makeRng } from "../../lib/rng";
 import { useRadioPhase } from "../phase";
 
 const ZONE = ["#16d8e8", "#5BD3A0", "#E8C24B", "#E8743B", "#ff2d78"];
@@ -7,18 +8,17 @@ const ZONE = ["#16d8e8", "#5BD3A0", "#E8C24B", "#E8743B", "#ff2d78"];
  *  "Traffic" form). Positions/timings are stable per mount. */
 export function Traffic({ count = 14, height = 44 }: { count?: number; height?: number }) {
 	const { tokens } = useRadioPhase();
-	const trails = useMemo(
-		() =>
-			Array.from({ length: count }, () => ({
-				top: 12 + Math.random() * 72,
-				w: 16 + Math.random() * 40,
-				c: ZONE[Math.floor(Math.random() * 5)],
-				dur: 1.4 + Math.random() * 1.6,
-				delay: -Math.random() * 3,
-				op: 0.45 + Math.random() * 0.5,
-			})),
-		[count],
-	);
+	const trails = useMemo(() => {
+		const rnd = makeRng(count * 97 + 7);
+		return Array.from({ length: count }, () => ({
+			top: 12 + rnd() * 72,
+			w: 16 + rnd() * 40,
+			c: ZONE[Math.floor(rnd() * 5)],
+			dur: 1.4 + rnd() * 1.6,
+			delay: -rnd() * 3,
+			op: 0.45 + rnd() * 0.5,
+		}));
+	}, [count]);
 	return (
 		<div
 			className="radio-traffic"

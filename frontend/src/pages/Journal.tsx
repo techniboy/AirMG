@@ -40,15 +40,11 @@ export default function Journal() {
 	const questions = catalogData?.questions ?? [];
 
 	useEffect(() => {
-		if (entriesData?.entries) {
-			const map: Record<string, boolean> = {};
-			for (const e of entriesData.entries) {
-				map[e.question_id] = e.answer;
-			}
-			setAnswers(map);
-		} else {
-			setAnswers({});
-		}
+		// Seed the local toggle state from the fetched entries whenever the day changes.
+		const map: Record<string, boolean> = {};
+		for (const e of entriesData?.entries ?? []) map[e.question_id] = e.answer;
+		// eslint-disable-next-line react-hooks/set-state-in-effect -- intentional server→local sync on day change
+		setAnswers(map);
 	}, [entriesData, selectedDay]);
 
 	const toggleAnswer = useCallback(

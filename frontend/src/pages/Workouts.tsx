@@ -51,6 +51,7 @@ export default function Workouts() {
 
 	const allWorkouts = data?.workouts ?? [];
 	const rangeDays = { "7d": 7, "30d": 30, "90d": 90, "1y": 365, all: 99999 }[selectedRange];
+	// eslint-disable-next-line react-hooks/purity -- current-time read for a relative "last N days" filter
 	const cutoffTs = Math.floor(Date.now() / 1000) - rangeDays * 86400;
 	const workouts = allWorkouts.filter((w) => w.start_ts >= cutoffTs);
 

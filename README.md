@@ -25,15 +25,7 @@
 
 ## Live demo
 
-**▶ Try it: `https://<your-user>.github.io/<repo>/`** — the full app, all four themes, running
-entirely in your browser on generated sample data (no backend, no account).
-
-It's a static build with `VITE_DEMO=1`: the API client is swapped for a client-side mock
-(`frontend/src/api/demo.ts`) that produces realistic recovery/strain/sleep curves, so every chart
-is populated. Deployed by [`.github/workflows/deploy-demo.yml`](.github/workflows/deploy-demo.yml).
-
-**One-time setup:** repo **Settings → Pages → Source = "GitHub Actions"**, then push to `main`.
-(Run it locally with `VITE_DEMO=1 VITE_BASE=/ npm run build && npm run preview`.)
+**▶ Try it: `https://techniboy.github.io/AirMG/`**
 
 ---
 
@@ -48,8 +40,7 @@ moat is the analytics layer and the subscription wrapped around your own data.
 
 It reads the health data you already own through the **Google Health API**, stores it in a local
 SQLite database that never leaves your laptop, and computes a full recovery/strain/sleep/health-age
-model on top of it — then renders it through a dashboard that ranges from a clean data view to a
-fully 3D "data city" you can fly through.
+model on top of it — then renders it through a dashboard.
 
 No account. No cloud. No subscription. The data is yours; AirMG just does the math on it, locally.
 
@@ -62,7 +53,7 @@ No account. No cloud. No subscription. The data is yours; AirMG just does the ma
   `backend/src/airmg/analytics/` is the product.
 - **Twelve dashboards** — Today, Sleep, Recovery, Strain, Workouts, Trends, Insights, Health Age,
   Coach, Journal, Settings, Onboarding.
-- **Four switchable themes** — from a focused dark dashboard to a WebGL orbital data-city and a
+- **Four switchable themes** — from a focused dark dashboard to a WebGL orbital data-space and a
   neon "Radio City" skin. One data model, four ways to see it.
 - **Genuinely full stack** — typed Python analytics backend, React 19 + TypeScript frontend,
   real-time 3D (three.js / React Three Fiber), and a tested data pipeline.
@@ -71,31 +62,31 @@ No account. No cloud. No subscription. The data is yours; AirMG just does the ma
 
 One data model, four interchangeable skins — switch live from the sidebar. Below: **Home · Strain · Trends** in each.
 
-### Radio City — neon HACF night city *(default)*
+### Radio City — neon HACF night city _(default)_
 
-| Home | Strain | Trends |
-|---|---|---|
+| Home                                        | Strain                                          | Trends                                          |
+| ------------------------------------------- | ----------------------------------------------- | ----------------------------------------------- |
 | ![Radio City home](docs/gallery/r-home.png) | ![Radio City strain](docs/gallery/r-strain.png) | ![Radio City trends](docs/gallery/r-trends.png) |
 
 ### Dark — focused, NOOP-inspired dashboard
 
-| Home | Strain | Trends |
-|---|---|---|
+| Home                                  | Strain                                    | Trends                                    |
+| ------------------------------------- | ----------------------------------------- | ----------------------------------------- |
 | ![Dark home](docs/gallery/d-home.png) | ![Dark strain](docs/gallery/d-strain.png) | ![Dark trends](docs/gallery/d-trends.png) |
 
 ### Liquid Glass — frosted, translucent
 
-| Home | Trends |
-|---|---|
+| Home                                          | Trends                                            |
+| --------------------------------------------- | ------------------------------------------------- |
 | ![Liquid Glass home](docs/gallery/l-home.png) | ![Liquid Glass trends](docs/gallery/l-trends.png) |
 
 ### Orbital — 3D WebGPU data-city
 
-| Home | Strain | Trends |
-|---|---|---|
+| Home                                     | Strain                                       | Trends                                       |
+| ---------------------------------------- | -------------------------------------------- | -------------------------------------------- |
 | ![Orbital home](docs/gallery/o-home.png) | ![Orbital strain](docs/gallery/o-strain.png) | ![Orbital trends](docs/gallery/o-trends.png) |
 
-In Orbital the scene *is* the readout — the celestial bodies move with your metrics:
+In Orbital the scene _is_ the readout — the celestial bodies move with your metrics:
 
 - **Aurora** — its **colour** is your recovery state (red depleted → amber → mint peak), and its
   **intensity** tracks your HRV against your baseline. Bright vivid curtains = recovered + high HRV.
@@ -163,22 +154,21 @@ Deeper dive: **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)**.
 
 AirMG ships **four** interchangeable presentations of the same data model, selectable in Settings:
 
-| Theme | What it is |
-|---|---|
-| **dark** | Focused, fast, no-nonsense dashboard. The default. |
-| **liquid-glass** | Frosted-glass cards, depth and blur. |
-| **orbital** | A 3D WebGL "data city" — fly through your metrics as an orbital scene (three.js / R3F). |
-| **radio** | "Radio City" — a Halt-and-Catch-Fire neon City-Pop skin: living night sky, neon billboards, CRT grain. DOM/CSS/SVG only. |
+| Theme            | What it is                                                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------ |
+| **dark**         | Focused, fast, no-nonsense dashboard. The default.                                                                       |
+| **liquid-glass** | Frosted-glass cards, depth and blur.                                                                                     |
+| **orbital**      | A 3D WebGL "data space" — fly through your metrics as an orbital scene (three.js / R3F).                                 |
+| **radio**        | "Radio City" — a Halt-and-Catch-Fire neon City-Pop skin: living night sky, neon billboards, CRT grain. DOM/CSS/SVG only. |
 
 ## Status
 
-This is a personal project and a portfolio piece, not a commercial product. It is **not a medical
+This is a personal project not a commercial product. It is **not a medical
 device** — every metric is an approximation and is not clinically validated. See
 [`ATTRIBUTION.md`](ATTRIBUTION.md).
 
 > **Built with AI.** AirMG was designed and written end-to-end through AI prompting — the
-> backend analytics, the React frontend, all four themes, the docs, and these screenshots. It's
-> as much a demonstration of what one person can ship by directing AI as it is a health dashboard.
+> backend analytics, the React frontend.
 
 ## Credits
 

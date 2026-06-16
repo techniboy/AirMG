@@ -1,3 +1,4 @@
+import { ChartScroll } from "../../components/charts/ChartScroll";
 import { useRadioPhase } from "../phase";
 import { useTipBind } from "../tooltip";
 
@@ -82,6 +83,7 @@ export function Hypnogram({
 			: [];
 
 	return (
+		<ChartScroll minWidth={Math.min(width, 600)}>
 		<svg
 			width="100%"
 			viewBox={`0 0 ${width} ${height + (ticks.length ? 18 : 0)}`}
@@ -123,5 +125,6 @@ export function Hypnogram({
 				</text>
 			))}
 		</svg>
+		</ChartScroll>
 	);
 }

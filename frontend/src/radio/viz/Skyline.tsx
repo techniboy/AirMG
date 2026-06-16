@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { ChartScroll } from "../../components/charts/ChartScroll";
 import { fmt, RECOVERY_RAMP as REC } from "../metricColors";
 import { useRadioPhase } from "../phase";
 import { useTipBind } from "../tooltip";
@@ -31,6 +32,7 @@ export function Skyline({
 	}, [data.length, tokens.cp]);
 
 	return (
+		<ChartScroll minWidth={Math.max(420, data.length * 16)}>
 		<div style={{ display: "flex", alignItems: "flex-end", gap: 4, height, padding: "0 4px" }}>
 			{data.map((v, i) => {
 				const h = (v / max) * height;
@@ -49,6 +51,7 @@ export function Skyline({
 				);
 			})}
 		</div>
+		</ChartScroll>
 	);
 }
 

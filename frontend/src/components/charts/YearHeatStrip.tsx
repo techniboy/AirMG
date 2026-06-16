@@ -2,6 +2,7 @@ import { useAtomValue } from "jotai";
 import { useState } from "react";
 import { themeAtom } from "../../atoms/theme";
 import { Facade } from "../../radio/viz/Facade";
+import { ChartScroll } from "./ChartScroll";
 
 interface HeatDay {
 	day: string;
@@ -94,6 +95,7 @@ export function YearHeatStrip({
 	const height = TOP_PAD + 7 * STEP;
 
 	return (
+		<ChartScroll minWidth={width}>
 		<div className="relative">
 			<svg
 				viewBox={`0 0 ${width} ${height}`}
@@ -162,5 +164,6 @@ export function YearHeatStrip({
 				)}
 			</svg>
 		</div>
+		</ChartScroll>
 	);
 }

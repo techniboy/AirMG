@@ -405,3 +405,15 @@
 		@apply font-sans;
 	}
 }
+
+/* Wide charts scroll horizontally on phones instead of squishing (see ChartScroll). */
+@media (max-width: 640px) {
+	.chart-scroll {
+		overflow-x: auto;
+		overflow-y: hidden;
+		-webkit-overflow-scrolling: touch;
+	}
+	.chart-scroll > * {
+		min-width: var(--chart-min, 560px);
+	}
+}

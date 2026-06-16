@@ -1,3 +1,4 @@
+import { ChartScroll } from "../../components/charts/ChartScroll";
 import { RECOVERY_RAMP as REC } from "../metricColors";
 import { useRadioPhase } from "../phase";
 import { useTipBind } from "../tooltip";
@@ -15,6 +16,7 @@ export function Facade({
 	const { tokens } = useRadioPhase();
 	const bind = useTipBind();
 	return (
+		<ChartScroll minWidth={Math.max(560, cols * 12)}>
 		<div
 			style={{
 				display: "grid",
@@ -58,5 +60,6 @@ export function Facade({
 				);
 			})}
 		</div>
+		</ChartScroll>
 	);
 }

@@ -13,6 +13,7 @@ import {
 import { themeAtom } from "../../atoms/theme";
 import { Skyline, Spire } from "../../radio/viz/Skyline";
 import { EQ } from "../../radio/viz/EQ";
+import { ChartScroll } from "./ChartScroll";
 
 interface TrendPoint {
 	day: string;
@@ -122,6 +123,7 @@ export function TrendLine({
 	const tickInterval = Math.max(1, Math.floor(data.length / 6));
 
 	return (
+		<ChartScroll minWidth={Math.max(420, data.length * 28)}>
 		<ResponsiveContainer width="100%" height={160}>
 			<LineChart data={data} margin={{ top: 8, right: 8, bottom: 0, left: 0 }}>
 				<CartesianGrid
@@ -186,5 +188,6 @@ export function TrendLine({
 				/>
 			</LineChart>
 		</ResponsiveContainer>
+		</ChartScroll>
 	);
 }

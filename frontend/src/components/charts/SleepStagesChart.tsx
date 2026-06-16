@@ -5,6 +5,7 @@ import { formatMinutes } from "../../lib/format";
 import type { StageSegment } from "../../lib/types";
 import { themeAtom } from "../../atoms/theme";
 import { Hypnogram as RadioHypnogram } from "../../radio/viz/Hypnogram";
+import { ChartScroll } from "./ChartScroll";
 
 interface SleepStagesChartProps {
 	stages: StageSegment[] | null;
@@ -68,6 +69,7 @@ function Hypnogram({ stages }: { stages: StageSegment[] }) {
 	}
 
 	return (
+		<ChartScroll minWidth={600}>
 		<div ref={wrapRef} className="relative">
 		<svg
 			viewBox="0 0 640 178"
@@ -147,6 +149,7 @@ function Hypnogram({ stages }: { stages: StageSegment[] }) {
 			</div>
 		)}
 		</div>
+		</ChartScroll>
 	);
 }
 

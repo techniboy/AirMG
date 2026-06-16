@@ -1,3 +1,4 @@
+import { ChartScroll } from "../../components/charts/ChartScroll";
 import { fmt, RECOVERY_RAMP as GOOD } from "../metricColors";
 import { useTipBind } from "../tooltip";
 import { useRadioPhase } from "../phase";
@@ -125,8 +126,10 @@ export function EQ({
 		</div>
 	);
 
-	if (!xTitle && !yTitle && !showLabels) return bars;
+	const cw = Math.max(420, data.length * 7);
+	if (!xTitle && !yTitle && !showLabels) return <ChartScroll minWidth={cw}>{bars}</ChartScroll>;
 	return (
+		<ChartScroll minWidth={cw}>
 		<div style={{ display: "flex", gap: 6, width: "100%" }}>
 			{yTitle && (
 				<div
@@ -167,5 +170,6 @@ export function EQ({
 				)}
 			</div>
 		</div>
+		</ChartScroll>
 	);
 }

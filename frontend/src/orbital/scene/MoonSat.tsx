@@ -114,7 +114,7 @@ export default function MoonSat({
   const hot = hovered || pointerHover;
 
   const moonTex = useMemo(() => {
-    const tex = new THREE.TextureLoader().load("/orbital/moon.jpg");
+    const tex = new THREE.TextureLoader().load(`${import.meta.env.BASE_URL}orbital/moon.jpg`);
     tex.colorSpace = THREE.SRGBColorSpace;
     return tex;
   }, []);

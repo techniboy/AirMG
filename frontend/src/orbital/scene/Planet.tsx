@@ -222,8 +222,9 @@ export default function Planet({
 
   const textures = useMemo(() => {
     const loader = new THREE.TextureLoader();
-    const day = loader.load("/orbital/earth-day.jpg");
-    const night = loader.load("/orbital/earth-night.jpg");
+    const base = import.meta.env.BASE_URL; // respects the deploy base path
+    const day = loader.load(`${base}orbital/earth-day.jpg`);
+    const night = loader.load(`${base}orbital/earth-night.jpg`);
     day.colorSpace = THREE.SRGBColorSpace;
     night.colorSpace = THREE.SRGBColorSpace;
     day.anisotropy = 4;

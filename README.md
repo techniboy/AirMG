@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <img src="docs/gallery/r-home.png" alt="AirMG — Radio City home" width="900">
+  <img src="docs/gallery/d-home.png" alt="AirMG — Dark (NOOP-inspired) home" width="900">
 </p>
 
 ## Live demo
@@ -62,17 +62,17 @@ No account. No cloud. No subscription. The data is yours; AirMG just does the ma
 
 One data model, four interchangeable skins — switch live from the sidebar. Below: **Home · Strain · Trends** in each.
 
-### Radio City — neon HACF night city _(default)_
-
-| Home                                        | Strain                                          | Trends                                          |
-| ------------------------------------------- | ----------------------------------------------- | ----------------------------------------------- |
-| ![Radio City home](docs/gallery/r-home.png) | ![Radio City strain](docs/gallery/r-strain.png) | ![Radio City trends](docs/gallery/r-trends.png) |
-
-### Dark — focused, NOOP-inspired dashboard
+### Dark — focused, NOOP-inspired dashboard _(default)_
 
 | Home                                  | Strain                                    | Trends                                    |
 | ------------------------------------- | ----------------------------------------- | ----------------------------------------- |
 | ![Dark home](docs/gallery/d-home.png) | ![Dark strain](docs/gallery/d-strain.png) | ![Dark trends](docs/gallery/d-trends.png) |
+
+### Radio City — neon HACF night city
+
+| Home                                        | Strain                                          | Trends                                          |
+| ------------------------------------------- | ----------------------------------------------- | ----------------------------------------------- |
+| ![Radio City home](docs/gallery/r-home.png) | ![Radio City strain](docs/gallery/r-strain.png) | ![Radio City trends](docs/gallery/r-trends.png) |
 
 ### Liquid Glass — frosted, translucent
 

@@ -105,6 +105,18 @@
 /* tab hidden: pause every ambient animation so the GPU compositor idles */
 .radio-app.paused, .radio-app.paused * { animation-play-state: paused !important; }
 
+/* Mobile: shrink the rail to icons-only and scale the billboard so content fits. */
+@media (max-width: 640px) {
+	.radio-rail { width: 56px; flex: 0 0 56px; padding: 10px 0; gap: 6px; }
+	.radio-sign { width: 48px; padding: 6px 2px 5px; }
+	.radio-sign .en { display: none; }
+	.radio-main { padding: 12px 12px; }
+	.radio-bb { gap: 10px; margin: 2px 0 12px; }
+	.radio-tube { font-size: 30px; }
+	.radio-mount { padding-left: 10px; }
+	.radio-mount .kana { font-size: 16px; }
+}
+
 /* themed-card surface for content pages */
 .radio .radio-card{border:1px solid #1c1a2c;border-radius:11px;padding:13px;background:#0a0815c2;backdrop-filter:blur(2px)}
 

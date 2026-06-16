@@ -22,15 +22,18 @@ export function Sidebar() {
 	const isGlass = theme === "liquid-glass";
 
 	return (
-		<nav className={`relative z-[1] flex w-56 flex-col gap-1 border-r border-hairline p-4 ${isGlass ? "lg-sidebar" : "bg-surface-raised"}`}>
-			<div className="mb-6 px-2 text-xl font-bold text-accent">AirMG</div>
+		<nav className={`relative z-[1] flex w-16 flex-col gap-1 border-r border-hairline p-2 sm:w-56 sm:p-4 ${isGlass ? "lg-sidebar" : "bg-surface-raised"}`}>
+			<div className="mb-6 px-2 text-center text-xl font-bold text-accent sm:text-left">
+				<span className="sm:hidden">A</span>
+				<span className="hidden sm:inline">AirMG</span>
+			</div>
 			{NAV_ITEMS.map((item) => (
 				<NavLink
 					key={item.path}
 					to={item.path}
 					end={item.path === "/"}
 					className={({ isActive }) =>
-						`flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-colors ${
+						`flex items-center justify-center gap-3 rounded-lg px-2 py-2 text-sm transition-colors sm:justify-start sm:px-3 ${
 							isActive
 								? isGlass
 									? "lg-nav-active text-accent"
@@ -40,7 +43,7 @@ export function Sidebar() {
 					}
 				>
 					<span className="w-5 text-center">{item.icon}</span>
-					{item.label}
+					<span className="hidden sm:inline">{item.label}</span>
 				</NavLink>
 			))}
 			<SidebarControls />

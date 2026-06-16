@@ -32,7 +32,7 @@ export function SidebarControls() {
 	return (
 		<div ref={ref} className="relative mt-auto space-y-2 border-t border-hairline pt-3">
 			{toast && (
-				<div className="absolute bottom-full left-0 right-0 mb-2 rounded-lg border border-accent bg-surface-overlay px-3 py-2 text-[11px] text-text-primary shadow-xl">
+				<div className="absolute bottom-full left-0 right-0 mb-2 min-w-[180px] rounded-lg border border-accent bg-surface-overlay px-3 py-2 text-[11px] text-text-primary shadow-xl">
 					{toast}
 				</div>
 			)}
@@ -41,25 +41,25 @@ export function SidebarControls() {
 				type="button"
 				onClick={sync}
 				disabled={syncing}
-				className="flex w-full items-center gap-2 rounded-lg border border-hairline bg-surface-raised px-3 py-2 text-sm text-text-secondary transition-colors hover:text-text-primary disabled:opacity-60"
+				className="flex w-full items-center justify-center gap-2 rounded-lg border border-hairline bg-surface-raised px-2 py-2 text-sm text-text-secondary transition-colors hover:text-text-primary disabled:opacity-60 sm:justify-start sm:px-3"
 			>
 				<RefreshCw size={14} className={syncing ? "animate-spin" : ""} />
-				<span>{syncing ? "Syncing…" : "Sync"}</span>
-				<span className="ml-auto text-[10px] text-text-tertiary">{lastSyncedAgo}</span>
+				<span className="hidden sm:inline">{syncing ? "Syncing…" : "Sync"}</span>
+				<span className="ml-auto hidden text-[10px] text-text-tertiary sm:inline">{lastSyncedAgo}</span>
 			</button>
 
 			<button
 				type="button"
 				onClick={() => setOpen((o) => !o)}
-				className="flex w-full items-center gap-2 rounded-lg border border-hairline bg-surface-raised px-3 py-2 text-sm text-text-secondary transition-colors hover:text-text-primary"
+				className="flex w-full items-center justify-center gap-2 rounded-lg border border-hairline bg-surface-raised px-2 py-2 text-sm text-text-secondary transition-colors hover:text-text-primary sm:justify-start sm:px-3"
 			>
 				<Palette size={14} />
-				<span>Theme</span>
-				<span className="ml-auto text-[11px] text-text-tertiary">{THEME_LABEL[theme]}</span>
+				<span className="hidden sm:inline">Theme</span>
+				<span className="ml-auto hidden text-[11px] text-text-tertiary sm:inline">{THEME_LABEL[theme]}</span>
 			</button>
 
 			{open && (
-				<div className="absolute bottom-12 left-0 right-0 z-50 space-y-0.5 rounded-lg border border-hairline bg-surface-overlay p-1.5 shadow-xl">
+				<div className="absolute bottom-12 left-0 right-0 z-50 min-w-[180px] space-y-0.5 rounded-lg border border-hairline bg-surface-overlay p-1.5 shadow-xl">
 					{THEMES.map((t) => (
 						<button
 							key={t.v}

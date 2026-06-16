@@ -293,6 +293,12 @@
     0 -0.5px 0 rgba(0,0,0,0.03) inset,
     0 8px 32px rgba(0,0,0,0.06),
     0 2px 8px rgba(0,0,0,0.04);
+}
+
+/* Only force relative on static elements — otherwise this clobbers Tailwind's
+   `absolute`/`fixed` (e.g. the DateNav calendar popover, which must overlay). */
+.liquid-glass [data-slot="card"]:not(.absolute):not(.fixed),
+.liquid-glass .bg-surface-raised:not(.absolute):not(.fixed) {
   position: relative;
 }
 
@@ -404,6 +410,13 @@
 	html {
 		@apply font-sans;
 	}
+}
+
+/* Dark root so iOS Safari's dynamic-toolbar gaps don't flash white on the dark
+   themes. Glass paints its own light backdrop (lg-bg-canvas) over this. */
+html,
+body {
+	background-color: #08060f;
 }
 
 /* Wide charts scroll horizontally on phones instead of squishing (see ChartScroll). */

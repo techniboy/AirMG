@@ -24,7 +24,7 @@
 	--color-border: #342b58;
 }
 .radio-app {
-	position: relative; height: 100vh; display: flex; overflow: hidden;
+	position: relative; height: 100vh; height: 100dvh; display: flex; overflow: hidden;
 	/* Static baked backdrop: aurora glow (top corners) + bloom (bottom) + base,
 	   all painted once and compositor-cached. Replaces the old animated aurora/
 	   bloom/dust/drift layers that re-painted the full screen every frame. */

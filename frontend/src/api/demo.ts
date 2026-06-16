@@ -73,12 +73,13 @@ const DATASET: DayMetrics[] = (() => {
 			light_minutes: sm - deep - rem - wake,
 		});
 	}
-	// hero today
+	// hero today — a poor-recovery day so the demo shows the low/red states
+	// (below-baseline HRV, elevated RHR, sleep debt), not only green ones.
 	const t = out[out.length - 1];
 	Object.assign(t, {
-		recovery: 84, strain: 14.2, sleep_performance: 91, hrv_rmssd: 78, resting_hr: 49,
-		steps: 11200, calories: 640, sleep_minutes: 451, deep_minutes: 86, rem_minutes: 102,
-		light_minutes: 255, wake_minutes: 8,
+		recovery: 29, strain: 8.1, sleep_performance: 54, hrv_rmssd: 43, resting_hr: 61,
+		steps: 4200, calories: 280, sleep_minutes: 358, deep_minutes: 41, rem_minutes: 58,
+		light_minutes: 241, wake_minutes: 18,
 	});
 	return out;
 })();
@@ -211,24 +212,42 @@ export function demoRequest(path: string, options?: RequestInit): unknown {
 	if (p === "/api/readiness") {
 		const m = get(q.get("day") ?? todayIso);
 		const sig = (key: string, label: string, detail: string, flag: string) => ({ key, label, detail, flag });
+		const hrvZ = (m.hrv_rmssd - 66) / 10;
+		const rhrDelta = m.resting_hr - 52;
+		const level = m.recovery >= 70 ? "primed" : m.recovery >= 50 ? "balanced" : "strained";
+		const sleepPct = Math.round((m.sleep_minutes / 480) * 100);
 		return {
-			level: m.recovery >= 70 ? "primed" : m.recovery >= 50 ? "balanced" : "strained",
-			headline: m.recovery >= 70 ? "You're primed — go for it." : "Looking balanced — train with intention.",
-			summary: "HRV is elevated above your baseline, resting heart rate is low, and your sleep debt is minimal.",
+			level,
+			headline:
+				level === "primed"
+					? "You're primed — go for it."
+					: level === "balanced"
+						? "Looking balanced — train with intention."
+						: "You're strained — prioritise recovery today.",
+			summary:
+				level === "strained"
+					? "HRV is below baseline, resting heart rate is elevated, and you're carrying sleep debt — favour rest or light movement."
+					: "HRV is elevated above your baseline, resting heart rate is low, and your sleep debt is minimal.",
 			acwr: 1.08,
 			signals: [
-				sig("hrv", "HRV", `HRV is above baseline (z=${((m.hrv_rmssd - 66) / 10).toFixed(2)}).`, m.hrv_rmssd >= 66 ? "good" : "watch"),
-				sig("rhr", "Resting HR", `RHR is at or below baseline (${(m.resting_hr - 52).toFixed(1)} bpm).`, m.resting_hr <= 52 ? "good" : "neutral"),
+				sig("hrv", "HRV", `HRV is ${hrvZ >= 0 ? "above" : "below"} baseline (z=${hrvZ.toFixed(2)}).`, m.hrv_rmssd >= 66 ? "good" : "watch"),
+				sig("rhr", "Resting HR", `RHR is ${rhrDelta <= 0 ? "at or below" : "above"} baseline (${rhrDelta.toFixed(1)} bpm).`, m.resting_hr <= 52 ? "good" : "watch"),
 				sig("load", "Training Load", "Acute:chronic load ratio is optimal (ACWR=1.08).", "good"),
-				sig("sleep_debt", "Sleep Debt", "Sleep is meeting your need (94% of target).", "good"),
+				sig("sleep_debt", "Sleep Debt", `Sleep is ${sleepPct}% of target.`, sleepPct >= 90 ? "good" : "watch"),
 			],
 		};
 	}
 	if (p === "/api/coach") {
 		const m = get(todayIso);
+		const recMsg =
+			m.recovery >= 67
+				? "Recovery is green. Your body is ready to push — high-intensity training is appropriate today."
+				: m.recovery >= 40
+					? "Recovery is moderate. Keep intensity in check and listen to your body."
+					: "Recovery is low. Favour rest or light movement today and protect tonight's sleep.";
 		return {
 			recommendations: [
-				{ category: "recovery", message: "Recovery is green. Your body is ready to push — high-intensity training is appropriate today.", priority: 3 },
+				{ category: "recovery", message: recMsg, priority: m.recovery >= 67 ? 3 : 1 },
 				m.sleep_performance < 85 ? { category: "sleep", message: `Sleep performance is ${Math.round(m.sleep_performance)}%. Prioritize an earlier bedtime tonight.`, priority: 1 } : null,
 			].filter(Boolean),
 		};
